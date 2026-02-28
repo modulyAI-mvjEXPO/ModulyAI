@@ -1,0 +1,141 @@
+/* =============================================
+   AppNav — Shared application navbar
+   ============================================= */
+
+.app-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 0 var(--space-6);
+  height: 64px;
+  display: flex;
+  align-items: center;
+
+  /* Glassmorphic bar */
+  background: rgba(255, 255, 255, 0.60);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  backdrop-filter: blur(20px) saturate(1.5);
+  border-bottom: 1px solid rgba(160, 150, 240, 0.18);
+  box-shadow: 0 1px 20px rgba(80, 60, 160, 0.08);
+}
+
+[data-theme="dark"] .app-nav {
+  background: rgba(17, 24, 39, 0.75);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 1px 20px rgba(0, 0, 0, 0.3);
+}
+
+.app-nav-inner {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Logo */
+.app-nav-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.app-nav-logo-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-secondary), var(--color-accent));
+  color: white;
+  font-weight: 800;
+  font-size: var(--font-size-base);
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(124, 100, 253, 0.35);
+  flex-shrink: 0;
+}
+
+.app-nav-logo-text {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+
+[data-theme="light"] .app-nav-logo-text,
+:root:not([data-theme]) .app-nav-logo-text {
+  color: #1e1b4b;
+}
+
+/* Actions */
+.app-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Theme toggle button */
+.app-nav-theme-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.50);
+  border: 1px solid rgba(160, 150, 240, 0.22);
+  border-radius: 50%;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+[data-theme="dark"] .app-nav-theme-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #9CA3AF;
+}
+
+.app-nav-theme-btn:hover {
+  background: rgba(124, 100, 253, 0.12);
+  border-color: rgba(124, 100, 253, 0.35);
+  color: #7c64fd;
+  transform: scale(1.08);
+}
+
+[data-theme="dark"] .app-nav-theme-btn:hover {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.35);
+  color: #a78bfa;
+}
+
+/* Sign out button */
+.app-nav-signout {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(160, 150, 240, 0.22);
+  border-radius: var(--border-radius-lg);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+[data-theme="dark"] .app-nav-signout {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #9CA3AF;
+}
+
+.app-nav-signout:hover {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #EF4444;
+}
