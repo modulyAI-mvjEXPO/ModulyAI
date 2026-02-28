@@ -1,0 +1,140 @@
+.solution {
+  background: var(--color-background);
+}
+
+/* Flow Diagram */
+.solution-flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-16);
+  flex-wrap: wrap;
+}
+
+.flow-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-xl);
+  padding: var(--space-5) var(--space-6);
+  transition: all var(--transition-base);
+}
+
+.flow-item:hover {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-md);
+}
+
+.flow-number {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-secondary), var(--color-accent));
+  color: white;
+  font-weight: 700;
+  font-size: var(--font-size-lg);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.flow-content h3 {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  margin-bottom: var(--space-1);
+}
+
+.flow-content p {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  margin: 0;
+}
+
+.flow-arrow {
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+/* Solution Cards */
+.solution-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+}
+
+.solution-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-xl);
+  padding: var(--space-8);
+  text-align: center;
+  transition: all var(--transition-base);
+}
+
+.solution-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-accent);
+}
+
+.card-icon {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--space-5);
+  border-radius: var(--border-radius-lg);
+  color: white;
+}
+
+.card-icon.verified {
+  background: linear-gradient(135deg, #10B981, #059669);
+}
+
+.card-icon.accuracy {
+  background: linear-gradient(135deg, var(--color-secondary), var(--color-accent));
+}
+
+.card-icon.structure {
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+}
+
+.solution-card h4 {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  margin-bottom: var(--space-3);
+}
+
+.solution-card p {
+  font-size: var(--font-size-base);
+  line-height: 1.7;
+}
+
+@media (max-width: 1024px) {
+  .solution-cards {
+    grid-template-columns: 1fr;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .solution-flow {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  
+  .flow-arrow {
+    transform: rotate(90deg);
+  }
+  
+  .flow-item {
+    width: 100%;
+    max-width: 300px;
+  }
+}
