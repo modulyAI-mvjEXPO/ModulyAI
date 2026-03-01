@@ -84,7 +84,7 @@ function AppContent() {
 
   // Post-auth pages (no landing page chrome)
   if (view === 'dashboard' && currentUser) {
-    return <Dashboard onSignOut={handleSignOut} />;
+    return <Dashboard user={currentUser} onSignOut={handleSignOut} />;
   }
 
   if (view === 'onboarding' && currentUser) {

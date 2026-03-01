@@ -74,19 +74,17 @@ export async function upsertProfile(
 
 /**
  * Look up a user's email by their display_name (username).
+ * Uses a SECURITY DEFINER RPC so RLS doesn't block unauthenticated lookups.
  * Returns null if no match found.
  */
 export async function getEmailByUsername(username: string): Promise<string | null> {
   const { data, error } = await supabase
-    .from('profiles')
-    .select('email')
-    .ilike('display_name', username.trim())
-    .maybeSingle();
+    .rpc('get_email_by_username', { p_username: username.trim() });
 
   if (error) {
-    console.error('getEmailByUsername error:', error.message);
+    console.error('getEmailByUsername RPC error:', error.message);
     return null;
   }
-  if (!data?.email) return null;
-  return data.email as string;
+  if (!data) return null;
+  return data as string;
 }
