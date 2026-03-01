@@ -1,9 +1,15 @@
 import { supabase } from './supabase';
+import { getEmailByUsername } from './profile';
 import type { AuthError, User } from '@supabase/supabase-js';
 
 export interface AuthResult {
     user: User | null;
     error: string | null;
+}
+
+/** Returns true if the string looks like a valid email (has @domain.tld). */
+function looksLikeEmail(input: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(input);
 }
 
 /**
@@ -37,11 +43,24 @@ export async function verifyOtp(email: string, token: string): Promise<AuthResul
 }
 
 /**
- * Sign in an existing user with email + password.
+ * Sign in with either an email address OR a username.
+ * Auto-detects which was provided:
+ *   - Looks like email (has @domain.tld)  → sign in directly
+ *   - Otherwise                            → look up email by username, then sign in
  */
-export async function signIn(email: string, password: string): Promise<AuthResult> {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+export async function signIn(emailOrUsername: string, password: string): Promise<AuthResult> {
+    let email = emailOrUsername.trim();
 
+    if (!looksLikeEmail(email)) {
+        // Treat as username — look up their registered email
+        const found = await getEmailByUsername(email);
+        if (!found) {
+            return { user: null, error: 'No account found with that username.' };
+        }
+        email = found;
+    }
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { user: null, error: formatError(error) };
     return { user: data.user, error: null };
 }
@@ -75,7 +94,7 @@ function formatError(error: AuthError): string {
     const msg = error.message?.toLowerCase() ?? '';
 
     if (msg.includes('invalid login credentials') || msg.includes('invalid password')) {
-        return 'Incorrect email or password. Please try again.';
+        return 'Incorrect email/username or password. Please try again.';
     }
     if (msg.includes('email not confirmed')) {
         return 'Please verify your email before logging in.';

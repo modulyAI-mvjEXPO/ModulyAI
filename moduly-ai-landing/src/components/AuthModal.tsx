@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { signIn, signUp, verifyOtp, resendOtp } from '../lib/auth';
+import { upsertProfile } from '../lib/profile';
 import './AuthModal.css';
 
 interface AuthModalProps {
@@ -27,6 +28,16 @@ function validateCollegeEmail(email: string): string | null {
     return null;
 }
 
+function validateUsername(username: string): string | null {
+    if (!username) return 'Username is required';
+    if (username.length < 3) return 'Username must be at least 3 characters';
+    if (username.length > 30) return 'Username can be at most 30 characters';
+    if (!/^[a-zA-Z0-9_\-\.@]+$/.test(username)) {
+        return 'Only letters, numbers and _ - . @ are allowed';
+    }
+    return null;
+}
+
 function validatePassword(password: string): string | null {
     if (!password) return 'Password is required';
     if (password.length < 8) return 'Password must be at least 8 characters';
@@ -35,15 +46,22 @@ function validatePassword(password: string): string | null {
 
 export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     const [view, setView] = useState<AuthView>('login');
+    // Signup fields
+    const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    // Login field — accepts email OR username
+    const [loginIdentifier, setLoginIdentifier] = useState('');
+    const [loginPassword, setLoginPassword] = useState('');
+
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [showLoginPassword, setShowLoginPassword] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [resendCooldown, setResendCooldown] = useState(0); // seconds remaining
+    const [resendCooldown, setResendCooldown] = useState(0);
     const [resendLoading, setResendLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
 
@@ -53,6 +71,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         setErrors({});
         setShowPassword(false);
         setShowConfirmPassword(false);
+        setShowLoginPassword(false);
         setSuccessMessage('');
     }, [view]);
 
@@ -66,9 +85,12 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     useEffect(() => {
         if (!isOpen) {
             setView('login');
+            setUsername('');
             setEmail('');
             setPassword('');
             setConfirmPassword('');
+            setLoginIdentifier('');
+            setLoginPassword('');
             setOtp(['', '', '', '', '', '']);
             setErrors({});
             setIsSubmitting(false);
@@ -96,27 +118,28 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     const handleLogin = useCallback(async (e: React.FormEvent) => {
         e.preventDefault();
         const newErrors: Record<string, string> = {};
-        const emailError = validateCollegeEmail(email);
-        if (emailError) newErrors.email = emailError;
-        const passwordError = validatePassword(password);
-        if (passwordError) newErrors.password = passwordError;
+        if (!loginIdentifier.trim()) newErrors.loginIdentifier = 'Email or username is required';
+        const passwordError = validatePassword(loginPassword);
+        if (passwordError) newErrors.loginPassword = passwordError;
         if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
 
         setIsSubmitting(true);
         setErrors({});
-        const { error } = await signIn(email, password);
+        const { error } = await signIn(loginIdentifier, loginPassword);
         setIsSubmitting(false);
 
         if (error) { setErrors({ form: error }); return; }
 
         setSuccessMessage('Logged in successfully. Welcome back!');
         setTimeout(onClose, 1200);
-    }, [email, password, onClose]);
+    }, [loginIdentifier, loginPassword, onClose]);
 
     // ── Sign Up ────────────────────────────────────────────
     const handleSignup = useCallback(async (e: React.FormEvent) => {
         e.preventDefault();
         const newErrors: Record<string, string> = {};
+        const usernameError = validateUsername(username);
+        if (usernameError) newErrors.username = usernameError;
         const emailError = validateCollegeEmail(email);
         if (emailError) newErrors.email = emailError;
         const passwordError = validatePassword(password);
@@ -133,7 +156,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         if (error) { setErrors({ form: error }); return; }
 
         setView('otp');
-    }, [email, password, confirmPassword]);
+    }, [username, email, password, confirmPassword]);
 
     // ── OTP ────────────────────────────────────────────────
     const handleOtpChange = (index: number, value: string) => {
@@ -166,10 +189,18 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
         setErrors({});
         setIsSubmitting(true);
-        const { error } = await verifyOtp(email, code);
+        const { error, user } = await verifyOtp(email, code);
         setIsSubmitting(false);
 
         if (error) { setErrors({ otp: error }); return; }
+
+        // Save username + email to profile right after OTP verification
+        if (user) {
+            await upsertProfile(user.id, {
+                display_name: username,
+                email: email,
+            });
+        }
 
         setSuccessMessage('Account verified! Welcome to MODULY AI.');
         setTimeout(onClose, 1400);
@@ -188,10 +219,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             return;
         }
 
-        // Clear old OTP digits so user enters the fresh code
         setOtp(Array(6).fill(''));
         setTimeout(() => otpRefs.current[0]?.focus(), 50);
-        // Start 60-second cooldown to respect Supabase rate limits
         setResendCooldown(60);
     };
 
@@ -255,31 +284,36 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         {view === 'login' && (
                             <form className="auth-form" onSubmit={handleLogin} noValidate>
                                 <div className="form-group">
-                                    <label htmlFor="login-email">College Email</label>
-                                    <div className={`input-wrapper ${errors.email ? 'error' : ''}`}>
-                                        <EmailIcon />
+                                    <label htmlFor="login-identifier">Email or Username</label>
+                                    <div className={`input-wrapper ${errors.loginIdentifier ? 'error' : ''}`}>
+                                        <AtIcon />
                                         <input
-                                            id="login-email" type="email" placeholder="you@college.edu.in"
-                                            value={email} autoComplete="email"
-                                            onChange={(e) => { setEmail(e.target.value); clearError('email'); }}
+                                            id="login-identifier"
+                                            type="text"
+                                            placeholder="you@college.edu.in or your_username"
+                                            value={loginIdentifier}
+                                            autoComplete="username"
+                                            onChange={(e) => { setLoginIdentifier(e.target.value); clearError('loginIdentifier'); }}
                                         />
                                     </div>
-                                    {errors.email ? <span className="field-error">{errors.email}</span>
-                                        : <span className="field-hint">Use your institutional email address</span>}
+                                    {errors.loginIdentifier
+                                        ? <span className="field-error">{errors.loginIdentifier}</span>
+                                        : <span className="field-hint">Enter your college email or your username</span>
+                                    }
                                 </div>
 
                                 <div className="form-group">
                                     <label htmlFor="login-password">Password</label>
-                                    <div className={`input-wrapper ${errors.password ? 'error' : ''}`}>
+                                    <div className={`input-wrapper ${errors.loginPassword ? 'error' : ''}`}>
                                         <LockIcon />
                                         <input
-                                            id="login-password" type={showPassword ? 'text' : 'password'}
-                                            placeholder="Enter your password" value={password} autoComplete="current-password"
-                                            onChange={(e) => { setPassword(e.target.value); clearError('password'); }}
+                                            id="login-password" type={showLoginPassword ? 'text' : 'password'}
+                                            placeholder="Enter your password" value={loginPassword} autoComplete="current-password"
+                                            onChange={(e) => { setLoginPassword(e.target.value); clearError('loginPassword'); }}
                                         />
-                                        <EyeToggle show={showPassword} onToggle={() => setShowPassword(v => !v)} />
+                                        <EyeToggle show={showLoginPassword} onToggle={() => setShowLoginPassword(v => !v)} />
                                     </div>
-                                    {errors.password && <span className="field-error">{errors.password}</span>}
+                                    {errors.loginPassword && <span className="field-error">{errors.loginPassword}</span>}
                                 </div>
 
                                 <button type="submit" className="auth-submit" disabled={isSubmitting}>
@@ -291,6 +325,26 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         {/* ── Sign Up Form ── */}
                         {view === 'signup' && (
                             <form className="auth-form" onSubmit={handleSignup} noValidate>
+                                {/* Username — above email */}
+                                <div className="form-group">
+                                    <label htmlFor="signup-username">Username</label>
+                                    <div className={`input-wrapper ${errors.username ? 'error' : ''}`}>
+                                        <UsernameIcon />
+                                        <input
+                                            id="signup-username"
+                                            type="text"
+                                            placeholder="your_username"
+                                            value={username}
+                                            autoComplete="username"
+                                            onChange={(e) => { setUsername(e.target.value); clearError('username'); }}
+                                        />
+                                    </div>
+                                    {errors.username
+                                        ? <span className="field-error">{errors.username}</span>
+                                        : <span className="field-hint">Letters, numbers, and _ - . @ allowed (3–30 chars)</span>
+                                    }
+                                </div>
+
                                 <div className="form-group">
                                     <label htmlFor="signup-email">College Email</label>
                                     <div className={`input-wrapper ${errors.email ? 'error' : ''}`}>
@@ -301,8 +355,10 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                             onChange={(e) => { setEmail(e.target.value); clearError('email'); }}
                                         />
                                     </div>
-                                    {errors.email ? <span className="field-error">{errors.email}</span>
-                                        : <span className="field-hint">Personal emails (Gmail, Yahoo, etc.) are not accepted</span>}
+                                    {errors.email
+                                        ? <span className="field-error">{errors.email}</span>
+                                        : <span className="field-hint">Personal emails (Gmail, Yahoo, etc.) are not accepted</span>
+                                    }
                                 </div>
 
                                 <div className="form-group">
@@ -360,6 +416,9 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                         key={index}
                                         ref={(el) => { otpRefs.current[index] = el; }}
                                         type="text" inputMode="numeric" maxLength={1}
+                                        aria-label={`OTP digit ${index + 1}`}
+                                        title={`OTP digit ${index + 1}`}
+                                        placeholder="·"
                                         value={digit} className={`otp-digit ${digit ? 'filled' : ''}`}
                                         onChange={(e) => handleOtpChange(index, e.target.value)}
                                         onKeyDown={(e) => handleOtpKeyDown(index, e)}
@@ -416,6 +475,22 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 }
 
 /* ── Reusable icon components ── */
+function AtIcon() {
+    return (
+        <svg className="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="4" /><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94" />
+        </svg>
+    );
+}
+
+function UsernameIcon() {
+    return (
+        <svg className="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+        </svg>
+    );
+}
+
 function EmailIcon({ size = 18 }: { size?: number }) {
     return (
         <svg className="input-icon" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -457,4 +532,3 @@ function EyeToggle({ show, onToggle }: { show: boolean; onToggle: () => void }) 
         </button>
     );
 }
-

@@ -134,7 +134,7 @@ export function Onboarding({ user, onComplete, onSignOut }: OnboardingProps) {
     setIsSubmitting(false);
 
     if (error) {
-      setSubmitError('Something went wrong saving your info. Please try again.');
+      setSubmitError(`Save failed: ${error}`);
       return;
     }
 
