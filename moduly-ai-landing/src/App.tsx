@@ -22,47 +22,90 @@ import './App.css';
 
 type AppView = 'landing' | 'onboarding' | 'dashboard' | 'loading';
 
+// ---------------------------------------------------------------------------
+// Synchronous helpers — run before first render, zero network cost
+// ---------------------------------------------------------------------------
+
+/**
+ * Read Supabase's own session out of localStorage without any async call.
+ * Returns the stored user if found and not obviously expired, else null.
+ */
+function getStoredUser(): User | null {
+  try {
+    const key = Object.keys(localStorage).find(
+      k => k.startsWith('sb-') && k.includes('-auth-token')
+    );
+    if (!key) return null;
+    const parsed = JSON.parse(localStorage.getItem(key) ?? '{}');
+    // Supabase v2 JSON shape: { access_token, refresh_token, expires_at, user }
+    const user: User | null = parsed?.user ?? parsed?.session?.user ?? null;
+    if (!user) return null;
+    // Reject tokens that have already expired (unix seconds)
+    const expiresAt: number = parsed?.expires_at ?? 0;
+    if (expiresAt && expiresAt * 1000 < Date.now()) return null;
+    return user;
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// App component
+// ---------------------------------------------------------------------------
+
 function AppContent() {
   const [authOpen, setAuthOpen] = useState(false);
-  const [view, setView] = useState<AppView>('loading');
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  // Determine where to route after auth
-  const resolveRoute = async (user: User) => {
-    setCurrentUser(user);
-    const profile = await getProfile(user.id);
-    if (profile?.onboarding_complete) {
-      setView('dashboard');
-    } else {
-      setView('onboarding');
-    }
-  };
+  /**
+   * OPTIMISTIC INIT:
+   * If Supabase has a stored (non-expired) session → assume dashboard immediately.
+   * Background useEffect will verify and correct (onboarding / landing) silently.
+   * This eliminates the loading spinner on every page/server reload.
+   */
+  const storedUser = getStoredUser();
+  const [view, setView]           = useState<AppView>(storedUser ? 'dashboard' : 'loading');
+  const [currentUser, setCurrentUser] = useState<User | null>(storedUser);
 
   const handleSignOut = () => {
     setCurrentUser(null);
     setView('landing');
   };
 
-  const handleOnboardingComplete = () => {
-    setView('dashboard');
-  };
+  const handleOnboardingComplete = () => setView('dashboard');
 
   useEffect(() => {
-    // Check existing session on mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        resolveRoute(session.user);
-      } else {
+    // Background verification – no UI impact if session is still valid
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session?.user) {
+        // Truly signed out or token expired → landing
+        setCurrentUser(null);
         setView('landing');
+        return;
+      }
+
+      const user = session.user;
+      setCurrentUser(user);
+
+      // Check whether onboarding is actually complete
+      const profile = await getProfile(user.id);
+
+      if (profile?.onboarding_complete === false) {
+        // Explicit false → onboarding genuinely not done
+        setView('onboarding');
+      } else {
+        // true, or profile null (fetch failed) → stay/go to dashboard
+        setView('dashboard');
       }
     });
 
-    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN' && session?.user) {
           setAuthOpen(false);
-          await resolveRoute(session.user);
+          setCurrentUser(session.user);
+          const profile = await getProfile(session.user.id);
+          // false explicitly → onboarding; anything else (true/null) → dashboard
+          setView(profile?.onboarding_complete === false ? 'onboarding' : 'dashboard');
         } else if (event === 'SIGNED_OUT') {
           handleSignOut();
         }
@@ -73,7 +116,8 @@ function AppContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Full-screen loading spinner while checking session
+  // ── Render ──────────────────────────────────────────────────────────────
+
   if (view === 'loading') {
     return (
       <div className="app-loading">
@@ -82,7 +126,6 @@ function AppContent() {
     );
   }
 
-  // Post-auth pages (no landing page chrome)
   if (view === 'dashboard' && currentUser) {
     return <Dashboard user={currentUser} onSignOut={handleSignOut} />;
   }
@@ -97,7 +140,7 @@ function AppContent() {
     );
   }
 
-  // Landing page (default)
+  // Landing page (unauthenticated)
   return (
     <div className="app">
       <Header onAuthOpen={() => setAuthOpen(true)} />

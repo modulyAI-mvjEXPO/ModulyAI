@@ -237,6 +237,21 @@
   position: relative;
 }
 
+/*
+ * StudyMode renders as a direct child of db-main.
+ * Absolutely position it to fill db-main below db-header (64px),
+ * bypassing the flex offset bug caused by position:sticky + overflow:hidden.
+ */
+.db-main > .sm-shell {
+  position: absolute;
+  top: 64px;    /* exactly below db-header */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  flex: none;
+  z-index: 5;
+}
+
 /* Ambient blobs */
 .db-blob {
   position: absolute;
@@ -454,16 +469,8 @@
 [data-theme='dark'] .db-header-avatar { border-color: #111827; }
 
 /* ─── Scrollable content ──────────────────────────────────────────────── */
-.db-content {
-  flex: 1;
-  min-height: 0;     /* lets flex child shrink, enabling overflow-y */
-  overflow-y: auto;
-  padding: 32px;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-}
+.db-content { flex: 1; min-height: 0; overflow-y: auto; padding: 32px; z-index: 10; display: flex; flex-direction: column; gap: 28px; }
+.db-content--hidden { display: none; }
 
 /* Prevent sections from being squashed — they should overflow and scroll */
 .db-content > * {

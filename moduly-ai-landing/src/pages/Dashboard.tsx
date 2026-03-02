@@ -2,22 +2,25 @@ import { useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { useTheme } from '../context/ThemeContext';
 import { signOut } from '../lib/auth';
+import { StudyMode } from './StudyMode';
 import './Dashboard.css';
+
+type DashboardPage = 'overview' | 'study' | 'exam' | 'library' | 'upload' | 'settings';
 
 interface DashboardProps {
   user: User;
   onSignOut: () => void;
 }
 
-const NAV_MAIN = [
-  { icon: 'dashboard',      label: 'Overview',        active: true  },
-  { icon: 'school',         label: 'Study Mode',      active: false },
-  { icon: 'assignment',     label: 'Exam Mode',       active: false },
-  { icon: 'library_books',  label: 'Library',         active: false },
+const NAV_MAIN: { icon: string; label: string; page: DashboardPage }[] = [
+  { icon: 'dashboard',     label: 'Overview',   page: 'overview' },
+  { icon: 'school',        label: 'Study Mode', page: 'study'    },
+  { icon: 'assignment',    label: 'Exam Mode',  page: 'exam'     },
+  { icon: 'library_books', label: 'Library',    page: 'library'  },
 ];
-const NAV_TOOLS = [
-  { icon: 'upload_file',    label: 'Upload Docs',     active: false },
-  { icon: 'settings',       label: 'Settings',        active: false },
+const NAV_TOOLS: { icon: string; label: string; page: DashboardPage }[] = [
+  { icon: 'upload_file', label: 'Upload Docs', page: 'upload'   },
+  { icon: 'settings',    label: 'Settings',    page: 'settings' },
 ];
 
 const QUICK_ACTIONS = [
@@ -60,6 +63,7 @@ const SESSIONS = [
 export function Dashboard({ user, onSignOut }: DashboardProps) {
   const { theme, toggleTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activePage, setActivePage] = useState<DashboardPage>('overview');
 
   const displayName = user.user_metadata?.display_name
     ?? user.email?.split('@')[0]
@@ -90,7 +94,8 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
               <a
                 key={item.label}
                 href="#"
-                className={`db-nav-item ${item.active ? 'db-nav-item--active' : ''}`}
+                className={`db-nav-item ${activePage === item.page ? 'db-nav-item--active' : ''}`}
+                onClick={e => { e.preventDefault(); setActivePage(item.page); setSidebarOpen(false); }}
               >
                 <span className="material-icons-outlined db-nav-icon">{item.icon}</span>
                 {item.label}
@@ -99,7 +104,12 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
 
             <p className="db-nav-label db-nav-label--mt">Tools</p>
             {NAV_TOOLS.map(item => (
-              <a key={item.label} href="#" className="db-nav-item">
+              <a
+                key={item.label}
+                href="#"
+                className={`db-nav-item ${activePage === item.page ? 'db-nav-item--active' : ''}`}
+                onClick={e => { e.preventDefault(); setActivePage(item.page); setSidebarOpen(false); }}
+              >
                 <span className="material-icons-outlined db-nav-icon">{item.icon}</span>
                 {item.label}
               </a>
@@ -188,8 +198,13 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
           </div>
         </header>
 
-        {/* ── Scrollable content ── */}
-        <main className="db-content">
+        {/* ── Page content ── */}
+        {activePage === 'study' && (
+          <StudyMode user={user} />
+        )}
+
+        {/* ── Overview scrollable content ── */}
+        <main className={`db-content ${activePage !== 'overview' ? 'db-content--hidden' : ''}`}>
 
           {/* Welcome hero */}
           <section className="db-hero">
