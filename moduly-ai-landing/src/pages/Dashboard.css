@@ -238,17 +238,13 @@
 }
 
 /*
- * StudyMode renders as a direct child of db-main.
- * Absolutely position it to fill db-main below db-header (64px),
- * bypassing the flex offset bug caused by position:sticky + overflow:hidden.
+ * StudyMode fills all remaining vertical space in db-main after db-header.
+ * Using flex: 1 + min-height: 0 is robust — no absolute pos, no scroll math.
  */
 .db-main > .sm-shell {
-  position: absolute;
-  top: 64px;    /* exactly below db-header */
-  left: 0;
-  right: 0;
-  bottom: 0;
-  flex: none;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
   z-index: 5;
 }
 
@@ -287,10 +283,8 @@
   background: rgba(255, 255, 255, 0.85);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
-  position: sticky;
-  top: 0;
-  z-index: 20;
   flex-shrink: 0;
+  z-index: 20;
 }
 
 [data-theme='dark'] .db-header {
