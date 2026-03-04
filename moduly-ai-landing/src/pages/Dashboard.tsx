@@ -4,6 +4,7 @@ import { useTheme } from '../context/ThemeContext';
 import { signOut } from '../lib/auth';
 import { StudyMode } from './StudyMode';
 import { ExamMode } from './ExamMode';
+import { Library } from './Library';
 import './Dashboard.css';
 
 type DashboardPage = 'overview' | 'study' | 'exam' | 'library' | 'upload' | 'settings';
@@ -205,6 +206,9 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
         )}
         {activePage === 'exam' && (
           <ExamMode user={user} />
+        )}
+        {activePage === 'library' && (
+          <Library />
         )}
 
         {/* ── Overview scrollable content ── */}
