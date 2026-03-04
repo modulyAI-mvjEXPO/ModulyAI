@@ -319,9 +319,7 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
             </div>
           </section>
 
-          <footer className="db-footer">
-            © 2025 MODULY AI · Built for VTU Project Expo
-          </footer>
+
         </main>
       </div>
 
