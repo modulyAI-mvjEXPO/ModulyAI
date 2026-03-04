@@ -239,9 +239,10 @@
 
 /*
  * StudyMode fills all remaining vertical space in db-main after db-header.
- * Using flex: 1 + min-height: 0 is robust — no absolute pos, no scroll math.
+ * Because .sm-shell is inside the flex column .db-main, flex: 1 makes it grow.
  */
-.db-main > .sm-shell {
+.db-main > .sm-shell,
+.db-main > .em-shell {
   flex: 1;
   min-height: 0;
   min-width: 0;

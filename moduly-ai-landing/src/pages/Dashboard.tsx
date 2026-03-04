@@ -3,6 +3,7 @@ import type { User } from '@supabase/supabase-js';
 import { useTheme } from '../context/ThemeContext';
 import { signOut } from '../lib/auth';
 import { StudyMode } from './StudyMode';
+import { ExamMode } from './ExamMode';
 import './Dashboard.css';
 
 type DashboardPage = 'overview' | 'study' | 'exam' | 'library' | 'upload' | 'settings';
@@ -13,51 +14,51 @@ interface DashboardProps {
 }
 
 const NAV_MAIN: { icon: string; label: string; page: DashboardPage }[] = [
-  { icon: 'dashboard',     label: 'Overview',   page: 'overview' },
-  { icon: 'school',        label: 'Study Mode', page: 'study'    },
-  { icon: 'assignment',    label: 'Exam Mode',  page: 'exam'     },
-  { icon: 'library_books', label: 'Library',    page: 'library'  },
+  { icon: 'dashboard', label: 'Overview', page: 'overview' },
+  { icon: 'school', label: 'Study Mode', page: 'study' },
+  { icon: 'assignment', label: 'Exam Mode', page: 'exam' },
+  { icon: 'library_books', label: 'Library', page: 'library' },
 ];
 const NAV_TOOLS: { icon: string; label: string; page: DashboardPage }[] = [
-  { icon: 'upload_file', label: 'Upload Docs', page: 'upload'   },
-  { icon: 'settings',    label: 'Settings',    page: 'settings' },
+  { icon: 'upload_file', label: 'Upload Docs', page: 'upload' },
+  { icon: 'settings', label: 'Settings', page: 'settings' },
 ];
 
 const QUICK_ACTIONS = [
   {
-    icon:        'play_arrow',
-    bgIcon:      'play_circle',
-    title:       'Start Study Session',
-    desc:        'Resume from where you left off in Data Structures.',
-    color:       'primary',
+    icon: 'play_arrow',
+    bgIcon: 'play_circle',
+    title: 'Start Study Session',
+    desc: 'Resume from where you left off in Data Structures.',
+    color: 'primary',
   },
   {
-    icon:        'quiz',
-    bgIcon:      'analytics',
-    title:       'Analyse PYQs',
-    desc:        'AI analysis of Previous Year Questions.',
-    color:       'teal',
+    icon: 'quiz',
+    bgIcon: 'analytics',
+    title: 'Analyse PYQs',
+    desc: 'AI analysis of Previous Year Questions.',
+    color: 'teal',
   },
   {
-    icon:        'upload_file',
-    bgIcon:      'cloud_upload',
-    title:       'Upload Documents',
-    desc:        'Add notes or syllabus for AI processing.',
-    color:       'purple',
+    icon: 'upload_file',
+    bgIcon: 'cloud_upload',
+    title: 'Upload Documents',
+    desc: 'Add notes or syllabus for AI processing.',
+    color: 'purple',
   },
 ];
 
 const STATS = [
-  { value: '124',  label: 'Total Notes',    gradient: false },
-  { value: '450+', label: 'Total PYQs',     gradient: false },
-  { value: '89',   label: 'Important Qs',   gradient: true  },
-  { value: '12',   label: 'Recent Uploads', gradient: false },
+  { value: '124', label: 'Total Notes', gradient: false },
+  { value: '450+', label: 'Total PYQs', gradient: false },
+  { value: '89', label: 'Important Qs', gradient: true },
+  { value: '12', label: 'Recent Uploads', gradient: false },
 ];
 
 const SESSIONS = [
-  { subject: 'Data Structures',  module: 'Module 3: Trees & Graphs', date: 'Mar 1, 2025',  mode: 'Learning' },
-  { subject: 'Operating Systems',module: 'Module 1: Introduction',   date: 'Feb 28, 2025', mode: 'Quiz'     },
-  { subject: 'Database Mgmt',    module: 'Module 4: Normalization',  date: 'Feb 26, 2025', mode: 'Learning' },
+  { subject: 'Data Structures', module: 'Module 3: Trees & Graphs', date: 'Mar 1, 2025', mode: 'Learning' },
+  { subject: 'Operating Systems', module: 'Module 1: Introduction', date: 'Feb 28, 2025', mode: 'Quiz' },
+  { subject: 'Database Mgmt', module: 'Module 4: Normalization', date: 'Feb 26, 2025', mode: 'Learning' },
 ];
 
 export function Dashboard({ user, onSignOut }: DashboardProps) {
@@ -202,6 +203,9 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
         {activePage === 'study' && (
           <StudyMode user={user} />
         )}
+        {activePage === 'exam' && (
+          <ExamMode user={user} />
+        )}
 
         {/* ── Overview scrollable content ── */}
         <main className={`db-content ${activePage !== 'overview' ? 'db-content--hidden' : ''}`}>
@@ -235,7 +239,7 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
                 <div className="db-progress-ring">
                   <svg className="db-ring-svg" viewBox="0 0 48 48">
                     <circle className="db-ring-track" cx="24" cy="24" r="18" />
-                    <circle className="db-ring-fill"  cx="24" cy="24" r="18"
+                    <circle className="db-ring-fill" cx="24" cy="24" r="18"
                       strokeDasharray="113"
                       strokeDashoffset="28"
                     />
@@ -259,7 +263,7 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
                   <span className="material-icons-outlined db-action-icon">{a.icon}</span>
                 </div>
                 <h3 className="db-action-title">{a.title}</h3>
-                <p  className="db-action-desc">{a.desc}</p>
+                <p className="db-action-desc">{a.desc}</p>
               </button>
             ))}
           </section>
