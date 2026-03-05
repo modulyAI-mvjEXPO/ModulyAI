@@ -32,7 +32,7 @@ function validateUsername(username: string): string | null {
     if (!username) return 'Username is required';
     if (username.length < 3) return 'Username must be at least 3 characters';
     if (username.length > 30) return 'Username can be at most 30 characters';
-    if (!/^[a-zA-Z0-9_\-\.@]+$/.test(username)) {
+    if (!/^[a-zA-Z0-9_\-.@]+$/.test(username)) {
         return 'Only letters, numbers and _ - . @ are allowed';
     }
     return null;

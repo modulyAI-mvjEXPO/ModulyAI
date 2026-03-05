@@ -5,6 +5,8 @@ import { signOut } from '../lib/auth';
 import { StudyMode } from './StudyMode';
 import { ExamMode } from './ExamMode';
 import { Library } from './Library';
+import { UploadDocs } from './UploadDocs';
+import { Settings } from './Settings';
 import './Dashboard.css';
 
 type DashboardPage = 'overview' | 'study' | 'exam' | 'library' | 'upload' | 'settings';
@@ -209,6 +211,12 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
         )}
         {activePage === 'library' && (
           <Library />
+        )}
+        {activePage === 'upload' && (
+          <UploadDocs />
+        )}
+        {activePage === 'settings' && (
+          <Settings user={user} />
         )}
 
         {/* ── Overview scrollable content ── */}

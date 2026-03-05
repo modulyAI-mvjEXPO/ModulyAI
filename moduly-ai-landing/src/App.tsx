@@ -63,7 +63,7 @@ function AppContent() {
    * This eliminates the loading spinner on every page/server reload.
    */
   const storedUser = getStoredUser();
-  const [view, setView]           = useState<AppView>(storedUser ? 'dashboard' : 'loading');
+  const [view, setView] = useState<AppView>(storedUser ? 'dashboard' : 'loading');
   const [currentUser, setCurrentUser] = useState<User | null>(storedUser);
 
   const handleSignOut = () => {
@@ -113,7 +113,6 @@ function AppContent() {
     );
 
     return () => subscription.unsubscribe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Render ──────────────────────────────────────────────────────────────
