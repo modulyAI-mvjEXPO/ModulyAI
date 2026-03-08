@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { FileUpload } from '../components/FileUpload';
 import './UploadDocs.css';
 
 const MOCK_UPLOADS = [
@@ -72,88 +73,7 @@ export function UploadDocs() {
                                 <span className="material-icons-outlined">cloud_upload</span>
                                 New Upload
                             </h2>
-
-                            <div className="ud-dropzone">
-                                <div className="ud-dropzone-bg"></div>
-                                <div className="ud-dropzone-content">
-                                    <div className="ud-dropzone-icon">
-                                        <span className="material-icons-outlined">upload_file</span>
-                                    </div>
-                                    <p className="ud-dropzone-text">Click to upload or drag and drop</p>
-                                    <p className="ud-dropzone-subtext">PDF, DOCX, JPG or PNG (MAX. 10MB)</p>
-                                </div>
-                                <input type="file" className="ud-file-input" aria-label="Upload File" />
-                            </div>
-
-                            <form className="ud-form">
-                                <div className="ud-form-grid">
-                                    <div className="ud-form-group--full">
-                                        <label className="ud-label" htmlFor="doc-title">Document Title</label>
-                                        <input
-                                            type="text"
-                                            id="doc-title"
-                                            className="ud-input"
-                                            placeholder="e.g., Module 3: Trees & Graphs Notes"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="ud-label" htmlFor="doc-type">Document Type</label>
-                                        <div className="ud-select-wrap">
-                                            <select id="doc-type" className="ud-select">
-                                                <option value="">Select Type</option>
-                                                <option value="handwritten">Handwritten Notes</option>
-                                                <option value="summarized">Summarized Notes</option>
-                                                <option value="computer-generated">Computer Generated</option>
-                                                <option value="pyqs">PYQs (Previous Year Questions)</option>
-                                                <option value="cheat-sheets">Cheat Sheets</option>
-                                                <option value="mind-maps">Mind Maps</option>
-                                            </select>
-                                            <span className="material-icons-outlined ud-select-icon">expand_more</span>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="ud-label" htmlFor="subject">Subject (Optional)</label>
-                                        <div className="ud-select-wrap">
-                                            <select id="subject" className="ud-select">
-                                                <option value="">Select Subject</option>
-                                                <option value="ds">Data Structures</option>
-                                                <option value="os">Operating Systems</option>
-                                                <option value="dbms">Database Mgmt</option>
-                                                <option value="cn">Computer Networks</option>
-                                            </select>
-                                            <span className="material-icons-outlined ud-select-icon">expand_more</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="ud-form-group--full">
-                                        <label className="ud-label" htmlFor="description">Description</label>
-                                        <textarea
-                                            id="description"
-                                            className="ud-textarea"
-                                            placeholder="Briefly describe the contents of this document..."
-                                        ></textarea>
-                                    </div>
-                                </div>
-
-                                <div className="ud-consent-box">
-                                    <div className="ud-consent-inner">
-                                        <div className="ud-consent-checkbox-wrap">
-                                            <input type="checkbox" id="cloud-consent" className="ud-checkbox" />
-                                        </div>
-                                        <label htmlFor="cloud-consent" className="ud-consent-label">
-                                            <strong>Cloud Consent:</strong> By uploading, you agree that this document will be stored on our cloud server and made accessible to other users in the universal library.
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div className="ud-submit-wrap">
-                                    <button type="button" className="ud-submit-btn">
-                                        Upload to Cloud
-                                    </button>
-                                </div>
-                            </form>
+                            <FileUpload />
                         </div>
                     </div>
 
