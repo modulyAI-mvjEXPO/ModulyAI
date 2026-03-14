@@ -7,6 +7,7 @@ const s3Client = new S3Client({
         accessKeyId: process.env.UTHO_ACCESS_KEY,
         secretAccessKey: process.env.UTHO_SECRET_KEY,
     },
+    forcePathStyle: true,
 });
 
 export const handler = async (event) => {
