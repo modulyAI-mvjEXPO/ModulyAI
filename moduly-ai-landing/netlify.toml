@@ -8,3 +8,13 @@
   port = 8888
   targetPort = 5173
   framework = "#custom"
+
+[[redirects]]
+  from = "/get-upload-url"
+  to = "/.netlify/functions/get-upload-url"
+  status = 200
+
+[[redirects]]
+  from = "/list-files"
+  to = "/.netlify/functions/list-files"
+  status = 200
