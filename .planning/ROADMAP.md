@@ -32,11 +32,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. A Netlify Function can call NVIDIA NIM embedding API and receive a 1024-dimensional vector back
   3. If NVIDIA NIM embedding API is unavailable, the system automatically falls back to an alternative embedding provider and returns a valid vector
   4. A Netlify Function can call OpenRouter for LLM chat completions and receive a streamed response
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 01-01: Supabase pgvector schema and migrations
-- [ ] 01-02: AI utility clients (embedding, LLM, fallback chain)
+- [ ] 01-01-PLAN.md — pgvector schema, AI types, server Supabase client, Vitest setup
+- [ ] 01-02-PLAN.md — Embedding client (NVIDIA NIM + fallback) and LLM client (OpenRouter + fallback) with tests
 
 ### Phase 2: Document Processing Pipeline
 **Goal**: When a user uploads a PDF, it is automatically processed into searchable vector embeddings with visible status tracking
