@@ -5,6 +5,7 @@
   right: 0;
   z-index: 1000;
   background: rgba(249, 250, 251, 0.85);
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--color-border);
   transition: background var(--transition-base);
