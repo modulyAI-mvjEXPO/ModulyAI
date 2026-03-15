@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { ThemeProvider } from './context/ThemeContext';
 import { Header } from './sections/Header';
-import { Hero } from './sections/Hero';
 import { Problem } from './sections/Problem';
 import { Solution } from './sections/Solution';
 import { Modes } from './sections/Modes';
@@ -52,6 +51,8 @@ function getStoredUser(): User | null {
 // ---------------------------------------------------------------------------
 // App component
 // ---------------------------------------------------------------------------
+
+import { WavyBackgroundDemo } from './components/demo';
 
 function AppContent() {
   const [authOpen, setAuthOpen] = useState(false);
@@ -144,7 +145,7 @@ function AppContent() {
     <div className="app">
       <Header onAuthOpen={() => setAuthOpen(true)} />
       <main>
-        <Hero />
+        <WavyBackgroundDemo />
         <Problem />
         <Solution />
         <Modes />
