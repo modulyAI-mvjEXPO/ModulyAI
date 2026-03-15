@@ -93,38 +93,38 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| RAG-01 | — | Pending |
-| RAG-02 | — | Pending |
-| RAG-03 | — | Pending |
-| RAG-04 | — | Pending |
-| RAG-05 | — | Pending |
-| RAG-06 | — | Pending |
-| RAG-07 | — | Pending |
-| RAG-08 | — | Pending |
-| STUDY-01 | — | Pending |
-| STUDY-02 | — | Pending |
-| STUDY-03 | — | Pending |
-| STUDY-04 | — | Pending |
-| STUDY-05 | — | Pending |
-| EXAM-01 | — | Pending |
-| EXAM-02 | — | Pending |
-| EXAM-03 | — | Pending |
-| EXAM-04 | — | Pending |
-| EXAM-05 | — | Pending |
-| LIB-01 | — | Pending |
-| LIB-02 | — | Pending |
-| LIB-03 | — | Pending |
-| DEMO-01 | — | Pending |
-| DEMO-02 | — | Pending |
-| DEMO-03 | — | Pending |
-| DEMO-04 | — | Pending |
-| DEMO-05 | — | Pending |
+| RAG-01 | Phase 2: Document Processing Pipeline | Pending |
+| RAG-02 | Phase 2: Document Processing Pipeline | Pending |
+| RAG-03 | Phase 2: Document Processing Pipeline | Pending |
+| RAG-04 | Phase 1: AI Foundation | Pending |
+| RAG-05 | Phase 2: Document Processing Pipeline | Pending |
+| RAG-06 | Phase 2: Document Processing Pipeline | Pending |
+| RAG-07 | Phase 2: Document Processing Pipeline | Pending |
+| RAG-08 | Phase 1: AI Foundation | Pending |
+| STUDY-01 | Phase 3: Study Mode Core | Pending |
+| STUDY-02 | Phase 3: Study Mode Core | Pending |
+| STUDY-03 | Phase 4: Study Mode Enhancement | Pending |
+| STUDY-04 | Phase 4: Study Mode Enhancement | Pending |
+| STUDY-05 | Phase 4: Study Mode Enhancement | Pending |
+| EXAM-01 | Phase 5: Exam Mode | Pending |
+| EXAM-02 | Phase 5: Exam Mode | Pending |
+| EXAM-03 | Phase 5: Exam Mode | Pending |
+| EXAM-04 | Phase 6: PYQ Intelligence | Pending |
+| EXAM-05 | Phase 5: Exam Mode | Pending |
+| LIB-01 | Phase 7: Community Library | Pending |
+| LIB-02 | Phase 7: Community Library | Pending |
+| LIB-03 | Phase 7: Community Library | Pending |
+| DEMO-01 | Phase 8: Demo Hardening | Pending |
+| DEMO-02 | Phase 8: Demo Hardening | Pending |
+| DEMO-03 | Phase 8: Demo Hardening | Pending |
+| DEMO-04 | Phase 8: Demo Hardening | Pending |
+| DEMO-05 | Phase 8: Demo Hardening | Pending |
 
 **Coverage:**
 - v1 requirements: 26 total
-- Mapped to phases: 0
-- Unmapped: 26 ⚠️ (will be mapped during roadmap creation)
+- Mapped to phases: 26 ✓
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-16*
-*Last updated: 2026-03-16 after initial definition*
+*Last updated: 2026-03-16 after roadmap creation*
