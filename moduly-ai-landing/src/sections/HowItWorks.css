@@ -1,5 +1,5 @@
 .how-it-works {
-  background: var(--color-background);
+  background: var(--background);
 }
 
 .steps-grid {
@@ -9,19 +9,18 @@
 }
 
 .step-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-xl);
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
   padding: var(--space-8);
   text-align: center;
   position: relative;
-  transition: all var(--transition-base);
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
 }
 
 .step-card:hover {
-  transform: translateY(-4px);
+  transform: translate(-4px, -4px);
   box-shadow: var(--shadow-lg);
-  border-color: var(--color-accent);
 }
 
 .step-number {
@@ -30,12 +29,9 @@
   right: var(--space-4);
   font-size: var(--font-size-3xl);
   font-weight: 800;
-  color: var(--color-border);
+  color: var(--border);
   line-height: 1;
-}
-
-[data-theme="dark"] .step-number {
-  color: var(--color-surface-elevated);
+  font-family: var(--font-mono);
 }
 
 .step-icon {
@@ -45,25 +41,25 @@
   align-items: center;
   justify-content: center;
   margin: 0 auto var(--space-5);
-  background: linear-gradient(135deg, rgba(124, 131, 253, 0.1), rgba(74, 222, 222, 0.1));
-  border-radius: var(--border-radius-lg);
-  color: var(--color-accent);
-}
-
-[data-theme="dark"] .step-icon {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(45, 212, 191, 0.15));
+  background: var(--accent);
+  border-radius: var(--radius);
+  color: #ffffff;
+  border: 2px solid var(--border);
+  box-shadow: var(--shadow-sm);
 }
 
 .step-card h3 {
   font-size: var(--font-size-xl);
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: var(--space-3);
+  color: var(--foreground);
 }
 
 .step-card p {
   font-size: var(--font-size-base);
   line-height: 1.7;
   margin: 0;
+  color: var(--muted-foreground);
 }
 
 .step-connector {
@@ -82,17 +78,17 @@
     max-width: 400px;
     margin: 0 auto;
   }
-  
+
   .step-connector {
     display: block;
     position: absolute;
     bottom: -28px;
     left: 50%;
     transform: translateX(-50%);
-    color: var(--color-accent);
+    color: var(--accent);
     z-index: 1;
   }
-  
+
   .step-card:last-child .step-connector {
     display: none;
   }

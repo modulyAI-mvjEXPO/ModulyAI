@@ -12,14 +12,15 @@ Transform the existing Moduly AI prototype (React 19 SPA with working auth, uplo
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: AI Foundation** - Supabase pgvector schema, embedding client, LLM client with multi-provider fallback
-- [ ] **Phase 2: Document Processing Pipeline** - PDF extraction, chunking, embedding, and status tracking from upload to searchable vectors
-- [ ] **Phase 3: Study Mode Core** - AI chat with RAG-grounded answers and real-time streaming, replacing mock responses
-- [ ] **Phase 4: Study Mode Enhancement** - Study Kit document selection, mark-based answer depth, and VTU curriculum awareness
-- [ ] **Phase 5: Exam Mode** - PYQ solver with question-by-question and full paper modes, VTU-formatted answers
-- [ ] **Phase 6: PYQ Intelligence** - Topic frequency analysis across past exam papers
-- [ ] **Phase 7: Community Library** - Real document browsing with filtering and removal requests from Supabase
-- [ ] **Phase 8: Demo Hardening** - Multi-provider fallback chain, cached responses, error handling, and pre-warming for live demo
+- [x] **Phase 1: AI Foundation** - Supabase pgvector schema, embedding client, LLM client with multi-provider fallback
+- [x] **Phase 2: Document Processing Pipeline** - PDF extraction, chunking, embedding, and status tracking from upload to searchable vectors
+- [x] **Phase 3: Study Mode Core** - AI chat with RAG-grounded answers and real-time streaming, replacing mock responses
+- [x] **Phase 4: Study Mode Enhancement** - Study Kit document selection, mark-based answer depth, and VTU curriculum awareness
+- [x] **Phase 5: Exam Mode** - PYQ solver with question-by-question and full paper modes, VTU-formatted answers
+- [x] **Phase 6: PYQ Intelligence** - Topic frequency analysis across past exam papers
+- [x] **Phase 7: Community Library** - Real document browsing with filtering and removal requests from Supabase
+- [x] **Phase 8: Demo Hardening** - Multi-provider fallback chain, cached responses, error handling, and pre-warming for live demo
+- [x] **Phase 9: Visual Redesign: New Theme System** - Replace all existing CSS/themes with new design system (CSS variables, wavy background, new fonts) across all pages, subpages, landing page, and auth modals
 
 ## Phase Details
 
@@ -132,11 +133,10 @@ Plans:
   2. All AI features display user-friendly error messages instead of raw API errors when something goes wrong
   3. Chat interfaces show typing/loading indicators while waiting for AI responses
   4. API connections are pre-warmed before the demo so there are no cold start delays
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 08-01: Multi-provider fallback chain and cached demo responses
-- [ ] 08-02: Error handling, loading states, and API pre-warming
+- [x] 08-01: Multi-provider fallback chain, DEMO_CACHE, sanitizeError, warm.mts, Dashboard pre-warm
 
 ## Progress
 
@@ -145,15 +145,26 @@ Phases execute in numeric order. Note: Phases 5, 6, and 7 have independent depen
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. AI Foundation | 0/2 | Not started | - |
-| 2. Document Processing Pipeline | 0/3 | Not started | - |
-| 3. Study Mode Core | 0/2 | Not started | - |
-| 4. Study Mode Enhancement | 0/2 | Not started | - |
-| 5. Exam Mode | 0/2 | Not started | - |
-| 6. PYQ Intelligence | 0/1 | Not started | - |
-| 7. Community Library | 0/2 | Not started | - |
-| 8. Demo Hardening | 0/2 | Not started | - |
+| 1. AI Foundation | 2/2 | Complete | 2026-03-16 |
+| 2. Document Processing Pipeline | 3/3 | Complete | 2026-03-16 |
+| 3. Study Mode Core | 2/2 | Complete | 2026-03-16 |
+| 4. Study Mode Enhancement | 2/2 | Complete | 2026-03-16 |
+| 5. Exam Mode | 2/2 | Complete | 2026-03-16 |
+| 6. PYQ Intelligence | 1/1 | Complete | 2026-03-17 |
+| 7. Community Library | 1/1 | Complete | 2026-03-17 |
+| 8. Demo Hardening | 1/1 | Complete | 2026-03-17 |
+| 9. Visual Redesign: New Theme System | 1/1 | Complete | 2026-03-17 |
+
+### Phase 9: Visual Redesign: New Theme System
+
+**Goal:** Replace all existing glassmorphism/gradient CSS with flat/brutalist design system per prompt.txt
+**Requirements**: Visual quality
+**Depends on:** Phase 8
+**Plans:** 1 plan
+
+Plans:
+- [x] 09-01: Install simplex-noise, add fonts (DM Sans + Space Mono), create WavyBackground component, rewrite all 26 CSS files to brutalist design
 
 ---
 *Roadmap created: 2026-03-16*
-*Last updated: 2026-03-16*
+*Last updated: 2026-03-17 (Phase 9 complete: Visual Redesign — brutalist design system)*

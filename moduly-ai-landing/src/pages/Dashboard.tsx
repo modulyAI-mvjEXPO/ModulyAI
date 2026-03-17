@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { useTheme } from '../context/ThemeContext';
 import { signOut } from '../lib/auth';
 import { StudyMode } from './StudyMode';
 import { ExamMode } from './ExamMode';
@@ -22,10 +21,7 @@ const NAV_MAIN: { icon: string; label: string; page: DashboardPage }[] = [
   { icon: 'assignment', label: 'Exam Mode', page: 'exam' },
   { icon: 'library_books', label: 'Library', page: 'library' },
 ];
-const NAV_TOOLS: { icon: string; label: string; page: DashboardPage }[] = [
-  { icon: 'upload_file', label: 'Upload Docs', page: 'upload' },
-  { icon: 'settings', label: 'Settings', page: 'settings' },
-];
+
 
 const QUICK_ACTIONS = [
   {
@@ -65,118 +61,103 @@ const SESSIONS = [
 ];
 
 export function Dashboard({ user, onSignOut }: DashboardProps) {
-  const { theme, toggleTheme } = useTheme();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activePage, setActivePage] = useState<DashboardPage>('overview');
+
+  useEffect(() => {
+    void fetch('/warm', { method: 'POST' });
+  }, []);
 
   const displayName = user.user_metadata?.display_name
     ?? user.email?.split('@')[0]
     ?? 'Student';
   const firstName = displayName.split(' ')[0];
 
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
+  // Close dropdown if clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!(e.target as Element).closest('.db-brand-nav-wrap')) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
   const handleSignOut = async () => {
+    setIsSigningOut(true);
     await signOut();
     onSignOut();
   };
 
   return (
-    <div className={`db-shell ${sidebarOpen ? 'db-shell--open' : ''}`}>
-
-      {/* ── Sidebar ─────────────────────────────────────────── */}
-      <aside className="db-sidebar">
-        <div>
-          {/* Brand */}
-          <div className="db-brand">
-            <div className="db-brand-logo">M</div>
-            <span className="db-brand-name">MODULY AI</span>
-          </div>
-
-          {/* Nav */}
-          <nav className="db-nav">
-            <p className="db-nav-label">Main</p>
-            {NAV_MAIN.map(item => (
-              <a
-                key={item.label}
-                href="#"
-                className={`db-nav-item ${activePage === item.page ? 'db-nav-item--active' : ''}`}
-                onClick={e => { e.preventDefault(); setActivePage(item.page); setSidebarOpen(false); }}
-              >
-                <span className="material-icons-outlined db-nav-icon">{item.icon}</span>
-                {item.label}
-              </a>
-            ))}
-
-            <p className="db-nav-label db-nav-label--mt">Tools</p>
-            {NAV_TOOLS.map(item => (
-              <a
-                key={item.label}
-                href="#"
-                className={`db-nav-item ${activePage === item.page ? 'db-nav-item--active' : ''}`}
-                onClick={e => { e.preventDefault(); setActivePage(item.page); setSidebarOpen(false); }}
-              >
-                <span className="material-icons-outlined db-nav-icon">{item.icon}</span>
-                {item.label}
-              </a>
-            ))}
-          </nav>
-        </div>
-
-        {/* User strip + theme toggle */}
-        <div className="db-sidebar-footer">
-          <div className="db-user-strip">
-            <div className="db-user-avatar">
-              {firstName.charAt(0).toUpperCase()}
-            </div>
-            <div className="db-user-info">
-              <p className="db-user-name">{displayName}</p>
-              <p className="db-user-email">{user.email}</p>
-            </div>
-          </div>
-
-          <div className="db-sidebar-actions">
-            <button className="db-theme-btn" onClick={toggleTheme}>
-              <span className="material-icons-outlined">
-                {theme === 'dark' ? 'light_mode' : 'dark_mode'}
-              </span>
-              Toggle Theme
-            </button>
-            <button className="db-signout-btn" onClick={handleSignOut}>
-              <span className="material-icons-outlined">logout</span>
-              Sign Out
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      {/* ── Main column ─────────────────────────────────────── */}
-      <div className="db-main">
-
-        {/* Ambient blobs */}
-        <div className="db-blob db-blob-1" />
-        <div className="db-blob db-blob-2" />
-
-        {/* ── Top header ── */}
-        <header className="db-header">
-          <div className="db-header-left">
-            <button
-              className="db-menu-btn"
-              onClick={() => setSidebarOpen(o => !o)}
-              aria-label="Toggle sidebar"
+    <div className="db-shell">
+      {/* ── Top header (Full Width) ── */}
+      <header className="db-header">
+        <div className="db-header-left">
+          <div className="db-brand-nav-wrap">
+            {/* Brand */}
+            <div 
+              className="db-brand db-brand--clickable" 
+              onClick={() => { setActivePage('overview'); setDropdownOpen(false); }}
+              role="button"
+              tabIndex={0}
             >
-              <span className="material-icons-outlined">menu</span>
+              <div className="db-brand-logo">M</div>
+              <span className="db-brand-name">MODULY AI</span>
+            </div>
+            
+            {/* Nav Dropdown Trigger */}
+            <button 
+              className={`db-nav-trigger ${dropdownOpen ? 'db-nav-trigger--active' : ''}`}
+              onClick={(e) => { e.stopPropagation(); setDropdownOpen(o => !o); }}
+              aria-label="Toggle navigation menu"
+              aria-expanded={dropdownOpen}
+            >
+              <span className="material-icons-outlined">expand_more</span>
             </button>
 
-            <div className="db-subject-wrap">
-              <select className="db-subject-select" aria-label="Select subject">
-                <option>Data Structures</option>
-                <option>Operating Systems</option>
-                <option>Database Mgmt</option>
-                <option>Computer Networks</option>
-              </select>
-              <span className="material-icons-outlined db-select-arrow">expand_more</span>
-            </div>
-            <span className="db-sem-badge">SEM 6</span>
+            {/* Nav Dropdown Menu */}
+            {dropdownOpen && (
+              <div className="db-nav-dropdown">
+                {NAV_MAIN.map(item => (
+                  <button
+                    key={item.label}
+                    className={`db-dropdown-item ${activePage === item.page ? 'db-dropdown-item--active' : ''}`}
+                    onClick={() => { setActivePage(item.page); setDropdownOpen(false); }}
+                  >
+                    <span className="material-icons-outlined db-dropdown-icon">{item.icon}</span>
+                    {item.label}
+                  </button>
+                ))}
+                <div className="db-dropdown-divider" />
+                <button 
+                  className="db-dropdown-item db-dropdown-item--danger" 
+                  onClick={handleSignOut}
+                  disabled={isSigningOut}
+                >
+                  <span className="material-icons-outlined db-dropdown-icon">
+                    {isSigningOut ? 'hourglass_empty' : 'logout'}
+                  </span>
+                  {isSigningOut ? 'Signing out...' : 'Sign Out'}
+                </button>
+              </div>
+            )}
           </div>
+
+          <div className="db-subject-wrap" style={{ marginLeft: '1.5rem' }}>
+            <select className="db-subject-select" aria-label="Select subject">
+              <option>Data Structures</option>
+              <option>Operating Systems</option>
+              <option>Database Mgmt</option>
+              <option>Computer Networks</option>
+            </select>
+            <span className="material-icons-outlined db-select-arrow">expand_more</span>
+          </div>
+          <span className="db-sem-badge">SEM 6</span>
+        </div>
 
           <div className="db-header-right">
             <div className="db-search-wrap">
@@ -188,6 +169,10 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
                 aria-label="Search"
               />
             </div>
+
+            <button className="db-notif-btn" aria-label="Settings" onClick={() => setActivePage('settings')}>
+              <span className="material-icons-outlined">settings</span>
+            </button>
 
             <button className="db-notif-btn" aria-label="Notifications">
               <span className="material-icons-outlined">notifications</span>
@@ -204,16 +189,16 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
 
         {/* ── Page content ── */}
         {activePage === 'study' && (
-          <StudyMode user={user} />
+          <StudyMode user={user} onNavigate={(page) => setActivePage(page as DashboardPage)} />
         )}
         {activePage === 'exam' && (
           <ExamMode user={user} />
         )}
         {activePage === 'library' && (
-          <Library />
+          <Library user={user} onNavigate={(page) => setActivePage(page as DashboardPage)} />
         )}
         {activePage === 'upload' && (
-          <UploadDocs />
+          <UploadDocs user={user} />
         )}
         {activePage === 'settings' && (
           <Settings user={user} />
@@ -330,19 +315,7 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
               </table>
             </div>
           </section>
-
-
         </main>
-      </div>
-
-      {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div
-          className="db-overlay"
-          onClick={() => setSidebarOpen(false)}
-          aria-hidden="true"
-        />
-      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 .scope {
-  background: var(--color-surface);
+  background: var(--surface);
 }
 
 .scope-grid {
@@ -9,23 +9,24 @@
 }
 
 .scope-card {
-  background: var(--color-background);
-  border: 2px solid var(--color-border);
-  border-radius: var(--border-radius-2xl);
+  background: var(--background);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
   padding: var(--space-8);
   transition: all var(--transition-base);
 }
 
 .scope-card:hover {
-  box-shadow: var(--shadow-xl);
+  transform: translate(-4px, -4px);
+  box-shadow: var(--shadow-lg);
 }
 
 .scope-card.mvp:hover {
-  border-color: #10B981;
+  border-color: #00aa00;
 }
 
 .scope-card.future:hover {
-  border-color: var(--color-secondary);
+  border-color: var(--accent);
 }
 
 .scope-header {
@@ -34,7 +35,7 @@
   gap: var(--space-4);
   margin-bottom: var(--space-6);
   padding-bottom: var(--space-6);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 2px solid var(--border);
 }
 
 .scope-icon {
@@ -43,28 +44,31 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--border-radius-lg);
+  border-radius: var(--radius);
   color: white;
+  flex-shrink: 0;
 }
 
 .mvp-icon {
-  background: linear-gradient(135deg, #10B981, #059669);
+  background: #00aa00;
 }
 
 .future-icon {
-  background: linear-gradient(135deg, var(--color-secondary), #6366F1);
+  background: var(--accent);
 }
 
 .scope-header h3 {
   font-size: var(--font-size-2xl);
   font-weight: 700;
   margin-bottom: var(--space-1);
+  color: var(--foreground);
 }
 
 .scope-subtitle {
   font-size: var(--font-size-sm);
-  color: var(--color-text-tertiary);
+  color: var(--muted-foreground);
   font-weight: 500;
+  font-family: var(--font-mono);
 }
 
 .scope-list {
@@ -78,8 +82,8 @@
   gap: var(--space-3);
   padding: var(--space-3) 0;
   font-size: var(--font-size-base);
-  color: var(--color-text-primary);
-  border-bottom: 1px solid var(--color-border-subtle);
+  color: var(--foreground);
+  border-bottom: 1px solid var(--border);
 }
 
 .scope-list li:last-child {
@@ -92,17 +96,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(16, 185, 129, 0.15);
-  color: #10B981;
-  border-radius: 4px;
+  background: #00aa00;
+  color: white;
+  border-radius: var(--radius);
   flex-shrink: 0;
 }
 
 .future-dot {
   width: 8px;
   height: 8px;
-  background: var(--color-secondary);
-  border-radius: 50%;
+  background: var(--accent);
+  border-radius: var(--radius);
   flex-shrink: 0;
 }
 
@@ -115,26 +119,21 @@
   padding: var(--space-2) var(--space-4);
   font-size: var(--font-size-sm);
   font-weight: 600;
-  border-radius: 100px;
+  border-radius: var(--radius);
+  border: 2px solid var(--border);
+  font-family: var(--font-mono);
 }
 
 .status-badge.implemented {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10B981;
+  background: #00aa00;
+  color: white;
+  border-color: #00aa00;
 }
 
 .status-badge.planned {
-  background: rgba(124, 131, 253, 0.15);
-  color: var(--color-secondary);
-}
-
-[data-theme="dark"] .status-badge.implemented {
-  background: rgba(16, 185, 129, 0.2);
-}
-
-[data-theme="dark"] .status-badge.planned {
-  background: rgba(139, 92, 246, 0.2);
-  color: var(--color-secondary);
+  background: var(--secondary);
+  color: var(--foreground);
+  border-color: var(--border);
 }
 
 @media (max-width: 1024px) {

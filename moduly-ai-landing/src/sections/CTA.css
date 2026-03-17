@@ -1,23 +1,8 @@
 .cta {
-  background: linear-gradient(135deg, var(--color-primary) 0%, #1a1445 100%);
-  color: white;
+  background: var(--foreground);
+  color: var(--background);
   position: relative;
   overflow: hidden;
-}
-
-[data-theme="dark"] .cta {
-  background: linear-gradient(135deg, #0B0F19 0%, #1a1a2e 100%);
-}
-
-.cta::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  right: -30%;
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(74, 222, 222, 0.1) 0%, transparent 70%);
-  pointer-events: none;
 }
 
 .cta-content {
@@ -33,41 +18,51 @@
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-2) var(--space-4);
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 100px;
+  background: transparent;
+  border: 2px solid var(--background);
+  border-radius: var(--radius);
   font-size: var(--font-size-sm);
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+  color: var(--background);
   margin-bottom: var(--space-8);
+  font-family: var(--font-mono);
 }
 
 .cta-badge .badge-dot {
   width: 8px;
   height: 8px;
-  background: var(--color-accent);
-  border-radius: 50%;
+  background: var(--primary);
+  border-radius: var(--radius);
   animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
 .cta h2 {
   font-size: var(--font-size-4xl);
   font-weight: 700;
-  color: white;
+  color: var(--background);
   margin-bottom: var(--space-6);
   line-height: 1.2;
 }
 
 .cta-statement {
   font-size: var(--font-size-xl);
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--background);
+  opacity: 0.85;
   line-height: 1.7;
   margin-bottom: var(--space-8);
 }
 
 .cta-statement .highlight {
-  color: var(--color-accent);
-  font-weight: 600;
+  color: var(--secondary);
+  font-weight: 700;
+  opacity: 1;
+  background: var(--secondary);
+  padding: 0 4px;
 }
 
 .cta-features {
@@ -84,7 +79,7 @@
   align-items: center;
   gap: var(--space-2);
   font-size: var(--font-size-base);
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--background);
 }
 
 .feature-check {
@@ -93,36 +88,38 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(45, 212, 191, 0.2);
-  color: var(--color-accent);
-  border-radius: 50%;
+  background: #00aa00;
+  color: white;
+  border-radius: var(--radius);
 }
 
 .cta-divider {
   width: 60px;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.2);
+  height: 2px;
+  background: var(--background);
+  opacity: 0.3;
   margin: var(--space-8) auto;
 }
 
 .cta-subtitle {
   font-size: var(--font-size-lg);
-  font-weight: 600;
-  color: var(--color-accent);
+  font-weight: 700;
+  color: var(--secondary);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin: 0;
+  font-family: var(--font-mono);
 }
 
 @media (max-width: 768px) {
   .cta h2 {
     font-size: var(--font-size-3xl);
   }
-  
+
   .cta-statement {
     font-size: var(--font-size-lg);
   }
-  
+
   .cta-features {
     flex-direction: column;
     gap: var(--space-4);

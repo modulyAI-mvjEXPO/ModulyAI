@@ -1,4 +1,4 @@
-import { ThemeToggle } from '../components/ThemeToggle';
+
 import './Header.css';
 
 interface HeaderProps {
@@ -20,7 +20,6 @@ export function Header({ onAuthOpen }: HeaderProps) {
                     <a href="#tech-stack" className="nav-link">Tech Stack</a>
                 </nav>
                 <div className="header-actions">
-                    <ThemeToggle />
                     <button className="header-cta" onClick={onAuthOpen}>
                         Get Started
                     </button>

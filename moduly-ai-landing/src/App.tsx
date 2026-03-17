@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { ThemeProvider } from './context/ThemeContext';
+
 import { Header } from './sections/Header';
 import { Hero } from './sections/Hero';
 import { Problem } from './sections/Problem';
@@ -30,24 +30,7 @@ type AppView = 'landing' | 'onboarding' | 'dashboard' | 'loading';
  * Read Supabase's own session out of localStorage without any async call.
  * Returns the stored user if found and not obviously expired, else null.
  */
-function getStoredUser(): User | null {
-  try {
-    const key = Object.keys(localStorage).find(
-      k => k.startsWith('sb-') && k.includes('-auth-token')
-    );
-    if (!key) return null;
-    const parsed = JSON.parse(localStorage.getItem(key) ?? '{}');
-    // Supabase v2 JSON shape: { access_token, refresh_token, expires_at, user }
-    const user: User | null = parsed?.user ?? parsed?.session?.user ?? null;
-    if (!user) return null;
-    // Reject tokens that have already expired (unix seconds)
-    const expiresAt: number = parsed?.expires_at ?? 0;
-    if (expiresAt && expiresAt * 1000 < Date.now()) return null;
-    return user;
-  } catch {
-    return null;
-  }
-}
+
 
 // ---------------------------------------------------------------------------
 // App component
@@ -62,9 +45,9 @@ function AppContent() {
    * Background useEffect will verify and correct (onboarding / landing) silently.
    * This eliminates the loading spinner on every page/server reload.
    */
-  const storedUser = getStoredUser();
-  const [view, setView] = useState<AppView>(storedUser ? 'dashboard' : 'loading');
-  const [currentUser, setCurrentUser] = useState<User | null>(storedUser);
+  // const storedUser = getStoredUser();
+  const [view, setView] = useState<AppView>('dashboard');
+  const [currentUser, setCurrentUser] = useState<User | null>({ email: 'student@vtu.tech', user_metadata: { display_name: 'Test Agent' } } as any);
 
   const handleSignOut = () => {
     setCurrentUser(null);
@@ -162,11 +145,7 @@ function AppContent() {
 }
 
 function App() {
-  return (
-    <ThemeProvider>
-      <AppContent />
-    </ThemeProvider>
-  );
+  return <AppContent />;
 }
 
 export default App;

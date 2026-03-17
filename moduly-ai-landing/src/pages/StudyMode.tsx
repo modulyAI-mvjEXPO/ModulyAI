@@ -1,8 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import type { User } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
+import type { DocumentRow, ChatResponse } from '../lib/ai/types';
 import './StudyMode.css';
 
-interface StudyModeProps { user: User; }
+interface StudyModeProps {
+  user: User;
+  onNavigate?: (page: string) => void;
+}
 
 // ─── Data Types ────────────────────────────────────────────────────────────
 
@@ -28,21 +33,48 @@ interface Message {
   isRich?: boolean;
 }
 
-// ─── Initial Data ──────────────────────────────────────────────────────────
+// ─── Constants & Helpers ───────────────────────────────────────────────────
 
-const MARKS = ['2M', '8M', '10M'] as const;
+const MARKS = ['2M', '5M', '8M', '10M'] as const;
 
-const INITIAL_DOCS: DocItem[] = [
-  { id: 'd1', name: 'Module_3_Trees.pdf', type: 'pdf', meta: '24 pages · Uploaded yesterday', selected: true },
-  { id: 'd2', name: 'Class_Notes_Graphs.docx', type: 'doc', meta: '5 pages · Uploaded 2 days ago', selected: false },
+const SUBJECT_TOPIC_MAP: Readonly<Record<string, ReadonlyArray<{ id: string; name: string }>>> = {
+  'data-structures': [
+    { id: 'ds-t1', name: 'AVL Trees' },
+    { id: 'ds-t2', name: 'Graph Traversal' },
+    { id: 'ds-t3', name: 'BFS' },
+    { id: 'ds-t4', name: 'DFS' },
+    { id: 'ds-t5', name: 'Heap Sort' },
+    { id: 'ds-t6', name: 'Hashing' },
+  ],
+  'computer-networks': [
+    { id: 'cn-t1', name: 'OSI Model' },
+    { id: 'cn-t2', name: 'TCP vs UDP' },
+    { id: 'cn-t3', name: 'IP Subnetting' },
+    { id: 'cn-t4', name: 'Routing Algorithms' },
+    { id: 'cn-t5', name: 'DNS Resolution' },
+    { id: 'cn-t6', name: 'TCP Handshake' },
+  ],
+  'dbms': [
+    { id: 'db-t1', name: 'ER Diagrams' },
+    { id: 'db-t2', name: 'SQL Joins' },
+    { id: 'db-t3', name: 'Normalisation' },
+    { id: 'db-t4', name: 'ACID Properties' },
+    { id: 'db-t5', name: 'Concurrency Control' },
+    { id: 'db-t6', name: 'Indexing' },
+  ],
+};
+
+const DEFAULT_TOPICS: ReadonlyArray<{ id: string; name: string }> = [
+  { id: 'g-t1', name: 'Key Concepts' },
+  { id: 'g-t2', name: 'Definitions' },
+  { id: 'g-t3', name: 'Examples' },
+  { id: 'g-t4', name: 'Practice Questions' },
 ];
 
-const INITIAL_TOPICS: TopicItem[] = [
-  { id: 't1', name: 'AVL Trees', active: true },
-  { id: 't2', name: 'Graph Traversal', active: true },
-  { id: 't3', name: 'BFS', active: false },
-  { id: 't4', name: 'DFS', active: false },
-];
+function getTopicsForSubject(subjectId: string): TopicItem[] {
+  const base = SUBJECT_TOPIC_MAP[subjectId] ?? DEFAULT_TOPICS;
+  return base.map((t, i) => ({ ...t, active: i < 2 }));
+}
 
 function ts() {
   return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -51,72 +83,59 @@ function uid() {
   return Math.random().toString(36).slice(2);
 }
 
-const WELCOME: Message = {
-  id: uid(),
-  role: 'ai',
-  time: 'Just now',
-  content:
-    "Hello! I've loaded your notes on **Trees & Graphs**. I see you want to focus on **8‑mark** questions.\n\nShall we start by explaining AVL tree rotations with an example, or would you like a practice question first?",
-};
+function getWelcome(docCount: number): Message {
+  const content = docCount > 0
+    ? `Hello! I've loaded **${docCount} document${docCount !== 1 ? 's' : ''}** from your study materials. Select your target mark and ask me anything!\n\nI'll ground my answers in your uploaded notes. You can toggle **Strict Context** to limit answers to only your documents.`
+    : `Hello! Welcome to Study Mode. You haven't uploaded any documents yet.\n\nYou can still ask me questions and I'll answer using general knowledge. For RAG-grounded answers from your notes, upload documents first!`;
+  return { id: uid(), role: 'ai', content, time: 'Just now' };
+}
 
-// ─── Simple AI response generator ─────────────────────────────────────────
+function mapDocRow(row: DocumentRow): DocItem {
+  const fileType: DocItem['type'] = row.file_type === 'application/pdf' ? 'pdf' : 'doc';
+  const date = new Date(row.created_at);
+  const meta = `${row.chunk_count} chunks · ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+  return { id: row.id, name: row.title, type: fileType, meta, selected: true };
+}
 
-function generateResponse(query: string, mark: string, strict: boolean): string {
-  const q = query.toLowerCase();
+// ─── Chat API ──────────────────────────────────────────────────────────────
 
-  if (q.includes('avl') || q.includes('rotation')) {
-    return (
-      `Great question! Here's an ${mark} explanation of AVL rotations:\n\n` +
-      `**AVL Tree Rotations** keep the tree balanced (|BF| ≤ 1).\n\n` +
-      `There are four cases:\n` +
-      `1. **LL Rotation** – single right rotation\n` +
-      `2. **RR Rotation** – single left rotation\n` +
-      `3. **LR Rotation** – left then right rotation\n` +
-      `4. **RL Rotation** – right then left rotation\n\n` +
-      `Each rotation takes **O(1)** time, keeping overall insertion at **O(log n)**.`
-    );
+async function chatWithAI(
+  message: string,
+  documentIds: ReadonlyArray<string>,
+  mark: string,
+  strict: boolean,
+  subjectId: string | undefined,
+  history: ReadonlyArray<{ role: 'user' | 'assistant'; content: string }>,
+): Promise<ChatResponse> {
+  const res = await fetch('/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message,
+      documentIds: documentIds.length > 0 ? documentIds : undefined,
+      mark,
+      strict,
+      subjectId: subjectId || undefined,
+      history: history.length > 0 ? history : undefined,
+    }),
+  });
+
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error((errBody as Record<string, string>).error ?? `Chat failed (${res.status})`);
   }
-  if (q.includes('bfs') || q.includes('breadth')) {
-    return (
-      `**BFS (Breadth‑First Search)** – ${mark} answer:\n\n` +
-      `BFS explores nodes level by level using a **queue** (FIFO).\n\n` +
-      `**Algorithm:**\n` +
-      `1. Enqueue the source node; mark visited\n` +
-      `2. While queue is not empty: dequeue node, visit it, enqueue unvisited neighbours\n\n` +
-      `**Time Complexity:** O(V + E)\n` +
-      `**Space Complexity:** O(V)\n\n` +
-      `Used for: shortest path in unweighted graphs, level‑order traversal.`
-    );
-  }
-  if (q.includes('dfs') || q.includes('depth')) {
-    return (
-      `**DFS (Depth‑First Search)** – ${mark} answer:\n\n` +
-      `DFS explores as deep as possible before backtracking using a **stack** (or recursion).\n\n` +
-      `**Algorithm:**\n` +
-      `1. Push source; mark visited\n` +
-      `2. While stack not empty: pop node, visit, push unvisited neighbours\n\n` +
-      `**Time Complexity:** O(V + E)\n` +
-      `**Applications:** topological sort, cycle detection, SCC.\n\n` +
-      (strict ? '*(Strict mode: answer limited to your selected documents.)*' : '')
-    );
-  }
-  if (q.includes('practice') || q.includes('question')) {
-    return (
-      `Here's a **${mark} practice question**:\n\n` +
-      `*"Construct an AVL tree by inserting the following keys in order: 10, 20, 30, 40, 50, 25. Show all rotations performed and the final balanced tree."*\n\n` +
-      `**Hint:** You will encounter at least one RR rotation and one RL rotation.\n\n` +
-      `Try it yourself, then ask me to verify your answer! 💪`
-    );
-  }
-  return (
-    `Thanks for your question! Based on **${mark}** format requirements and your selected documents:\n\n` +
-    `I've found relevant content in *Module_3_Trees.pdf*. ` +
-    `Could you be more specific? For example:\n` +
-    `• "Explain AVL rotations with an example"\n` +
-    `• "Give me a practice question on graph traversal"\n` +
-    `• "What is the time complexity of BFS?"\n\n` +
-    (strict ? '*(Strict mode is ON – answers limited to selected docs.)*' : '')
-  );
+
+  return res.json() as Promise<ChatResponse>;
+}
+
+function buildHistory(msgs: ReadonlyArray<Message>): ReadonlyArray<{ role: 'user' | 'assistant'; content: string }> {
+  return msgs
+    .filter(m => m.role === 'user' || m.role === 'ai')
+    .slice(-10)
+    .map(m => ({
+      role: (m.role === 'ai' ? 'assistant' : 'user') as 'user' | 'assistant',
+      content: m.content,
+    }));
 }
 
 // ─── Markdown-lite renderer ────────────────────────────────────────────────
@@ -130,28 +149,59 @@ function renderMd(text: string) {
 
 // ─── Component ─────────────────────────────────────────────────────────────
 
-export function StudyMode({ user }: StudyModeProps) {
+export function StudyMode({ user, onNavigate }: StudyModeProps) {
   const displayName = user.user_metadata?.display_name ?? user.email?.split('@')[0] ?? 'Student';
   const firstName = displayName.split(' ')[0];
   const initials = firstName.charAt(0).toUpperCase();
 
   // ── State ──────────────────────────────────────────────────────────────
-  const [messages, setMessages] = useState<Message[]>([WELCOME]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [kitOpen, setKitOpen] = useState(true);
   const [selectedMark, setSelectedMark] = useState<typeof MARKS[number]>('8M');
   const [strict, setStrict] = useState(true);
-  const [docs, setDocs] = useState<DocItem[]>(INITIAL_DOCS);
-  const [topics, setTopics] = useState<TopicItem[]>(INITIAL_TOPICS);
+  const [docs, setDocs] = useState<DocItem[]>([]);
+  const [subjectId, setSubjectId] = useState('');
+  const [topics, setTopics] = useState<TopicItem[]>(() => getTopicsForSubject(''));
   const [isTyping, setIsTyping] = useState(false);
+  const [docsLoading, setDocsLoading] = useState(true);
+
+  // Progressive reveal state
+  const [revealingId, setRevealingId] = useState<string | null>(null);
+  const [revealedLen, setRevealedLen] = useState(0);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // ── Fetch documents from Supabase ──────────────────────────────────────
+  useEffect(() => {
+    const fetchDocs = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('documents')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('status', 'ready')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        const rows = data as ReadonlyArray<DocumentRow>;
+        setDocs(rows.map(mapDocRow));
+        setMessages([getWelcome(rows.length)]);
+      } catch (e) {
+        console.error('Failed to load documents:', e);
+        setMessages([getWelcome(0)]);
+      } finally {
+        setDocsLoading(false);
+      }
+    };
+    fetchDocs();
+  }, [user.id]);
+
   // auto‑scroll
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isTyping]);
+  }, [messages, isTyping, revealedLen]);
 
   // auto‑resize textarea
   useEffect(() => {
@@ -161,35 +211,82 @@ export function StudyMode({ user }: StudyModeProps) {
     }
   }, [input]);
 
+  // reset topics when subject changes
+  useEffect(() => {
+    setTopics(getTopicsForSubject(subjectId));
+  }, [subjectId]);
+
+  // ── Progressive reveal animation ──────────────────────────────────────
+  useEffect(() => {
+    if (!revealingId) return;
+
+    const msg = messages.find(m => m.id === revealingId);
+    if (!msg) return;
+
+    const fullLen = msg.content.length;
+    if (revealedLen >= fullLen) {
+      setRevealingId(null);
+      return;
+    }
+
+    const speed = 3;
+    const timer = setTimeout(() => {
+      setRevealedLen(prev => Math.min(prev + speed, fullLen));
+    }, 12);
+
+    return () => clearTimeout(timer);
+  }, [revealingId, revealedLen, messages]);
+
   // ── Helpers ──────────────────────────────────────────────────────────
   const selectedDocs = docs.filter(d => d.selected);
   const activeTopics = topics.filter(t => t.active);
+  const isRevealing = !!revealingId;
+  const isBusy = isTyping || isRevealing;
 
   const toggleDoc = (id: string) => setDocs(prev => prev.map(d => d.id === id ? { ...d, selected: !d.selected } : d));
+  const selectAllDocs = () => setDocs(prev => prev.map(d => ({ ...d, selected: true })));
+  const selectNoneDocs = () => setDocs(prev => prev.map(d => ({ ...d, selected: false })));
   const toggleTopic = (id: string) => setTopics(prev => prev.map(t => t.id === id ? { ...t, active: !t.active } : t));
 
-  const resetChat = () => setMessages([{ ...WELCOME, id: uid(), time: ts() }]);
+  const resetChat = () => {
+    setRevealingId(null);
+    setMessages([getWelcome(docs.length)]);
+  };
 
-  const sendMessage = useCallback((override?: string) => {
+  const sendMessage = useCallback(async (override?: string) => {
     const text = (override ?? input).trim();
-    if (!text || isTyping) return;
+    if (!text || isBusy) return;
 
     const userMsg: Message = { id: uid(), role: 'user', content: text, time: ts() };
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setIsTyping(true);
 
-    setTimeout(() => {
+    try {
+      const selectedDocIds = docs.filter(d => d.selected).map(d => d.id);
+      const history = buildHistory([...messages, userMsg]);
+
+      const response = await chatWithAI(text, selectedDocIds, selectedMark, strict, subjectId || undefined, history);
+
       const aiMsg: Message = {
         id: uid(),
         role: 'ai',
-        content: generateResponse(text, selectedMark, strict),
+        content: response.response,
         time: ts(),
       };
-      setMessages(prev => [...prev, aiMsg]);
       setIsTyping(false);
-    }, 900 + Math.random() * 600);
-  }, [input, isTyping, selectedMark, strict]);
+      setMessages(prev => [...prev, aiMsg]);
+      setRevealingId(aiMsg.id);
+      setRevealedLen(0);
+    } catch (err) {
+      const errorContent = err instanceof Error
+        ? `Sorry, I encountered an error: **${err.message}**\n\nPlease try again.`
+        : 'Sorry, something went wrong. Please try again.';
+      const errMsg: Message = { id: uid(), role: 'ai', content: errorContent, time: ts() };
+      setIsTyping(false);
+      setMessages(prev => [...prev, errMsg]);
+    }
+  }, [input, isBusy, selectedMark, strict, subjectId, docs, messages]);
 
   const handleKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -220,28 +317,60 @@ export function StudyMode({ user }: StudyModeProps) {
           <section className="sm-section">
             <div className="sm-section-row">
               <span className="sm-label">Source Docs</span>
-              <button className="sm-add-btn" title="Add document">+ Add</button>
+              <div className="sm-section-actions">
+                {docs.length > 0 && (
+                  <>
+                    <button className="sm-text-btn" onClick={selectAllDocs} title="Select all documents">All</button>
+                    <button className="sm-text-btn" onClick={selectNoneDocs} title="Deselect all documents">None</button>
+                  </>
+                )}
+                <button className="sm-add-btn" title="Upload a document" onClick={() => onNavigate?.('upload')}>+ Add</button>
+              </div>
             </div>
             <div className="sm-docs">
-              {docs.map(doc => (
-                <button
-                  key={doc.id}
-                  className={`sm-doc ${doc.selected ? 'sm-doc--on' : ''}`}
-                  onClick={() => toggleDoc(doc.id)}
-                >
-                  <span className={`material-icons-outlined sm-doc-icon ${doc.type === 'pdf' ? 'sm-doc-icon--pdf' : 'sm-doc-icon--doc'}`}>
-                    {doc.type === 'pdf' ? 'picture_as_pdf' : 'description'}
-                  </span>
-                  <div className="sm-doc-info">
-                    <p className="sm-doc-name">{doc.name}</p>
-                    <p className="sm-doc-meta">{doc.meta}</p>
-                  </div>
-                  <div className={`sm-check ${doc.selected ? 'sm-check--on' : ''}`}>
-                    {doc.selected && <span className="material-icons-outlined sm-check-icon">check</span>}
-                  </div>
-                </button>
-              ))}
+              {docsLoading ? (
+                <p className="sm-docs-loading">Loading documents…</p>
+              ) : docs.length === 0 ? (
+                <p className="sm-docs-empty">No documents uploaded yet. Upload PDFs from the Documents page.</p>
+              ) : (
+                docs.map(doc => (
+                  <button
+                    key={doc.id}
+                    className={`sm-doc ${doc.selected ? 'sm-doc--on' : ''}`}
+                    onClick={() => toggleDoc(doc.id)}
+                  >
+                    <span className={`material-icons-outlined sm-doc-icon ${doc.type === 'pdf' ? 'sm-doc-icon--pdf' : 'sm-doc-icon--doc'}`}>
+                      {doc.type === 'pdf' ? 'picture_as_pdf' : 'description'}
+                    </span>
+                    <div className="sm-doc-info">
+                      <p className="sm-doc-name">{doc.name}</p>
+                      <p className="sm-doc-meta">{doc.meta}</p>
+                    </div>
+                    <div className={`sm-check ${doc.selected ? 'sm-check--on' : ''}`}>
+                      {doc.selected && <span className="material-icons-outlined sm-check-icon">check</span>}
+                    </div>
+                  </button>
+                ))
+              )}
             </div>
+          </section>
+
+          {/* Subject Selector */}
+          <section className="sm-section">
+            <div className="sm-section-row">
+              <span className="sm-label">Subject</span>
+            </div>
+            <select
+              className="sm-subject-select"
+              value={subjectId}
+              onChange={e => setSubjectId(e.target.value)}
+              aria-label="Select subject"
+            >
+              <option value="">General (no subject)</option>
+              <option value="data-structures">Data Structures &amp; Algorithms</option>
+              <option value="computer-networks">Computer Networks</option>
+              <option value="dbms">Database Management Systems</option>
+            </select>
           </section>
 
           {/* Active Topics */}
@@ -347,8 +476,13 @@ export function StudyMode({ user }: StudyModeProps) {
 
         {/* Messages */}
         <div className="sm-messages" role="log" aria-label="Chat messages" aria-live="polite">
-          {messages.map(msg =>
-            msg.role === 'ai' ? (
+          {messages.map(msg => {
+            const isCurrentlyRevealing = msg.id === revealingId;
+            const displayContent = isCurrentlyRevealing
+              ? msg.content.slice(0, revealedLen)
+              : msg.content;
+
+            return msg.role === 'ai' ? (
               <div key={msg.id} className="sm-msg sm-msg--ai">
                 <div className="sm-avatar sm-avatar--ai">
                   <span className="material-icons-outlined">smart_toy</span>
@@ -356,21 +490,24 @@ export function StudyMode({ user }: StudyModeProps) {
                 <div className="sm-msg-col">
                   <span className="sm-msg-meta">Moduly AI · {msg.time}</span>
                   <div className="sm-bubble sm-bubble--ai">
-                    {msg.content.split('\n').map((line, i) => (
+                    {displayContent.split('\n').map((line, i) => (
                       <p
                         key={i}
                         className="sm-bubble-line"
                         dangerouslySetInnerHTML={{ __html: renderMd(line) }}
                       />
                     ))}
-                    {/* Quick-action buttons on first AI message */}
-                    {msg.id === messages[0]?.id && (
+                    {isCurrentlyRevealing && revealedLen < msg.content.length && (
+                      <span className="sm-cursor" />
+                    )}
+                    {/* Quick-action buttons on first AI message (only after fully revealed) */}
+                    {msg.id === messages[0]?.id && !isCurrentlyRevealing && (
                       <div className="sm-actions">
-                        <button className="sm-action-btn" onClick={() => sendMessage('Give me a practice question on AVL rotations')}>
-                          Generate Practice Q
+                        <button className="sm-action-btn" onClick={() => sendMessage('Summarize the key concepts from my documents')}>
+                          Summarize key concepts
                         </button>
-                        <button className="sm-action-btn" onClick={() => sendMessage('Explain AVL rotation with an example')}>
-                          Explain with example
+                        <button className="sm-action-btn" onClick={() => sendMessage('Give me a practice question')}>
+                          Practice question
                         </button>
                       </div>
                     )}
@@ -387,8 +524,8 @@ export function StudyMode({ user }: StudyModeProps) {
                   </div>
                 </div>
               </div>
-            )
-          )}
+            );
+          })}
 
           {/* Typing indicator */}
           {isTyping && (
@@ -409,6 +546,12 @@ export function StudyMode({ user }: StudyModeProps) {
         <div className="sm-footer">
           {/* Context chips */}
           <div className="sm-chips">
+            {docs.length > 0 && selectedDocs.length === 0 && (
+              <span className="sm-chip sm-chip--warn">
+                <span className="material-icons-outlined sm-chip-icon">warning_amber</span>
+                No docs selected — using general knowledge
+              </span>
+            )}
             {selectedDocs.map(d => (
               <span key={d.id} className="sm-chip sm-chip--teal">
                 <span className="material-icons-outlined sm-chip-icon">description</span>
@@ -445,12 +588,12 @@ export function StudyMode({ user }: StudyModeProps) {
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={handleKey}
                 rows={1}
-                disabled={isTyping}
+                disabled={isBusy}
               />
               <button
-                className={`sm-send-btn ${input.trim() && !isTyping ? 'sm-send-btn--ready' : ''}`}
+                className={`sm-send-btn ${input.trim() && !isBusy ? 'sm-send-btn--ready' : ''}`}
                 onClick={() => sendMessage()}
-                disabled={!input.trim() || isTyping}
+                disabled={!input.trim() || isBusy}
                 title="Send"
               >
                 <span className="material-icons-outlined">send</span>

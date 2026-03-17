@@ -1,151 +1,131 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import type { User } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
+import type { DocumentRow } from '../lib/ai/types';
 import './Library.css';
 
-/* ─── Static mock data ───────────────────────────────────────────────────── */
-const ALL_DOCS = [
-  {
-    id: 1,
-    title: 'Complete Binary Trees Guide',
-    size: '2.4 MB',
-    date: 'Oct 24, 2023',
-    subject: 'Data Structures',
-    module: 'Mod 3',
-    contributor: 'Sarah J.',
-    type: 'Notes',
-    typeColor: 'violet',
-    icon: 'menu_book',
-    iconBgVar: 1,
-    contributorColorVar: 1,
-  },
-  {
-    id: 2,
-    title: 'Paging & Segmentation Summary',
-    size: '15 KB',
-    date: 'Oct 22, 2023',
-    subject: 'Operating Systems',
-    module: 'Mod 4',
-    contributor: 'Moduly AI',
-    type: 'AI Summary',
-    typeColor: 'teal',
-    icon: 'auto_awesome',
-    iconBgVar: 2,
-    contributorColorVar: 2,
-  },
-  {
-    id: 3,
-    title: 'VTU Dec 2022 Question Paper',
-    size: '1.1 MB',
-    date: 'Oct 20, 2023',
-    subject: 'Discrete Math',
-    module: 'All',
-    contributor: 'Admin',
-    type: 'PYQ',
-    typeColor: 'amber',
-    icon: 'help_outline',
-    iconBgVar: 3,
-    contributorColorVar: 3,
-  },
-  {
-    id: 4,
-    title: 'Sorting Algorithms Mind Map',
-    size: '3.2 MB',
-    date: 'Sep 12, 2023',
-    subject: 'Data Structures',
-    module: 'Mod 2',
-    contributor: 'Mike R.',
-    type: 'Mind Map',
-    typeColor: 'rose',
-    icon: 'account_tree',
-    iconBgVar: 4,
-    contributorColorVar: 4,
-  },
-  {
-    id: 5,
-    title: 'Computer Networks Cheatsheet',
-    size: '820 KB',
-    date: 'Sep 5, 2023',
-    subject: 'Computer Networks',
-    module: 'Mod 1',
-    contributor: 'Sarah J.',
-    type: 'Notes',
-    typeColor: 'violet',
-    icon: 'menu_book',
-    iconBgVar: 1,
-    contributorColorVar: 1,
-  },
-  {
-    id: 6,
-    title: 'DBMS Normalization Quick Notes',
-    size: '560 KB',
-    date: 'Sep 1, 2023',
-    subject: 'Database Mgmt',
-    module: 'Mod 4',
-    contributor: 'Moduly AI',
-    type: 'AI Summary',
-    typeColor: 'teal',
-    icon: 'auto_awesome',
-    iconBgVar: 2,
-    contributorColorVar: 2,
-  },
-  {
-    id: 7,
-    title: 'VTU Jun 2023 OS Question Paper',
-    size: '1.5 MB',
-    date: 'Aug 28, 2023',
-    subject: 'Operating Systems',
-    module: 'All',
-    contributor: 'Admin',
-    type: 'PYQ',
-    typeColor: 'amber',
-    icon: 'help_outline',
-    iconBgVar: 3,
-    contributorColorVar: 3,
-  },
-  {
-    id: 8,
-    title: 'Graph Theory Concept Map',
-    size: '2.1 MB',
-    date: 'Aug 15, 2023',
-    subject: 'Discrete Math',
-    module: 'Mod 3',
-    contributor: 'Mike R.',
-    type: 'Mind Map',
-    typeColor: 'rose',
-    icon: 'account_tree',
-    iconBgVar: 4,
-    contributorColorVar: 4,
-  },
-];
+/* ─── Display helpers ────────────────────────────────────────────────────── */
+
+function inferDocType(title: string): string {
+  const t = title.toLowerCase();
+  if (t.includes('question paper') || t.includes('pyq') || t.includes('previous year') || t.includes(' qp')) return 'PYQ';
+  if (t.includes('mind map') || t.includes('concept map') || t.includes('diagram')) return 'Mind Map';
+  if (t.includes('lab manual') || t.includes('laboratory')) return 'Lab Manual';
+  return 'Notes';
+}
+
+function getDocTypeColor(type: string): string {
+  if (type === 'PYQ') return 'amber';
+  if (type === 'Mind Map') return 'rose';
+  if (type === 'Lab Manual') return 'teal';
+  return 'violet';
+}
+
+function getDocTypeIcon(type: string): string {
+  if (type === 'PYQ') return 'quiz';
+  if (type === 'Mind Map') return 'account_tree';
+  if (type === 'Lab Manual') return 'science';
+  return 'menu_book';
+}
+
+function getIconBgVar(type: string): number {
+  if (type === 'PYQ') return 3;
+  if (type === 'Mind Map') return 4;
+  if (type === 'Lab Manual') return 2;
+  return 1;
+}
+
+function formatSize(bytes: number | null): string {
+  if (bytes === null || bytes === undefined) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatDate(isoDate: string): string {
+  const d = new Date(isoDate);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function inferSubject(title: string): string {
+  const t = title.toLowerCase();
+  if (t.includes('data struct') || t.includes('tree') || t.includes('graph') || t.includes('sorting') || t.includes('algorithm') || t.includes('binary') || t.includes('heap') || t.includes('hash')) return 'Data Structures';
+  if (t.includes('operating system') || t.includes(' os ') || t.includes('paging') || t.includes('segmentation') || t.includes('process') || t.includes('scheduling') || t.includes('deadlock')) return 'Operating Systems';
+  if (t.includes('discrete') || t.includes('graph theory') || t.includes('combinatorics') || t.includes('logic') || t.includes('boolean')) return 'Discrete Math';
+  if (t.includes('network') || t.includes('tcp') || t.includes('ip ') || t.includes('http') || t.includes('osi') || t.includes('protocol')) return 'Computer Networks';
+  if (t.includes('database') || t.includes('dbms') || t.includes('sql') || t.includes('normaliz') || t.includes('er diagram') || t.includes('relational')) return 'Database Mgmt';
+  return 'General';
+}
+
+function inferModule(title: string): string {
+  const t = title.toLowerCase();
+  const m = t.match(/mod(?:ule)?\s*(\d)/);
+  if (m) return `Mod ${m[1]}`;
+  if (t.includes('all') || t.includes('complete') || t.includes('full')) return 'All';
+  return 'General';
+}
+
+/* ─── Constants ──────────────────────────────────────────────────────────── */
 
 const SUBJECTS = ['All Subjects', 'Data Structures', 'Operating Systems', 'Discrete Math', 'Computer Networks', 'Database Mgmt'];
-const MODULES = ['All Modules', 'Mod 1', 'Mod 2', 'Mod 3', 'Mod 4', 'All'];
-const DOC_TYPES = ['Any Type', 'Notes', 'AI Summary', 'PYQ', 'Mind Map'];
+const MODULES = ['All Modules', 'Mod 1', 'Mod 2', 'Mod 3', 'Mod 4', 'Mod 5', 'All', 'General'];
+const DOC_TYPES = ['Any Type', 'Notes', 'PYQ', 'Mind Map', 'Lab Manual'];
 
 const PAGE_SIZE = 4;
 
-const TYPE_ICON: Record<string, string> = {
-  Notes: 'menu_book',
-  'AI Summary': 'auto_awesome',
-  PYQ: 'quiz',
-  'Mind Map': 'account_tree',
-};
+/* ─── Component ──────────────────────────────────────────────────────────── */
 
-export function Library() {
+interface LibraryProps {
+  readonly user: User;
+  onNavigate?: (page: string) => void;
+}
+
+export function Library({ user, onNavigate }: LibraryProps) {
+  const [docs, setDocs] = useState<ReadonlyArray<DocumentRow>>([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState('');
+  const [removalPending, setRemovalPending] = useState<ReadonlySet<string>>(new Set());
+  const [removalDone, setRemovalDone] = useState<ReadonlySet<string>>(new Set());
+
   const [subject, setSubject] = useState('All Subjects');
   const [module, setModule] = useState('All Modules');
   const [docType, setDocType] = useState('Any Type');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
 
+  useEffect(() => {
+    const fetchDocs = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('documents')
+          .select('id,title,file_type,file_size,created_at,user_id,status,chunk_count,file_path,subject_id,module_id,updated_at')
+          .eq('status', 'ready')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setDocs((data ?? []) as ReadonlyArray<DocumentRow>);
+        setFetchError('');
+      } catch (e) {
+        console.error('Error fetching library documents:', e);
+        setFetchError('Could not load documents. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void fetchDocs();
+  }, []);
+
   const filtered = useMemo(() => {
-    return ALL_DOCS.filter(d => {
-      if (subject !== 'All Subjects' && d.subject !== subject) return false;
-      if (module !== 'All Modules' && d.module !== module) return false;
-      if (docType !== 'Any Type' && d.type !== docType) return false;
-      if (search && !d.title.toLowerCase().includes(search.toLowerCase())) return false;
+    return docs.filter(doc => {
+      if (subject !== 'All Subjects' && inferSubject(doc.title) !== subject) return false;
+      if (module !== 'All Modules' && inferModule(doc.title) !== module) return false;
+      if (docType !== 'Any Type' && inferDocType(doc.title) !== docType) return false;
+      if (search && !doc.title.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     });
-  }, [subject, module, docType, search]);
+  }, [docs, subject, module, docType, search]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -154,6 +134,25 @@ export function Library() {
   const handleFilter = (setter: (v: string) => void) => (e: React.ChangeEvent<HTMLSelectElement>) => {
     setter(e.target.value);
     setPage(1);
+  };
+
+  const requestRemoval = async (docId: string) => {
+    setRemovalPending(prev => new Set([...prev, docId]));
+    try {
+      const { error } = await supabase
+        .from('removal_requests')
+        .insert({ document_id: docId, user_id: user.id });
+      if (error) throw error;
+      setRemovalDone(prev => new Set([...prev, docId]));
+    } catch (e) {
+      console.error('Error submitting removal request:', e);
+    } finally {
+      setRemovalPending(prev => {
+        const next = new Set(prev);
+        next.delete(docId);
+        return next;
+      });
+    }
   };
 
   return (
@@ -165,14 +164,14 @@ export function Library() {
             Universal Library
             <span className="lib-badge-global">GLOBAL ACCESS</span>
           </h1>
-          <p className="lib-subtitle">Browse 42,000+ academic resources contributed by the community.</p>
+          <p className="lib-subtitle">Browse academic resources contributed by the VTU student community.</p>
         </div>
         <div className="lib-header-actions">
           <button className="lib-btn-history">
             <span className="material-icons-outlined lib-btn-icon">history</span>
             History
           </button>
-          <button className="lib-btn-contribute">
+          <button className="lib-btn-contribute" onClick={() => onNavigate?.('upload')}>
             <span className="material-icons-outlined lib-btn-icon">add</span>
             Contribute
           </button>
@@ -237,56 +236,89 @@ export function Library() {
 
         {/* Table body */}
         <div className="lib-table-body">
-          {pageItems.length === 0 ? (
+          {loading && (
+            <div className="lib-empty">
+              <span className="material-icons-outlined lib-empty-icon">hourglass_top</span>
+              <p>Loading library…</p>
+            </div>
+          )}
+          {!loading && fetchError && (
+            <div className="lib-empty">
+              <span className="material-icons-outlined lib-empty-icon">error_outline</span>
+              <p>{fetchError}</p>
+            </div>
+          )}
+          {!loading && !fetchError && filtered.length === 0 && (
             <div className="lib-empty">
               <span className="material-icons-outlined lib-empty-icon">folder_off</span>
-              <p>No documents found. Try adjusting your filters.</p>
+              <p>{docs.length === 0 ? 'No documents in the library yet. Be the first to contribute!' : 'No documents found. Try adjusting your filters.'}</p>
             </div>
-          ) : pageItems.map((doc, i) => (
-            <div key={doc.id} className={`lib-row ${i % 2 === 0 ? '' : 'lib-row--alt'}`}>
-              {/* Doc details */}
-              <div className="lib-col-details lib-doc-info">
-                <div className={`lib-doc-icon lib-doc-icon--var-${doc.iconBgVar}`}>
-                  <span className="material-icons-outlined">{doc.icon}</span>
+          )}
+          {!loading && !fetchError && pageItems.map((doc, i) => {
+            const docTypeStr = inferDocType(doc.title);
+            const typeColor = getDocTypeColor(docTypeStr);
+            const typeIcon = getDocTypeIcon(docTypeStr);
+            const iconBgVar = getIconBgVar(docTypeStr);
+            const isOwner = doc.user_id === user.id;
+            const alreadyRequested = removalDone.has(doc.id);
+            const isPending = removalPending.has(doc.id);
+
+            return (
+              <div key={doc.id} className={`lib-row ${i % 2 === 0 ? '' : 'lib-row--alt'}`}>
+                {/* Doc details */}
+                <div className="lib-col-details lib-doc-info">
+                  <div className={`lib-doc-icon lib-doc-icon--var-${iconBgVar}`}>
+                    <span className="material-icons-outlined">{typeIcon}</span>
+                  </div>
+                  <div>
+                    <p className="lib-doc-title">{doc.title}</p>
+                    <p className="lib-doc-meta">{formatSize(doc.file_size)} • {formatDate(doc.created_at)}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="lib-doc-title">{doc.title}</p>
-                  <p className="lib-doc-meta">{doc.size} • {doc.date}</p>
+
+                {/* Subject */}
+                <div className="lib-col-subject lib-cell">
+                  <span className="lib-subject-text">{inferSubject(doc.title)}</span>
                 </div>
-              </div>
 
-              {/* Subject */}
-              <div className="lib-col-subject lib-cell">
-                <span className="lib-subject-text">{doc.subject}</span>
-              </div>
+                {/* Module */}
+                <div className="lib-col-module lib-cell">
+                  <span className="lib-module-badge">{inferModule(doc.title)}</span>
+                </div>
 
-              {/* Module */}
-              <div className="lib-col-module lib-cell">
-                <span className="lib-module-badge">{doc.module}</span>
-              </div>
+                {/* Contributor */}
+                <div className="lib-col-contributor lib-cell">
+                  <span className="lib-contributor-dot lib-contributor-dot--var-1" />
+                  <span className="lib-contributor-name">{isOwner ? 'You' : 'VTU Student'}</span>
+                </div>
 
-              {/* Contributor */}
-              <div className="lib-col-contributor lib-cell">
-                <span className={`lib-contributor-dot lib-contributor-dot--var-${doc.contributorColorVar}`} />
-                <span className="lib-contributor-name">{doc.contributor}</span>
-              </div>
-
-              {/* Type */}
-              <div className="lib-col-type lib-cell">
-                <span className={`lib-type-badge lib-type-badge--${doc.typeColor}`}>
-                  <span className="material-icons-outlined lib-type-icon">
-                    {TYPE_ICON[doc.type] ?? 'description'}
+                {/* Type */}
+                <div className="lib-col-type lib-cell">
+                  <span className={`lib-type-badge lib-type-badge--${typeColor}`}>
+                    <span className="material-icons-outlined lib-type-icon">{typeIcon}</span>
+                    {docTypeStr}
                   </span>
-                  {doc.type}
-                </span>
-              </div>
+                </div>
 
-              {/* Action */}
-              <div className="lib-col-action lib-cell">
-                <button className="lib-view-btn">View</button>
+                {/* Action */}
+                <div className="lib-col-action lib-cell">
+                  {isOwner && (
+                    <button
+                      className="lib-remove-btn"
+                      disabled={alreadyRequested || isPending}
+                      onClick={() => void requestRemoval(doc.id)}
+                      title="Request removal of this document"
+                    >
+                      {alreadyRequested ? 'Requested' : isPending ? '…' : 'Remove'}
+                    </button>
+                  )}
+                  {!isOwner && (
+                    <button className="lib-view-btn">View</button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Pagination footer */}

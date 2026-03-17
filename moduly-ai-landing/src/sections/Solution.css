@@ -1,5 +1,5 @@
 .solution {
-  background: var(--color-background);
+  background: var(--background);
 }
 
 /* Flow Diagram */
@@ -16,16 +16,16 @@
   display: flex;
   align-items: center;
   gap: var(--space-4);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-xl);
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
   padding: var(--space-5) var(--space-6);
   transition: all var(--transition-base);
 }
 
 .flow-item:hover {
-  border-color: var(--color-accent);
-  box-shadow: var(--shadow-md);
+  transform: translate(-4px, -4px);
+  box-shadow: var(--shadow-lg);
 }
 
 .flow-number {
@@ -34,28 +34,30 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--color-secondary), var(--color-accent));
+  background: var(--primary);
   color: white;
   font-weight: 700;
   font-size: var(--font-size-lg);
-  border-radius: 50%;
+  border-radius: var(--radius);
   flex-shrink: 0;
+  font-family: var(--font-mono);
 }
 
 .flow-content h3 {
   font-size: var(--font-size-lg);
   font-weight: 600;
   margin-bottom: var(--space-1);
+  color: var(--foreground);
 }
 
 .flow-content p {
   font-size: var(--font-size-sm);
-  color: var(--color-text-tertiary);
+  color: var(--muted-foreground);
   margin: 0;
 }
 
 .flow-arrow {
-  color: var(--color-accent);
+  color: var(--accent);
   flex-shrink: 0;
 }
 
@@ -67,18 +69,17 @@
 }
 
 .solution-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-xl);
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
   padding: var(--space-8);
   text-align: center;
   transition: all var(--transition-base);
 }
 
 .solution-card:hover {
-  transform: translateY(-4px);
+  transform: translate(-4px, -4px);
   box-shadow: var(--shadow-lg);
-  border-color: var(--color-accent);
 }
 
 .card-icon {
@@ -88,31 +89,33 @@
   align-items: center;
   justify-content: center;
   margin: 0 auto var(--space-5);
-  border-radius: var(--border-radius-lg);
+  border-radius: var(--radius);
   color: white;
 }
 
 .card-icon.verified {
-  background: linear-gradient(135deg, #10B981, #059669);
+  background: #00aa00;
 }
 
 .card-icon.accuracy {
-  background: linear-gradient(135deg, var(--color-secondary), var(--color-accent));
+  background: var(--accent);
 }
 
 .card-icon.structure {
-  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  background: var(--primary);
 }
 
 .solution-card h4 {
   font-size: var(--font-size-xl);
   font-weight: 600;
   margin-bottom: var(--space-3);
+  color: var(--foreground);
 }
 
 .solution-card p {
   font-size: var(--font-size-base);
   line-height: 1.7;
+  color: var(--muted-foreground);
 }
 
 @media (max-width: 1024px) {
@@ -128,11 +131,11 @@
     flex-direction: column;
     gap: var(--space-3);
   }
-  
+
   .flow-arrow {
     transform: rotate(90deg);
   }
-  
+
   .flow-item {
     width: 100%;
     max-width: 300px;
