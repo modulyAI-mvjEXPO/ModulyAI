@@ -1,6 +1,6 @@
 import type { AIProviderConfig, EmbeddingResponse } from './types';
 
-const EMBEDDING_PROVIDERS: readonly [AIProviderConfig, AIProviderConfig] = [
+const EMBEDDING_PROVIDERS: readonly AIProviderConfig[] = [
   {
     name: 'nvidia-nim',
     baseUrl: 'https://integrate.api.nvidia.com/v1',
@@ -8,10 +8,10 @@ const EMBEDDING_PROVIDERS: readonly [AIProviderConfig, AIProviderConfig] = [
     defaultModel: 'nvidia/nv-embedqa-e5-v5',
   },
   {
-    name: 'nvidia-nim-fallback',
-    baseUrl: 'https://integrate.api.nvidia.com/v1',
-    apiKeyEnvVar: 'NVIDIA_NIM_API_KEY',
-    defaultModel: 'nvidia/nv-embedqa-e5-v5',
+    name: 'groq',
+    baseUrl: 'https://api.groq.com/openai/v1',
+    apiKeyEnvVar: 'GROQ_API_KEY',
+    defaultModel: 'nomic-embed-text-v1.5',
   },
 ];
 
@@ -53,19 +53,14 @@ const callEmbeddingProvider = async (
 };
 
 export const getEmbedding = async (text: string): Promise<ReadonlyArray<number>> => {
-  const [primary, fallback] = EMBEDDING_PROVIDERS;
   const errors: Array<string> = [];
 
-  try {
-    return await callEmbeddingProvider(primary, text);
-  } catch (err) {
-    errors.push(`${primary.name}: ${err instanceof Error ? err.message : String(err)}`);
-  }
-
-  try {
-    return await callEmbeddingProvider(fallback, text);
-  } catch (err) {
-    errors.push(`${fallback.name}-fallback: ${err instanceof Error ? err.message : String(err)}`);
+  for (const provider of EMBEDDING_PROVIDERS) {
+    try {
+      return await callEmbeddingProvider(provider, text);
+    } catch (err) {
+      errors.push(`${provider.name}: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 
   throw new Error(

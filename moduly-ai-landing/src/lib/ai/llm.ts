@@ -1,6 +1,6 @@
 import type { AIProviderConfig, ChatCompletionOptions, ChatCompletionResponse, StreamChunk } from './types';
 
-const LLM_PROVIDERS: readonly [AIProviderConfig, AIProviderConfig] = [
+const LLM_PROVIDERS: readonly AIProviderConfig[] = [
   {
     name: 'openrouter',
     baseUrl: 'https://openrouter.ai/api/v1',
@@ -12,6 +12,12 @@ const LLM_PROVIDERS: readonly [AIProviderConfig, AIProviderConfig] = [
     baseUrl: 'https://integrate.api.nvidia.com/v1',
     apiKeyEnvVar: 'NVIDIA_NIM_API_KEY',
     defaultModel: 'meta/llama-3.1-8b-instruct',
+  },
+  {
+    name: 'groq',
+    baseUrl: 'https://api.groq.com/openai/v1',
+    apiKeyEnvVar: 'GROQ_API_KEY',
+    defaultModel: 'llama-3.3-70b-versatile',
   },
 ];
 
@@ -115,25 +121,24 @@ const callLLMProvider = async (
   }
 
   const data = (await response.json()) as ChatCompletionResponse;
-  return data.choices[0].message.content;
+  const content = data.choices[0]?.message?.content;
+  if (content === null || content === undefined) {
+    throw new Error(`${config.name} returned null content`);
+  }
+  return content;
 };
 
 export const chatCompletion = async (
   options: ChatCompletionOptions,
 ): Promise<string | ReadableStream<string>> => {
-  const [primary, fallback] = LLM_PROVIDERS;
   const errors: Array<string> = [];
 
-  try {
-    return await callLLMProvider(primary, options);
-  } catch (err) {
-    errors.push(`${primary.name}: ${err instanceof Error ? err.message : String(err)}`);
-  }
-
-  try {
-    return await callLLMProvider(fallback, options);
-  } catch (err) {
-    errors.push(`${fallback.name}: ${err instanceof Error ? err.message : String(err)}`);
+  for (const provider of LLM_PROVIDERS) {
+    try {
+      return await callLLMProvider(provider, options);
+    } catch (err) {
+      errors.push(`${provider.name}: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 
   throw new Error(

@@ -23,13 +23,14 @@ const NAV_MAIN: { icon: string; label: string; page: DashboardPage }[] = [
 ];
 
 
-const QUICK_ACTIONS = [
+const QUICK_ACTIONS: { icon: string; bgIcon: string; title: string; desc: string; color: string; page: DashboardPage }[] = [
   {
     icon: 'play_arrow',
     bgIcon: 'play_circle',
     title: 'Start Study Session',
     desc: 'Resume from where you left off in Data Structures.',
     color: 'primary',
+    page: 'study',
   },
   {
     icon: 'quiz',
@@ -37,6 +38,7 @@ const QUICK_ACTIONS = [
     title: 'Analyse PYQs',
     desc: 'AI analysis of Previous Year Questions.',
     color: 'teal',
+    page: 'exam',
   },
   {
     icon: 'upload_file',
@@ -44,6 +46,7 @@ const QUICK_ACTIONS = [
     title: 'Upload Documents',
     desc: 'Add notes or syllabus for AI processing.',
     color: 'purple',
+    page: 'upload',
   },
 ];
 
@@ -86,10 +89,15 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  const handleSignOut = async () => {
+  const handleSignOut = () => {
     setIsSigningOut(true);
-    await signOut();
-    onSignOut();
+    // Fire and forget: do not await the backend logout
+    void signOut();
+    
+    // Optimistic UI update: Wait 300ms for visual feedback, then force the redirect
+    setTimeout(() => {
+      onSignOut();
+    }, 300);
   };
 
   return (
@@ -254,7 +262,11 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
           {/* Quick actions */}
           <section className="db-actions-grid">
             {QUICK_ACTIONS.map(a => (
-              <button key={a.title} className={`db-action-card db-action-card--${a.color}`}>
+              <button 
+                key={a.title} 
+                className={`db-action-card db-action-card--${a.color}`}
+                onClick={() => setActivePage(a.page)}
+              >
                 <span className={`material-icons-outlined db-action-bg-icon`}>{a.bgIcon}</span>
                 <div className="db-action-icon-wrap">
                   <span className="material-icons-outlined db-action-icon">{a.icon}</span>
