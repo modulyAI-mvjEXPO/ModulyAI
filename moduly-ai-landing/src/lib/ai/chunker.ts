@@ -69,7 +69,7 @@ export function chunkText(
     }
     prevStart = start;
 
-    let end = start + chunkSize;
+    const end = start + chunkSize;
 
     if (end >= normalized.length) {
       const remaining = normalized.slice(start).trim();

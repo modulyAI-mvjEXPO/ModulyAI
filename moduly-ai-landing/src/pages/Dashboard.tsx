@@ -114,7 +114,7 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
               className={`db-nav-trigger ${dropdownOpen ? 'db-nav-trigger--active' : ''}`}
               onClick={(e) => { e.stopPropagation(); setDropdownOpen(o => !o); }}
               aria-label="Toggle navigation menu"
-              aria-expanded={dropdownOpen}
+              {...{ 'aria-expanded': dropdownOpen }}
             >
               <span className="material-icons-outlined">expand_more</span>
             </button>
@@ -147,7 +147,7 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
             )}
           </div>
 
-          <div className="db-subject-wrap" style={{ marginLeft: '1.5rem' }}>
+          <div className="db-subject-wrap">
             <select className="db-subject-select" aria-label="Select subject">
               <option>Data Structures</option>
               <option>Operating Systems</option>

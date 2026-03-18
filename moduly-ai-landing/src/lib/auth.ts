@@ -74,11 +74,12 @@ export async function resendOtp(email: string): Promise<{ error: string | null }
     return { error: null };
 }
 
-/**
- * Sign out current user.
- */
 export async function signOut(): Promise<void> {
-    await supabase.auth.signOut();
+    try {
+        await supabase.auth.signOut();
+    } catch (e) {
+        console.error('Sign out error:', e);
+    }
 }
 
 /** 

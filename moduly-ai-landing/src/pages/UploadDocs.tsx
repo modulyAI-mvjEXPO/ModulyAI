@@ -3,7 +3,7 @@ import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type { DocumentStatus, DocumentRow } from '../lib/ai/types';
 import { FileUpload } from '../components/FileUpload';
-import type { UploadedFile } from '../components/FileUpload';
+
 import './UploadDocs.css';
 
 const STATUS_DISPLAY: Record<DocumentStatus, { readonly label: string; readonly icon: string; readonly badgeClass: string; readonly message?: string }> = {
@@ -102,7 +102,7 @@ export function UploadDocs({ user }: { user: User }) {
         };
     }, [documents, fetchDocuments]);
 
-    const handleUploadSuccess = (_newFile: UploadedFile) => {
+    const handleUploadSuccess = () => {
         fetchDocuments();
     };
 

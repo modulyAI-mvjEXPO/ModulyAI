@@ -370,8 +370,7 @@ export function ExamMode({ user }: ExamModeProps) {
                     </div>
                     <div className="em-weight-bar-bg">
                       <div
-                        className={`em-weight-bar-fill ${index === 0 ? 'em-weight-bar-fill--glow' : ''}`}
-                        style={{ width: `${Math.max(8, Math.min(100, item.percentage))}%` }}
+                        className={`em-weight-bar-fill ${index === 0 ? 'em-weight-bar-fill--glow' : ''} em-w-${Math.max(8, Math.min(100, item.percentage))}`}
                       />
                     </div>
                   </div>

@@ -47,7 +47,7 @@ function AppContent() {
    */
   // const storedUser = getStoredUser();
   const [view, setView] = useState<AppView>('dashboard');
-  const [currentUser, setCurrentUser] = useState<User | null>({ email: 'student@vtu.tech', user_metadata: { display_name: 'Test Agent' } } as any);
+  const [currentUser, setCurrentUser] = useState<User | null>({ email: 'student@vtu.tech', user_metadata: { display_name: 'Test Agent' } } as unknown as User);
 
   const handleSignOut = () => {
     setCurrentUser(null);
