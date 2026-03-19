@@ -232,30 +232,28 @@ export const handler = async (
       history: Array.isArray(body['history']) ? (body['history'] as ChatRequest['history'])?.slice(-MAX_HISTORY_MESSAGES) : undefined,
     };
 
+    const queryEmbedding = await getEmbedding(request.message);
+
+    const supabase = createServerSupabaseClient();
+    const { data: chunks, error: ragError } = await supabase.rpc('match_documents_filtered', {
+      query_embedding: queryEmbedding,
+      filter_document_ids: request.documentIds ?? null,
+      filter_subject_id: request.subjectId ?? null,
+      match_threshold: RAG_THRESHOLD,
+      match_count: RAG_MATCH_COUNT,
+    });
+
+    if (ragError) {
+      console.error('RAG retrieval error:', ragError);
+    }
+
+    const ragChunks: ReadonlyArray<RagChunk> = (chunks ?? []) as ReadonlyArray<RagChunk>;
+
+    const systemPrompt = buildSystemPrompt(ragChunks, request.mark, request.strict, request.subjectId);
+    const messages = buildMessagesArray(systemPrompt, request.history, request.message);
+
     let responseText: string;
-    let sources: any[] = [];
-
     try {
-      const queryEmbedding = await getEmbedding(request.message);
-
-      const supabase = createServerSupabaseClient();
-      const { data: chunks, error: ragError } = await supabase.rpc('match_documents_filtered', {
-        query_embedding: queryEmbedding,
-        filter_document_ids: request.documentIds ?? null,
-        filter_subject_id: request.subjectId ?? null,
-        match_threshold: RAG_THRESHOLD,
-        match_count: RAG_MATCH_COUNT,
-      });
-
-      if (ragError) {
-        console.error('RAG retrieval error:', ragError);
-      }
-
-      const ragChunks: ReadonlyArray<RagChunk> = (chunks ?? []) as ReadonlyArray<RagChunk>;
-
-      const systemPrompt = buildSystemPrompt(ragChunks, request.mark, request.strict, request.subjectId);
-      const messages = buildMessagesArray(systemPrompt, request.history, request.message);
-
       const llmResult = await chatCompletion({
         model: DEFAULT_MODEL,
         messages,
@@ -267,26 +265,21 @@ export const handler = async (
         throw new Error('LLM returned a stream instead of a string');
       }
       responseText = llmResult;
-      
-      sources = ragChunks.map((c) => ({
-        documentId: c.document_id,
-        content: c.content.slice(0, 200),
-        similarity: c.similarity,
-      }));
-    } catch (err: unknown) {
-      console.warn('AI pipeline failed (likely offline). Falling back to DEMO_CACHE.', err);
+    } catch (llmErr: unknown) {
       const cacheKey = request.message.trim().toLowerCase();
       const cached = DEMO_CACHE.get(cacheKey);
-      
       if (cached !== undefined) {
+        console.warn('LLM failed — serving cached demo response for key:', cacheKey);
         return jsonResponse(200, { response: cached, sources: [], cached: true });
-      } else {
-        return jsonResponse(200, { 
-          response: 'Offline Mode: I am currently running in a demo environment without live API keys. Please try asking about "AVL tree rotations", "OSI model layers", "normalisation in dbms", or "BFS and DFS" to see a cached response!',
-          sources: [] 
-        });
       }
+      throw llmErr;
     }
+
+    const sources = ragChunks.map((c) => ({
+      documentId: c.document_id,
+      content: c.content.slice(0, 200),
+      similarity: c.similarity,
+    }));
 
     return jsonResponse(200, {
       response: responseText,

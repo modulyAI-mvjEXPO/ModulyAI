@@ -1,44 +1,157 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { User } from '@supabase/supabase-js';
+import { getProfile, upsertProfile } from '../lib/profile';
+import type { UserProfile } from '../lib/profile';
 import './Settings.css';
 
 interface SettingsProps {
     user: User;
 }
 
+const MARKING_SCHEMES = [
+    'VTU 2022 Scheme (NEP)',
+    'VTU 2018 Scheme (CBCS)',
+    'Autonomous',
+];
+
+const SEMESTERS = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6', 'Sem 7', 'Sem 8'];
+
+const DEFAULT_SUBJECTS = [
+    'Data Structures',
+    'Operating Systems',
+    'Database Mgmt',
+    'Computer Networks',
+];
+
+type AppearanceTheme = 'light' | 'dark' | 'system';
+
+const applyTheme = (theme: AppearanceTheme) => {
+    if (theme === 'system') {
+        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    } else {
+        document.documentElement.setAttribute('data-theme', theme);
+    }
+};
+
+const parseSemester = (semStr: string): number | null => {
+    const match = semStr.match(/Sem\s*(\d+)/i);
+    return match ? parseInt(match[1], 10) : null;
+};
+
+const formatSemester = (sem: number | null): string => {
+    return sem != null ? `Sem ${sem}` : 'Sem --';
+};
+
 export function Settings({ user }: SettingsProps) {
     const [activeTab, setActiveTab] = useState('profile');
+    const [profile, setProfile] = useState<UserProfile | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
     const [fullName, setFullName] = useState(
         user.user_metadata?.display_name || user.email?.split('@')[0] || 'Student'
     );
     const [username, setUsername] = useState(
         user.user_metadata?.username || 'user_guest'
     );
-    const [bio, setBio] = useState('Final year CSE student passionate about AI and System Design.');
-    const [markingScheme, setMarkingScheme] = useState('VTU 2022 Scheme (NEP)');
+    const [bio, setBio] = useState('');
+    const [markingScheme, setMarkingScheme] = useState(MARKING_SCHEMES[0]);
     const [semester, setSemester] = useState('Sem 6');
-    const [subjects, setSubjects] = useState(['Data Structures', 'Operating Systems', 'Database Mgmt', 'Computer Networks']);
+    const [subjects, setSubjects] = useState<string[]>(DEFAULT_SUBJECTS);
 
     const [answerFormat, setAnswerFormat] = useState('8 Marks');
     const [answerStyle, setAnswerStyle] = useState('Concise');
     const [aiMode, setAiMode] = useState(false);
-    const [appearance, setAppearance] = useState('dark');
+    const [appearance, setAppearance] = useState<AppearanceTheme>('dark');
+
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+    const [saveMessage, setSaveMessage] = useState('');
+
+    const [newSubjectInput, setNewSubjectInput] = useState('');
+    const [showSubjectInput, setShowSubjectInput] = useState(false);
+
+    const email = user.email || 'student@vtu.edu.in';
+
+    useEffect(() => {
+        applyTheme(appearance);
+    }, [appearance]);
+
+    useEffect(() => {
+        const loadProfile = async () => {
+            setIsLoading(true);
+            const data = await getProfile(user.id);
+            setProfile(data);
+
+            if (data) {
+                if (data.full_name) setFullName(data.full_name);
+                if (data.display_name) setFullName(data.full_name ?? data.display_name);
+                if (data.display_name) setUsername(data.display_name);
+                if (data.bio) setBio(typeof data.bio === 'string' ? data.bio : '');
+                if (data.course) setMarkingScheme(data.course);
+                if (data.semester != null) setSemester(formatSemester(data.semester));
+                if (data.subjects && data.subjects.length > 0) setSubjects(data.subjects);
+            }
+
+            setIsLoading(false);
+        };
+        void loadProfile();
+    }, [user.id]);
+
+    useEffect(() => {
+        if (appearance !== 'system') return;
+
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        const handler = () => applyTheme('system');
+
+        mediaQuery.addEventListener('change', handler);
+        return () => mediaQuery.removeEventListener('change', handler);
+    }, [appearance]);
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        setSaveStatus('idle');
+
+        const semNum = parseSemester(semester);
+
+        const { error } = await upsertProfile(user.id, {
+            full_name: fullName,
+            display_name: username,
+            bio: bio,
+            semester: semNum,
+            subjects,
+        });
+
+        setIsSaving(false);
+
+        if (error) {
+            setSaveStatus('error');
+            setSaveMessage('Failed to save changes. Please try again.');
+        } else {
+            setSaveStatus('success');
+            setSaveMessage('Changes saved successfully!');
+            setTimeout(() => setSaveStatus('idle'), 3000);
+        }
+    };
 
     const removeSubject = (sub: string) => {
         setSubjects(subjects.filter((s) => s !== sub));
     };
 
-    const addSubject = () => {
-        if (!subjects.includes('New Subject')) {
-            setSubjects([...subjects, 'New Subject']);
+    const handleAddSubject = () => {
+        const trimmed = newSubjectInput.trim();
+        if (trimmed && !subjects.includes(trimmed)) {
+            setSubjects([...subjects, trimmed]);
         }
+        setNewSubjectInput('');
+        setShowSubjectInput(false);
     };
-
-    const email = user.email || 'student@vtu.edu.in';
 
     const scrollToSection = (id: string) => {
         setActiveTab(id);
-        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+        setTimeout(() => {
+            document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+        }, 50);
     };
 
     return (
@@ -61,13 +174,13 @@ export function Settings({ user }: SettingsProps) {
                         <span className="material-icons-outlined">school</span>
                         Academic Info
                     </button>
-                    <button className="settings-nav-btn" disabled>
+                    <button className="settings-nav-btn" disabled title="Coming soon">
                         <span className="material-icons-outlined">verified_user</span>
                         Security
                     </button>
                 </div>
 
-                <div className="settings-divider"></div>
+                <div className="settings-divider" />
 
                 <div className="settings-sidebar-group">
                     <h3 className="settings-sidebar-heading">App Preferences</h3>
@@ -99,11 +212,24 @@ export function Settings({ user }: SettingsProps) {
                                 <h2 className="settings-section-title">Public Profile</h2>
                                 <p className="settings-section-desc">Manage your personal information and college verification status.</p>
                             </div>
-                            <button className="btn btn-primary settings-btn-save">
-                                <span className="material-icons-outlined settings-btn-icon">save</span>
-                                Save Changes
+                            <button
+                                className="btn btn-primary settings-btn-save"
+                                onClick={handleSave}
+                                disabled={isSaving}
+                            >
+                                <span className="material-icons-outlined settings-btn-icon">
+                                    {isSaving ? 'hourglass_empty' : saveStatus === 'success' ? 'check' : 'save'}
+                                </span>
+                                {isSaving ? 'Saving...' : saveStatus === 'success' ? 'Saved!' : 'Save Changes'}
                             </button>
                         </div>
+
+                        {saveStatus === 'error' && (
+                            <div className="settings-alert settings-alert--error">
+                                <span className="material-icons-outlined">error</span>
+                                {saveMessage}
+                            </div>
+                        )}
 
                         <div className="settings-panel settings-panel-padding">
                             <div className="profile-flex">
@@ -169,18 +295,18 @@ export function Settings({ user }: SettingsProps) {
                                         <textarea
                                             id="bio"
                                             title="Bio"
-                                            placeholder="Bio"
+                                            placeholder="Tell us about yourself..."
                                             className="settings-textarea"
                                             value={bio}
                                             onChange={(e) => setBio(e.target.value)}
-                                        ></textarea>
+                                        />
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </section>
 
-                    <div className="settings-divider"></div>
+                    <div className="settings-divider" />
 
                     {/* Academic Configuration Section */}
                     <section id="academic" className="settings-section">
@@ -208,9 +334,9 @@ export function Settings({ user }: SettingsProps) {
                                         value={markingScheme}
                                         onChange={(e) => setMarkingScheme(e.target.value)}
                                     >
-                                        <option>VTU 2022 Scheme (NEP)</option>
-                                        <option>VTU 2018 Scheme (CBCS)</option>
-                                        <option>Autonomous</option>
+                                        {MARKING_SCHEMES.map((s) => (
+                                            <option key={s} value={s}>{s}</option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>
@@ -238,9 +364,9 @@ export function Settings({ user }: SettingsProps) {
                                             value={semester}
                                             onChange={(e) => setSemester(e.target.value)}
                                         >
-                                            <option>Sem 6</option>
-                                            <option>Sem 5</option>
-                                            <option>Sem 7</option>
+                                            {SEMESTERS.map((s) => (
+                                                <option key={s} value={s}>{s}</option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>
@@ -253,23 +379,68 @@ export function Settings({ user }: SettingsProps) {
                                 Active Subjects ({semester})
                             </h3>
                             <div className="academic-tags">
-                                {subjects.map(subject => (
+                                {subjects.map((subject) => (
                                     <div key={subject} className="academic-tag">
                                         {subject}
-                                        <button className="academic-tag-close" onClick={() => removeSubject(subject)}>
+                                        <button
+                                            className="academic-tag-close"
+                                            onClick={() => removeSubject(subject)}
+                                            aria-label={`Remove ${subject}`}
+                                        >
                                             <span className="material-icons-outlined">close</span>
                                         </button>
                                     </div>
                                 ))}
-                                <button className="academic-tag-add" onClick={addSubject}>
-                                    <span className="material-icons-outlined">add</span>
-                                    Add Subject
-                                </button>
+
+                                {showSubjectInput ? (
+                                    <div className="academic-tag academic-tag--input">
+                                        <input
+                                            type="text"
+                                            className="academic-tag-input"
+                                            placeholder="Subject name"
+                                            value={newSubjectInput}
+                                            onChange={(e) => setNewSubjectInput(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') handleAddSubject();
+                                                if (e.key === 'Escape') {
+                                                    setShowSubjectInput(false);
+                                                    setNewSubjectInput('');
+                                                }
+                                            }}
+                                            autoFocus
+                                        />
+                                        <button
+                                            className="academic-tag-add-confirm"
+                                            onClick={handleAddSubject}
+                                            aria-label="Confirm add subject"
+                                        >
+                                            <span className="material-icons-outlined">check</span>
+                                        </button>
+                                        <button
+                                            className="academic-tag-close"
+                                            onClick={() => {
+                                                setShowSubjectInput(false);
+                                                setNewSubjectInput('');
+                                            }}
+                                            aria-label="Cancel"
+                                        >
+                                            <span className="material-icons-outlined">close</span>
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        className="academic-tag-add"
+                                        onClick={() => setShowSubjectInput(true)}
+                                    >
+                                        <span className="material-icons-outlined">add</span>
+                                        Add Subject
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </section>
 
-                    <div className="settings-divider"></div>
+                    <div className="settings-divider" />
 
                     {/* AI & Study Preferences Section */}
                     <section id="ai-prefs" className="settings-section">
@@ -284,7 +455,7 @@ export function Settings({ user }: SettingsProps) {
                                     <h4 className="pref-title">Default Answer Format</h4>
                                     <p className="pref-desc">Set the preferred length for AI generated answers based on marks.</p>
                                     <div className="pref-actions">
-                                        {['2 Marks', '8 Marks', '10 Marks'].map(mark => (
+                                        {['2 Marks', '8 Marks', '10 Marks'].map((mark) => (
                                             <button
                                                 key={mark}
                                                 className={`pref-btn-mark ${answerFormat === mark ? 'pref-btn-mark--active' : ''}`}
@@ -337,7 +508,7 @@ export function Settings({ user }: SettingsProps) {
                                             checked={aiMode}
                                             onChange={() => setAiMode(!aiMode)}
                                         />
-                                        <span className="pref-toggle-label"></span>
+                                        <span className="pref-toggle-label" />
                                     </label>
                                 </div>
                             </div>
@@ -358,8 +529,8 @@ export function Settings({ user }: SettingsProps) {
                                     </div>
                                 )}
                                 <div className="appearance-preview appearance-preview--light">
-                                    <div className="preview-top"></div>
-                                    <div className="preview-left"></div>
+                                    <div className="preview-top" />
+                                    <div className="preview-left" />
                                     <div className="appearance-preview-icon">
                                         <span className="material-icons-outlined">light_mode</span>
                                     </div>
@@ -377,8 +548,8 @@ export function Settings({ user }: SettingsProps) {
                                     </div>
                                 )}
                                 <div className="appearance-preview appearance-preview--dark">
-                                    <div className="preview-top"></div>
-                                    <div className="preview-left"></div>
+                                    <div className="preview-top" />
+                                    <div className="preview-left" />
                                     <div className="appearance-preview-icon">
                                         <span className="material-icons-outlined">dark_mode</span>
                                     </div>
@@ -386,7 +557,16 @@ export function Settings({ user }: SettingsProps) {
                                 <span className="appearance-label">Dark Mode</span>
                             </button>
 
-                            <button className="appearance-btn appearance-btn--disabled">
+                            <button
+                                className={`appearance-btn ${appearance === 'system' ? 'appearance-btn--active' : ''}`}
+                                onClick={() => setAppearance('system')}
+                                title="Follow your operating system preference"
+                            >
+                                {appearance === 'system' && (
+                                    <div className="appearance-btn-check">
+                                        <span className="material-icons-outlined">check</span>
+                                    </div>
+                                )}
                                 <div className="appearance-preview appearance-preview--system">
                                     <div className="appearance-preview-icon">
                                         <span className="material-icons-outlined">contrast</span>
@@ -398,7 +578,7 @@ export function Settings({ user }: SettingsProps) {
                     </section>
 
                     <footer className="settings-footer">
-                        <p>© 2023 MODULY AI. Advanced Academic Settings.</p>
+                        <p>© 2026 MODULY AI. Advanced Academic Settings.</p>
                     </footer>
                 </div>
             </main>

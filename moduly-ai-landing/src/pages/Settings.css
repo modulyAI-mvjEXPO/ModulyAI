@@ -887,3 +887,84 @@
   font-size: 0.75rem;
   color: var(--muted-foreground);
 }
+
+/* ── Alert banners ── */
+.settings-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.settings-alert--error {
+  border-color: #ff3333;
+  color: #ff3333;
+  background: transparent;
+}
+
+/* ── Inline subject input ── */
+.academic-tag--input {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: transparent;
+  border: 2px dashed var(--border);
+  cursor: default;
+}
+
+.academic-tag-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 0.875rem;
+  color: var(--foreground);
+  width: 140px;
+}
+
+.academic-tag-input::placeholder {
+  color: var(--muted-foreground);
+}
+
+.academic-tag-add-confirm {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  color: #22c55e;
+}
+
+.academic-tag-add-confirm .material-icons-outlined {
+  font-size: 1rem;
+}
+
+/* ── Settings nav disabled tooltip ── */
+.settings-nav-btn[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Empty state / loading ── */
+.settings-panel:has(.profile-form-grid) {
+  min-height: 200px;
+}
+
+/* ── Sr-only utility ── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

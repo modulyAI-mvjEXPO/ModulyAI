@@ -55,7 +55,7 @@
 /* Brutalist highlight — yellow block instead of gradient text */
 .ud-title-highlight {
   background: var(--secondary);
-  color: var(--foreground);
+  color: var(--on-secondary);
   padding: 0 4px;
 }
 

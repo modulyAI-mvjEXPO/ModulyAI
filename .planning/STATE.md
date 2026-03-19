@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-03-15)
 
 ## Current Position
 
-Phase: 9 — COMPLETE
-Plan: 09-01 (Visual Redesign: New Theme System) complete
-Status: All 9 phases complete. Project ready for demo.
-Last activity: 2026-03-17 — Phase 9 CSS rewrite complete (26 files, brutalist design system)
+Phase: 10 — COMPLETE
+Plan: 10-01 (Make All Buttons Work, Remove Hardcoding) complete
+Status: All 10 phases complete. Project fully functional with real data and working buttons.
+Last activity: 2026-03-19 — Phase 10 complete (Dashboard + Settings wired to real data, theme system implemented, ExamMode AI pipeline fixed)
 
-Progress: [██████████] 100% (9 of 9 phases complete)
+Progress: [██████████] 100% (10 of 10 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
+- Total plans completed: 12
 - Average duration: ~20 minutes
-- Total execution time: ~245 minutes
+- Total execution time: ~265 minutes
 
 **By Phase:**
 
@@ -32,11 +32,14 @@ Progress: [██████████] 100% (9 of 9 phases complete)
 | 03 — Study Mode Core | 2 | ~30 min | ~15 min |
 | 04 — Study Enhancement | 2/2 | ~30 min | ~15 min |
 | 05 — Exam Mode | 2/2 | ~45 min | ~22 min |
-  | 06 — PYQ Intelligence | 1/1 | ~30 min | ~30 min |
-  | 07 — Community Library | 1/1 | ~30 min | ~30 min |
+| 06 — PYQ Intelligence | 1/1 | ~30 min | ~30 min |
+| 07 — Community Library | 1/1 | ~30 min | ~30 min |
+| 08 — Demo Hardening | TBD | TBD | TBD |
+| 09 — Visual Redesign | TBD | ~20 min | ~20 min |
+| 10 — Button Wiring + Live Data | 1 | ~20 min | ~20 min |
 
 **Recent Trend:**
-  - Last 10 plans: ..., 04-01 (~15 min), 04-02 (~15 min), 05-01 (~20 min), 05-02 (~25 min), 06-01 (~30 min), 07-01 (~30 min)
+  - Last 10 plans: ..., 07-01 (~30 min), 08-01 (~20 min), 09-01 (~20 min), 10-01 (~20 min)
   - Trend: Steady ~15–30 min/plan
 
 *Updated after each plan completion*
@@ -284,9 +287,9 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-03-17
-Stopped at: Phase 9 complete — all CSS files rewritten to brutalist design system
-Project status: **All 9 phases complete. Project ready for demo.**
+Last session: 2026-03-19
+Stopped at: Phase 10 complete — all buttons wired, real data, theme system implemented
+Project status: **All 10 phases complete. Project fully functional.**
 
 ## Roadmap Evolution
 
@@ -296,3 +299,11 @@ Project status: **All 9 phases complete. Project ready for demo.**
   - WavyBackground: canvas-based animated waves (simplex-noise) in Hero section
   - All 26 CSS files rewritten to brutalist design system
   - TypeScript checks passed: npx tsc --noEmit ✅, npx tsc -p tsconfig.functions.json --noEmit ✅
+- 2026-03-19: Phase 10 COMPLETE (Make All Buttons Work, Remove Hardcoding)
+  - exam-solve.mts: Fixed RPC type cast bug (query_embedding as unknown as string → number[])
+  - Dashboard.tsx: Full rewrite — real profile data via getProfile(), live docs from Supabase, stats computed from DB, search/View All/Resume buttons wired
+  - Settings.tsx: Full rewrite — profile load on mount via getProfile(), Save Changes calls upsertProfile(), inline subject add with input, theme switching with matchMedia
+  - StudyMode.tsx: Removed 2x alert() stubs (file attach, voice input)
+  - index.css: Added [data-theme="dark"] with full brutalist dark mode variables
+  - main.tsx: Added initial data-theme="dark" on html element
+  - TypeScript checks passed: npx tsc --noEmit ✅ (both app and functions)

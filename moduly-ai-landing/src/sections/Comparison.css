@@ -68,7 +68,7 @@
 }
 
 .row-moduly {
-  color: var(--foreground);
+  color: var(--on-secondary);
   background: var(--secondary);
 }
 
@@ -89,7 +89,7 @@
 }
 
 .status-icon.positive {
-  background: #00aa00;
+  background: #008800;
   color: white;
 }
 

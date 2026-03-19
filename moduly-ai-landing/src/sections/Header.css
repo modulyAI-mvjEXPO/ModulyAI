@@ -95,7 +95,7 @@
   font-family: var(--font-sans);
   font-size: var(--font-size-sm);
   font-weight: 700;
-  color: #ffffff;
+  color: var(--background);
   background: var(--foreground);
   border: 2px solid var(--border);
   border-radius: var(--radius);

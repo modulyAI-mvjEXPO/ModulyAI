@@ -8,6 +8,7 @@
   /* Core palette */
   --primary: #ff3333;
   --secondary: #ffff00;
+  --on-secondary: #000000;
   --accent: #0066ff;
   --background: #ffffff;
   --foreground: #000000;
@@ -88,6 +89,36 @@
   --transition-fast: 150ms ease;
   --transition-base: 250ms ease;
   --transition-slow: 350ms ease;
+}
+
+/* ---- DARK THEME (Brutalist) ---- */
+[data-theme="dark"] {
+  --primary: #ff3333;
+  --secondary: #ffff00;
+  --on-secondary: #000000;
+  --accent: #4488ff;
+  --background: #0a0a0a;
+  --foreground: #ffffff;
+  --muted: #1a1a1a;
+  --muted-foreground: #aaaaaa;
+  --border: #ffffff;
+  --shadow: 4px 4px 0px #ffffff;
+  --shadow-sm: 2px 2px 0px #ffffff;
+  --shadow-lg: 6px 6px 0px #ffffff;
+  --shadow-xl: 8px 8px 0px #ffffff;
+  --color-primary: var(--foreground);
+  --color-secondary: var(--primary);
+  --color-accent: var(--accent);
+  --color-background: var(--background);
+  --color-surface: var(--background);
+  --color-surface-elevated: var(--muted);
+  --color-text-primary: var(--foreground);
+  --color-text-secondary: var(--muted-foreground);
+  --color-text-tertiary: #888888;
+  --color-border: var(--border);
+  --color-border-subtle: #333333;
+  --shadow-md: var(--shadow);
+  --shadow-card: var(--shadow-sm);
 }
 
 /* ---- RESET & BASE ---- */
@@ -223,7 +254,7 @@ a:hover {
 
 .btn-primary:hover {
   background: var(--secondary);
-  color: #000000;
+  color: var(--on-secondary);
 }
 
 .btn-secondary {
@@ -249,7 +280,7 @@ a:hover {
   border-radius: var(--radius);
   border: 2px solid var(--border);
   background: var(--secondary);
-  color: #000000;
+  color: var(--on-secondary);
   box-shadow: var(--shadow-sm);
 }
 
@@ -283,8 +314,8 @@ a:hover {
 /* Brutalist highlight replaces gradient text */
 .gradient-text {
   background: var(--secondary);
-  color: #000000;
-  padding: 0 4px;
+  color: var(--on-secondary);
+  padding: 4px 12px;
   -webkit-text-fill-color: unset;
 }
 
@@ -306,7 +337,7 @@ a:hover {
   border-radius: var(--radius);
   border: 2px solid var(--border);
   background: var(--secondary);
-  color: #000000;
+  color: var(--on-secondary);
   margin-bottom: var(--space-4);
   font-size: 1.5rem;
   box-shadow: var(--shadow-sm);
@@ -316,7 +347,7 @@ a:hover {
 /* ---- SELECTION ---- */
 ::selection {
   background: var(--secondary);
-  color: #000000;
+  color: var(--on-secondary);
 }
 
 /* ---- SCROLLBAR ---- */

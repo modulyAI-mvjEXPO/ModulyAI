@@ -209,7 +209,7 @@ export const handler = async (
 
     const supabase = createServerSupabaseClient();
     const { data: chunks, error: ragError } = await supabase.rpc('match_documents_filtered', {
-      query_embedding: queryEmbedding as unknown as string,
+      query_embedding: queryEmbedding,
       filter_document_ids: request.documentIds ?? null,
       filter_subject_id: request.subjectId ?? null,
       match_threshold: RAG_THRESHOLD,

@@ -86,6 +86,8 @@ export function Library({ user, onNavigate }: LibraryProps) {
   const [fetchError, setFetchError] = useState('');
   const [removalPending, setRemovalPending] = useState<ReadonlySet<string>>(new Set());
   const [removalDone, setRemovalDone] = useState<ReadonlySet<string>>(new Set());
+  const [viewingDoc, setViewingDoc] = useState<string | null>(null);
+  const [viewError, setViewError] = useState('');
 
   const [subject, setSubject] = useState('All Subjects');
   const [module, setModule] = useState('All Modules');
@@ -94,27 +96,115 @@ export function Library({ user, onNavigate }: LibraryProps) {
   const [page, setPage] = useState(1);
 
   useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+
     const fetchDocs = async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('documents')
-          .select('id,title,file_type,file_size,created_at,user_id,status,chunk_count,file_path,subject_id,module_id,updated_at')
-          .eq('status', 'ready')
-          .order('created_at', { ascending: false });
+        const backendBase = import.meta.env.VITE_BACKEND_URL || '';
+        
+        // Use Promise.allSettled to fetch both independently
+        const [uthoSettled, dbSettled] = await Promise.allSettled([
+          fetch(`${backendBase}/list-files`, { signal: controller.signal }),
+          supabase
+            .from('documents')
+            .select('id,title,file_type,file_size,created_at,user_id,status,chunk_count,file_path,subject_id,module_id,updated_at')
+            .eq('status', 'ready')
+            .order('created_at', { ascending: false })
+        ]);
 
-        if (error) throw error;
-        setDocs((data ?? []) as ReadonlyArray<DocumentRow>);
+        if (!isMounted) return;
+
+        let uthoFiles: ReadonlyArray<{ filename: string; size: number; lastModified: string }> = [];
+        let uthoError = false;
+
+        // Handle Utho result
+        if (uthoSettled.status === 'fulfilled') {
+          const res = uthoSettled.value;
+          if (res.ok) {
+            const data = await res.json();
+            uthoFiles = data.files || [];
+          } else {
+            uthoError = true;
+            console.error('Utho API returned error:', res.status);
+          }
+        } else {
+          if (uthoSettled.reason?.name !== 'AbortError') {
+            uthoError = true;
+            console.error('Utho fetch rejected:', uthoSettled.reason);
+          }
+        }
+
+        if (!isMounted) return;
+
+        // Handle Supabase result
+        let dbDocs: any[] = [];
+        if (dbSettled.status === 'fulfilled') {
+          const { data, error: dbError } = dbSettled.value;
+          if (!dbError) {
+            dbDocs = data ?? [];
+          } else {
+            console.error('Supabase query error:', dbError);
+          }
+        } else {
+          console.error('Supabase promise rejected:', dbSettled.reason);
+        }
+
+        if (uthoError && dbDocs.length === 0) {
+          throw new Error('Failed to load documents from storage');
+        }
+
+        // 3. Merge: Utho files are the source of existence
+        const dbMap = new Map(dbDocs.map(d => [d.file_path, d]));
+        
+        const mergedDocs: DocumentRow[] = uthoFiles.map(file => {
+          const dbMatch = dbMap.get(file.filename);
+          
+          if (dbMatch) {
+            return {
+              ...dbMatch,
+              file_size: file.size,
+            } as DocumentRow;
+          }
+
+          return {
+            id: `utho-${file.filename}`,
+            user_id: 'unknown',
+            title: file.filename.replace(/^\d+-/, ''),
+            file_path: file.filename,
+            file_type: file.filename.split('.').pop()?.toLowerCase() || 'unknown',
+            subject_id: null,
+            module_id: null,
+            created_at: file.lastModified,
+            status: 'ready',
+            chunk_count: 0,
+            file_size: file.size,
+            updated_at: file.lastModified,
+          } as DocumentRow;
+        });
+
+        // Add any DB docs that might be missing from Utho (optional, but let's stick to Utho as truth)
+        // mergedDocs.sort...
+        mergedDocs.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+        setDocs(mergedDocs);
         setFetchError('');
-      } catch (e) {
+      } catch (e: any) {
+        if (e.name === 'AbortError') return;
         console.error('Error fetching library documents:', e);
-        setFetchError('Could not load documents. Please try again.');
+        setFetchError('Could not load documents from storage. Please try again.');
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     void fetchDocs();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
   }, []);
 
   const filtered = useMemo(() => {
@@ -155,6 +245,24 @@ export function Library({ user, onNavigate }: LibraryProps) {
     }
   };
 
+  const handleView = async (filePath: string) => {
+    if (viewingDoc === filePath) return;
+    setViewingDoc(filePath);
+    setViewError('');
+    try {
+      const backendBase = import.meta.env.VITE_BACKEND_URL || '';
+      const res = await fetch(`${backendBase}/get-view-url?filename=${encodeURIComponent(filePath)}`);
+      if (!res.ok) throw new Error('Failed to get view URL');
+      const { url } = await res.json() as { url: string };
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (e) {
+      console.error('Error opening file:', e);
+      setViewError('Could not open file. Please try again.');
+    } finally {
+      setViewingDoc(null);
+    }
+  };
+
   return (
     <div className="lib-shell">
       {/* ── Page header ───────────────────────────────────── */}
@@ -178,9 +286,18 @@ export function Library({ user, onNavigate }: LibraryProps) {
         </div>
       </div>
 
+      {/* View error banner */}
+      {viewError && (
+        <div className="lib-view-error">
+          <span className="material-icons-outlined">error_outline</span>
+          {viewError}
+          <button className="lib-view-error-close" onClick={() => setViewError('')}>✕</button>
+        </div>
+      )}
+
       {/* ── Filters panel ─────────────────────────────────── */}
       <div className="lib-filters">
-        <div className="lib-filter-row">
+        <div className="lib-filter-row lib-filter-row--single">
           <div className="lib-filter-group">
             <label className="lib-filter-label">Course Type</label>
             <select className="lib-select" aria-label="Course Type" defaultValue="B.E / B.Tech">
@@ -201,8 +318,6 @@ export function Library({ user, onNavigate }: LibraryProps) {
               {MODULES.map(m => <option key={m}>{m}</option>)}
             </select>
           </div>
-        </div>
-        <div className="lib-filter-row lib-filter-row--bottom">
           <div className="lib-filter-group">
             <label className="lib-filter-label">Doc Type</label>
             <select className="lib-select" aria-label="Doc Type" value={docType} onChange={handleFilter(setDocType)}>
@@ -312,9 +427,14 @@ export function Library({ user, onNavigate }: LibraryProps) {
                       {alreadyRequested ? 'Requested' : isPending ? '…' : 'Remove'}
                     </button>
                   )}
-                  {!isOwner && (
-                    <button className="lib-view-btn">View</button>
-                  )}
+                  <button
+                    className="lib-view-btn"
+                    disabled={viewingDoc === doc.file_path}
+                    onClick={() => void handleView(doc.file_path)}
+                    title="Open file in browser"
+                  >
+                    {viewingDoc === doc.file_path ? '…' : 'View'}
+                  </button>
                 </div>
               </div>
             );

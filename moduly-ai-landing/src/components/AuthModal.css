@@ -183,7 +183,7 @@
 }
 
 .auth-tab.active {
-  color: var(--foreground);
+  color: var(--on-secondary);
 }
 
 .tab-indicator {
@@ -325,7 +325,7 @@
   font-family: var(--font-sans);
   font-size: var(--font-size-base);
   font-weight: 700;
-  color: #ffffff;
+  color: var(--background);
   background: var(--foreground);
   cursor: pointer;
   box-shadow: var(--shadow);
@@ -391,7 +391,7 @@
   justify-content: center;
   border-radius: var(--radius);
   background: var(--secondary);
-  color: var(--foreground);
+  color: var(--on-secondary);
   border: 2px solid var(--border);
   box-shadow: var(--shadow-sm);
 }

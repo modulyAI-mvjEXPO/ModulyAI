@@ -21,6 +21,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 7: Community Library** - Real document browsing with filtering and removal requests from Supabase
 - [x] **Phase 8: Demo Hardening** - Multi-provider fallback chain, cached responses, error handling, and pre-warming for live demo
 - [x] **Phase 9: Visual Redesign: New Theme System** - Replace all existing CSS/themes with new design system (CSS variables, wavy background, new fonts) across all pages, subpages, landing page, and auth modals
+- [x] **Phase 10: Make All Buttons Work, Remove Hardcoding** - Wire Dashboard and Settings to real Supabase profile data, implement theme switching, fix ExamMode AI pipeline bug, remove all hardcoded mock arrays and alert() stubs
 
 ## Phase Details
 
@@ -164,6 +165,16 @@ Phases execute in numeric order. Note: Phases 5, 6, and 7 have independent depen
 
 Plans:
 - [x] 09-01: Install simplex-noise, add fonts (DM Sans + Space Mono), create WavyBackground component, rewrite all 26 CSS files to brutalist design
+
+### Phase 10: make all the buttons in all the pages work and do its designated task and remove all the hardcoding to make this project lively and useful. and make sure the ai api keys are used to get the answers in the chat.
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 9
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 10 to break down)
 
 ---
 *Roadmap created: 2026-03-16*

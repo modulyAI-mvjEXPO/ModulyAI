@@ -1,12 +1,23 @@
+import { useState, useEffect } from 'react';
 import './Hero.css';
 import { WavyBackground } from '../components/ui/wavy-background';
 
 export function Hero() {
+    const [isDark, setIsDark] = useState(document.documentElement.getAttribute('data-theme') === 'dark');
+    
+    useEffect(() => {
+        const observer = new MutationObserver(() => {
+            setIsDark(document.documentElement.getAttribute('data-theme') === 'dark');
+        });
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+        return () => observer.disconnect();
+    }, []);
+
     return (
         <section className="hero" id="hero">
             <WavyBackground
                 containerClassName="hero-wavy"
-                backgroundFill="#ffffff"
+                backgroundFill={isDark ? "#0a0a0a" : "#ffffff"}
                 colors={["#ff3333", "#ffff00", "#0066ff", "#ff3333", "#0066ff"]}
                 waveOpacity={0.35}
                 blur={8}

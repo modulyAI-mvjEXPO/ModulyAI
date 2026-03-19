@@ -38,16 +38,8 @@ type AppView = 'landing' | 'onboarding' | 'dashboard' | 'loading';
 
 function AppContent() {
   const [authOpen, setAuthOpen] = useState(false);
-
-  /**
-   * OPTIMISTIC INIT:
-   * If Supabase has a stored (non-expired) session → assume dashboard immediately.
-   * Background useEffect will verify and correct (onboarding / landing) silently.
-   * This eliminates the loading spinner on every page/server reload.
-   */
-  // const storedUser = getStoredUser();
-  const [view, setView] = useState<AppView>('dashboard');
-  const [currentUser, setCurrentUser] = useState<User | null>({ email: 'student@vtu.tech', user_metadata: { display_name: 'Test Agent' } } as unknown as User);
+  const [view, setView] = useState<AppView>('loading');
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   const handleSignOut = () => {
     setCurrentUser(null);
@@ -57,45 +49,83 @@ function AppContent() {
   const handleOnboardingComplete = () => setView('dashboard');
 
   useEffect(() => {
-    // Background verification – no UI impact if session is still valid
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session?.user) {
-        // Truly signed out or token expired → landing
-        setCurrentUser(null);
-        setView('landing');
-        return;
+    let mounted = true;
+
+    async function initializeAuth() {
+      // Safety timeout: transition to landing if init takes too long (e.g. 15s)
+      const safetyTimeout = setTimeout(() => {
+        if (mounted && view === 'loading') {
+          console.warn('Auth initialization timed out, defaulting to landing.');
+          setView('landing');
+        }
+      }, 15000);
+
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!mounted) {
+          clearTimeout(safetyTimeout);
+          return;
+        }
+
+        if (session?.user) {
+          setCurrentUser(session.user);
+          try {
+            // Profile fetch also needs a timeout safeguard (12s)
+            const profile = await Promise.race([
+              getProfile(session.user.id),
+              new Promise<null>((resolve) => setTimeout(() => resolve(null), 12000))
+            ]);
+
+            if (!mounted) return;
+            setView(profile?.onboarding_complete === false ? 'onboarding' : 'dashboard');
+          } catch (profileErr) {
+            console.error('Profile fetch failed during init:', profileErr);
+            setView('dashboard'); // Fallback to dashboard if profile fails
+          }
+        } else {
+          setView('landing');
+        }
+      } catch (err) {
+        console.error('Auth initialization failed:', err);
+        if (mounted) setView('landing');
+      } finally {
+        clearTimeout(safetyTimeout);
       }
+    }
 
-      const user = session.user;
-      setCurrentUser(user);
-
-      // Check whether onboarding is actually complete
-      const profile = await getProfile(user.id);
-
-      if (profile?.onboarding_complete === false) {
-        // Explicit false → onboarding genuinely not done
-        setView('onboarding');
-      } else {
-        // true, or profile null (fetch failed) → stay/go to dashboard
-        setView('dashboard');
-      }
-    });
+    initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
-          setAuthOpen(false);
+        if (!mounted) return;
+
+        if (session?.user) {
           setCurrentUser(session.user);
-          const profile = await getProfile(session.user.id);
-          // false explicitly → onboarding; anything else (true/null) → dashboard
-          setView(profile?.onboarding_complete === false ? 'onboarding' : 'dashboard');
-        } else if (event === 'SIGNED_OUT') {
-          handleSignOut();
+          if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'USER_UPDATED') {
+            try {
+              // Wrap with 15s timeout
+              const profile = await Promise.race([
+                  getProfile(session.user.id),
+                  new Promise<null>((resolve) => setTimeout(() => resolve(null), 15000))
+              ]);
+              if (!mounted) return;
+              setView(profile?.onboarding_complete === false ? 'onboarding' : 'dashboard');
+            } catch (err) {
+              console.error('onAuthStateChange profile fetch error:', err);
+              setView('dashboard');
+            }
+          }
+        } else {
+          setCurrentUser(null);
+          setView('landing');
         }
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   // ── Render ──────────────────────────────────────────────────────────────
@@ -104,6 +134,7 @@ function AppContent() {
     return (
       <div className="app-loading">
         <div className="app-loading-spinner" />
+        <p className="app-loading-text">MODULY AI</p>
       </div>
     );
   }

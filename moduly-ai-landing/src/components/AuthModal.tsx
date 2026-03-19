@@ -125,13 +125,19 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
         setIsSubmitting(true);
         setErrors({});
-        const { error } = await signIn(loginIdentifier, loginPassword);
-        setIsSubmitting(false);
-
-        if (error) { setErrors({ form: error }); return; }
-
-        setSuccessMessage('Logged in successfully. Welcome back!');
-        setTimeout(onClose, 1200);
+        try {
+            const { error } = await signIn(loginIdentifier, loginPassword);
+            if (error) {
+                setErrors({ form: error });
+                return;
+            }
+            setSuccessMessage('Logged in successfully. Welcome back!');
+            setTimeout(onClose, 1200);
+        } catch (err) {
+            setErrors({ form: 'Login failed. Please try again later.' });
+        } finally {
+            setIsSubmitting(false);
+        }
     }, [loginIdentifier, loginPassword, onClose]);
 
     // ── Sign Up ────────────────────────────────────────────
@@ -150,12 +156,18 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
         setIsSubmitting(true);
         setErrors({});
-        const { error } = await signUp(email, password);
-        setIsSubmitting(false);
-
-        if (error) { setErrors({ form: error }); return; }
-
-        setView('otp');
+        try {
+            const { error } = await signUp(email, password);
+            if (error) {
+                setErrors({ form: error });
+                return;
+            }
+            setView('otp');
+        } catch (err) {
+            setErrors({ form: 'Signup failed. Please try again.' });
+        } finally {
+            setIsSubmitting(false);
+        }
     }, [username, email, password, confirmPassword]);
 
     // ── OTP ────────────────────────────────────────────────
@@ -189,21 +201,32 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
         setErrors({});
         setIsSubmitting(true);
-        const { error, user } = await verifyOtp(email, code);
-        setIsSubmitting(false);
+        try {
+            const { error, user } = await verifyOtp(email, code);
+            if (error) {
+                setErrors({ otp: error });
+                return;
+            }
 
-        if (error) { setErrors({ otp: error }); return; }
+            // Save username + email to profile right after OTP verification
+            if (user) {
+                try {
+                    await upsertProfile(user.id, {
+                        display_name: username,
+                        email: email,
+                    });
+                } catch (profileErr) {
+                    console.error('Initial profile creation failed:', profileErr);
+                }
+            }
 
-        // Save username + email to profile right after OTP verification
-        if (user) {
-            await upsertProfile(user.id, {
-                display_name: username,
-                email: email,
-            });
+            setSuccessMessage('Account verified! Welcome to MODULY AI.');
+            setTimeout(onClose, 1400);
+        } catch (err) {
+            setErrors({ otp: 'Verification failed. Please try again.' });
+        } finally {
+            setIsSubmitting(false);
         }
-
-        setSuccessMessage('Account verified! Welcome to MODULY AI.');
-        setTimeout(onClose, 1400);
     };
 
     const handleResendOtp = async () => {

@@ -133,7 +133,7 @@
 .sm-doc:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0px var(--foreground); }
 .sm-doc--on {
   background: var(--secondary);
-  color: var(--foreground);
+  color: var(--on-secondary);
   box-shadow: 4px 4px 0px var(--foreground);
 }
 .sm-doc-icon { font-size: 18px !important; flex-shrink: 0; }
@@ -149,7 +149,7 @@
   text-overflow: ellipsis;
   margin: 0 0 1px;
 }
-.sm-doc--on .sm-doc-name { color: var(--foreground); }
+.sm-doc--on .sm-doc-name { color: var(--on-secondary); }
 .sm-doc-meta { font-size: 10px; color: var(--muted-foreground); margin: 0; }
 .sm-check {
   width: 15px; height: 15px;
@@ -182,7 +182,7 @@
 .sm-topic--on {
   background: var(--secondary);
   border-color: var(--foreground);
-  color: var(--foreground);
+  color: var(--on-secondary);
   font-weight: 800;
   box-shadow: 3px 3px 0px var(--foreground);
 }
@@ -339,7 +339,7 @@
 .sm-mark-btn:hover { color: var(--foreground); background: var(--muted); }
 .sm-mark-btn--on {
   background: var(--secondary);
-  color: var(--foreground);
+  color: var(--on-secondary);
   font-weight: 700;
 }
 

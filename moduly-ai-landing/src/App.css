@@ -9,18 +9,29 @@
   position: fixed;
   inset: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--color-background);
+  gap: var(--space-6);
+  background: var(--background);
+  z-index: 9999;
 }
 
 .app-loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(124, 100, 253, 0.15);
-  border-top-color: #7c64fd;
+  width: 50px;
+  height: 50px;
+  border: 5px solid var(--border);
+  border-top-color: var(--primary);
   border-radius: 50%;
-  animation: appSpin 0.75s linear infinite;
+  animation: appSpin 1s linear infinite;
+}
+
+.app-loading-text {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--foreground);
+  text-transform: uppercase;
 }
 
 @keyframes appSpin {
