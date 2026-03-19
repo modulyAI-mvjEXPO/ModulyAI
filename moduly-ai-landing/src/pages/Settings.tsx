@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { getProfile, upsertProfile } from '../lib/profile';
-import type { UserProfile } from '../lib/profile';
 import './Settings.css';
 
 interface SettingsProps {
@@ -45,8 +44,6 @@ const formatSemester = (sem: number | null): string => {
 
 export function Settings({ user }: SettingsProps) {
     const [activeTab, setActiveTab] = useState('profile');
-    const [profile, setProfile] = useState<UserProfile | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
 
     const [fullName, setFullName] = useState(
         user.user_metadata?.display_name || user.email?.split('@')[0] || 'Student'
@@ -79,9 +76,7 @@ export function Settings({ user }: SettingsProps) {
 
     useEffect(() => {
         const loadProfile = async () => {
-            setIsLoading(true);
             const data = await getProfile(user.id);
-            setProfile(data);
 
             if (data) {
                 if (data.full_name) setFullName(data.full_name);
@@ -92,8 +87,6 @@ export function Settings({ user }: SettingsProps) {
                 if (data.semester != null) setSemester(formatSemester(data.semester));
                 if (data.subjects && data.subjects.length > 0) setSubjects(data.subjects);
             }
-
-            setIsLoading(false);
         };
         void loadProfile();
     }, [user.id]);
