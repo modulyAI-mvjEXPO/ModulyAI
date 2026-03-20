@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from '../../src/lib/ai/supabase-server.ts';
 import { getEmbedding } from '../../src/lib/ai/embedding.ts';
 import { chatCompletion } from '../../src/lib/ai/llm.ts';
+import { rerankChunks } from '../../src/lib/ai/reranker.ts';
 import type { ChatMessage, ChatRequest, RagChunk } from '../../src/lib/ai/types.ts';
 
 type HandlerEvent = {
@@ -20,9 +21,13 @@ const CORS_HEADERS = {
 } as const;
 
 const MAX_HISTORY_MESSAGES = 10;
-const DEFAULT_MODEL = 'google/gemini-2.0-flash-exp:free';
-const RAG_MATCH_COUNT = 5;
-const RAG_THRESHOLD = 0.5;
+// Groq llama-3.3-70b-versatile is the default speed-optimised model.
+// The smart router in llm.ts will override to Z_AI or OpenRouter as needed.
+const DEFAULT_MODEL = 'llama-3.3-70b-versatile';
+// Fetch more candidates from pgvector so the reranker has room to work.
+const RAG_MATCH_COUNT = 10;
+const RAG_RERANK_COUNT = 5;
+const RAG_THRESHOLD = 0.4;
 
 const MARK_INSTRUCTIONS: Readonly<Record<string, string>> = {
   '2M': 'The student needs a 2-mark answer. Write 2–3 concise sentences covering only the core definition or fact. No examples or elaboration needed.',
@@ -249,17 +254,25 @@ export const handler = async (
 
     const ragChunks: ReadonlyArray<RagChunk> = (chunks ?? []) as ReadonlyArray<RagChunk>;
 
-    const systemPrompt = buildSystemPrompt(ragChunks, request.mark, request.strict, request.subjectId);
+    // ── Reranking: cross-encoder precision pass ──────────────────────────────
+    // Fetch 10 candidates above, rerank to the 5 most relevant chunks.
+    // Falls back to top-5 by similarity if NVIDIA NIM reranker is unavailable.
+    const rerankedChunks = await rerankChunks(request.message, ragChunks, RAG_RERANK_COUNT);
+
+    const systemPrompt = buildSystemPrompt(rerankedChunks, request.mark, request.strict, request.subjectId);
     const messages = buildMessagesArray(systemPrompt, request.history, request.message);
 
     let responseText: string;
     try {
+      // Route to Z_AI (GLM-5) for 8M/10M marks or when context is large
+      const reasoningMode = request.mark === '8M' || request.mark === '10M';
       const llmResult = await chatCompletion({
         model: DEFAULT_MODEL,
         messages,
         stream: false,
         temperature: 0.7,
         max_tokens: 2048,
+        reasoningMode,
       });
       if (typeof llmResult !== 'string') {
         throw new Error('LLM returned a stream instead of a string');
@@ -275,7 +288,7 @@ export const handler = async (
       throw llmErr;
     }
 
-    const sources = ragChunks.map((c) => ({
+    const sources = rerankedChunks.map((c) => ({
       documentId: c.document_id,
       content: c.content.slice(0, 200),
       similarity: c.similarity,

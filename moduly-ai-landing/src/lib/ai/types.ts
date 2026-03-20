@@ -26,6 +26,17 @@ export type ChatCompletionOptions = {
   readonly stream?: boolean;
   readonly temperature?: number;
   readonly max_tokens?: number;
+  /** When true, routes to Z_AI (GLM-5) for deep reasoning over complex or long-context queries */
+  readonly reasoningMode?: boolean;
+};
+
+export type RerankResult = {
+  readonly index: number;
+  readonly logit: number;
+};
+
+export type RerankResponse = {
+  readonly rankings: ReadonlyArray<RerankResult>;
 };
 
 export type ChatCompletionResponse = {
