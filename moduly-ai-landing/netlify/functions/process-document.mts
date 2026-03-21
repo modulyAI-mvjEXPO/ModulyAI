@@ -13,6 +13,7 @@ type ProcessDocumentBody = {
 type HandlerEvent = {
   readonly httpMethod: string;
   readonly body: string | null;
+  readonly headers: Record<string, string | undefined>;
 };
 
 type HandlerResponse = {
@@ -40,21 +41,35 @@ const findMissingFields = (
   REQUIRED_FIELDS.filter((field) => !body[field]);
 
 const triggerBackgroundProcessing = (
+  supabase: ReturnType<typeof createServerSupabaseClient>,
   documentId: string,
   filePath: string,
+  event: HandlerEvent,
 ): void => {
+  const host = event.headers?.host || 'localhost:8888';
+  const protocol = host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : 'https';
   const baseUrl =
     process.env['URL'] ??
     process.env['DEPLOY_URL'] ??
-    'http://localhost:8888';
+    `${protocol}://${host}`;
 
   fetch(`${baseUrl}/.netlify/functions/process-document-background`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ documentId, filePath }),
-  }).catch((err: unknown) => {
-    console.error('Failed to trigger background function:', err);
-  });
+  })
+    .then(async (res) => {
+      if (!res.ok) {
+        throw new Error(`Background function returned ${res.status}`);
+      }
+    })
+    .catch(async (err: unknown) => {
+      console.error('Failed to trigger background function:', err);
+      await supabase
+        .from('documents')
+        .update({ status: 'failed', updated_at: new Date().toISOString() })
+        .eq('id', documentId);
+    });
 };
 
 export const handler = async (
@@ -107,7 +122,7 @@ export const handler = async (
       });
     }
 
-    triggerBackgroundProcessing(data.id as string, filePath);
+    triggerBackgroundProcessing(supabase, data.id as string, filePath, event);
 
     return jsonResponse(202, { documentId: data.id });
   } catch (err: unknown) {

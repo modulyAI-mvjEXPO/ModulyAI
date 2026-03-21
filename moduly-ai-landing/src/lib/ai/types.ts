@@ -21,7 +21,7 @@ export type ChatMessage = {
 };
 
 export type ChatCompletionOptions = {
-  readonly model: string;
+  readonly model?: string;
   readonly messages: ReadonlyArray<ChatMessage>;
   readonly stream?: boolean;
   readonly temperature?: number;

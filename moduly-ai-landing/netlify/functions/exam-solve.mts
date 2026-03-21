@@ -17,9 +17,10 @@ type HandlerResponse = {
 const CORS_HEADERS = {
   'Content-Type': 'application/json',
   'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
 } as const;
 
-const DEFAULT_MODEL = 'google/gemini-2.0-flash-exp:free';
 const RAG_MATCH_COUNT = 5;
 const RAG_THRESHOLD = 0.5;
 
@@ -184,6 +185,10 @@ const buildExamSystemPrompt = (
 export const handler = async (
   event: HandlerEvent,
 ): Promise<HandlerResponse> => {
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers: CORS_HEADERS, body: '' };
+  }
+
   if (event.httpMethod !== 'POST') {
     return jsonResponse(405, { error: 'Method Not Allowed' });
   }
@@ -205,22 +210,27 @@ export const handler = async (
       subjectId: typeof body['subjectId'] === 'string' ? body['subjectId'] : undefined,
     };
 
-    const queryEmbedding = await getEmbedding(request.question);
+    let ragChunks: ReadonlyArray<RagChunk> = [];
+    try {
+      const queryEmbedding = await getEmbedding(request.question);
 
-    const supabase = createServerSupabaseClient();
-    const { data: chunks, error: ragError } = await supabase.rpc('match_documents_filtered', {
-      query_embedding: queryEmbedding,
-      filter_document_ids: request.documentIds ?? null,
-      filter_subject_id: request.subjectId ?? null,
-      match_threshold: RAG_THRESHOLD,
-      match_count: RAG_MATCH_COUNT,
-    });
+      const supabase = createServerSupabaseClient();
+      const { data: chunks, error: ragError } = await supabase.rpc('match_documents_filtered', {
+        query_embedding: queryEmbedding,
+        filter_document_ids: request.documentIds ?? null,
+        filter_subject_id: request.subjectId ?? null,
+        match_threshold: RAG_THRESHOLD,
+        match_count: RAG_MATCH_COUNT,
+      });
 
-    if (ragError) {
-      console.error('RAG retrieval error:', ragError);
+      if (ragError) {
+        console.error('RAG retrieval error:', ragError);
+      } else {
+        ragChunks = (chunks ?? []) as ReadonlyArray<RagChunk>;
+      }
+    } catch (ragErr) {
+      console.warn('Embedding/RAG pipeline failed, proceeding without context:', ragErr instanceof Error ? ragErr.message : String(ragErr));
     }
-
-    const ragChunks: ReadonlyArray<RagChunk> = (chunks ?? []) as ReadonlyArray<RagChunk>;
 
     const systemPrompt = buildExamSystemPrompt(ragChunks, request.mark, request.subjectId);
     const systemMsg: ChatMessage = { role: 'system', content: systemPrompt };
@@ -229,7 +239,6 @@ export const handler = async (
     let answerText: string;
     try {
       const llmResult = await chatCompletion({
-        model: DEFAULT_MODEL,
         messages: [systemMsg, userMsg],
         stream: false,
         temperature: 0.7,

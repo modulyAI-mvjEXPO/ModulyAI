@@ -7,12 +7,6 @@ const EMBEDDING_PROVIDERS: readonly AIProviderConfig[] = [
     apiKeyEnvVar: 'NVIDIA_NIM_API_KEY',
     defaultModel: 'nvidia/nv-embedqa-e5-v5',
   },
-  {
-    name: 'groq',
-    baseUrl: 'https://api.groq.com/openai/v1',
-    apiKeyEnvVar: 'GROQ_API_KEY',
-    defaultModel: 'nomic-embed-text-v1.5',
-  },
 ];
 
 const TIMEOUT_MS = 10_000;
@@ -28,6 +22,7 @@ const getApiKey = (envVar: string): string => {
 const callEmbeddingProvider = async (
   config: AIProviderConfig,
   text: string,
+  inputType: 'passage' | 'query' = 'passage',
 ): Promise<ReadonlyArray<number>> => {
   const apiKey = getApiKey(config.apiKeyEnvVar);
 
@@ -39,7 +34,9 @@ const callEmbeddingProvider = async (
     },
     body: JSON.stringify({
       model: config.defaultModel,
-      input: text,
+      input: [text],
+      input_type: inputType,
+      encoding_format: 'float'
     }),
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
@@ -52,12 +49,15 @@ const callEmbeddingProvider = async (
   return data.data[0].embedding;
 };
 
-export const getEmbedding = async (text: string): Promise<ReadonlyArray<number>> => {
+export const getEmbedding = async (
+  text: string,
+  inputType: 'passage' | 'query' = 'passage'
+): Promise<ReadonlyArray<number>> => {
   const errors: Array<string> = [];
 
   for (const provider of EMBEDDING_PROVIDERS) {
     try {
-      return await callEmbeddingProvider(provider, text);
+      return await callEmbeddingProvider(provider, text, inputType);
     } catch (err) {
       errors.push(`${provider.name}: ${err instanceof Error ? err.message : String(err)}`);
     }

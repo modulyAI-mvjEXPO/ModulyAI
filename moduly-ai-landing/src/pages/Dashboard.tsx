@@ -179,7 +179,7 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
     }
   };
 
-  const handleResume = (_doc: RecentDoc) => {
+  const handleResume = () => {
     setActivePage('study');
   };
 
@@ -440,7 +440,7 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
                       <td className="db-table-right">
                         <button
                           className="db-resume-btn"
-                          onClick={() => handleResume(doc)}
+                          onClick={() => handleResume()}
                         >
                           Resume
                         </button>

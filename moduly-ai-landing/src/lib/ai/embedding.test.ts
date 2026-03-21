@@ -52,61 +52,12 @@ describe('getEmbedding', () => {
     expect(result.every((n) => typeof n === 'number')).toBe(true);
   });
 
-  it('falls back to alternative provider when primary returns 500', async () => {
+  it('throws descriptive error with provider name when it fails', async () => {
     const mockFetch = vi.fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
-      .mockResolvedValueOnce(new Response('Internal Server Error', { status: 500 }))
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify(createMockEmbeddingResponse()), { status: 200 }),
-      );
-    globalThis.fetch = mockFetch;
-
-    const result = await getEmbedding('test text');
-
-    expect(mockFetch).toHaveBeenCalledTimes(2);
-    expect(result).toHaveLength(1024);
-  });
-
-  it('falls back when primary fetch throws network error', async () => {
-    const mockFetch = vi.fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
-      .mockRejectedValueOnce(new Error('Network error'))
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify(createMockEmbeddingResponse()), { status: 200 }),
-      );
-    globalThis.fetch = mockFetch;
-
-    const result = await getEmbedding('test text');
-
-    expect(mockFetch).toHaveBeenCalledTimes(2);
-    expect(result).toHaveLength(1024);
-  });
-
-  it('fallback also returns 1024-dim vector', async () => {
-    const mockFetch = vi.fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
-      .mockRejectedValueOnce(new Error('Primary failed'))
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify(createMockEmbeddingResponse(1024)), { status: 200 }),
-      );
-    globalThis.fetch = mockFetch;
-
-    const result = await getEmbedding('test text');
-
-    expect(result).toHaveLength(1024);
-    result.forEach((n) => expect(typeof n).toBe('number'));
-  });
-
-  it('throws descriptive error with both provider names when both fail', async () => {
-    const mockFetch = vi.fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
-      .mockRejectedValueOnce(new Error('Primary failed'))
-      .mockRejectedValueOnce(new Error('Fallback failed'));
+      .mockRejectedValue(new Error('Primary failed'));
     globalThis.fetch = mockFetch;
 
     await expect(getEmbedding('test text')).rejects.toThrow(/nvidia-nim/i);
-    // Reset and test again for fallback provider name
-    mockFetch
-      .mockRejectedValueOnce(new Error('Primary failed'))
-      .mockRejectedValueOnce(new Error('Fallback failed'));
-
-    await expect(getEmbedding('test text')).rejects.toThrow(/fallback/i);
   });
 
   it('throws if API key env var is missing', async () => {

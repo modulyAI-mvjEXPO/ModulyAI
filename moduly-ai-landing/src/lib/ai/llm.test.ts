@@ -27,7 +27,6 @@ const createMockSSEStream = (chunks: ReadonlyArray<string>): ReadableStream<Uint
 };
 
 const defaultOptions: ChatCompletionOptions = {
-  model: 'google/gemini-2.0-flash-exp:free',
   messages: [{ role: 'user', content: 'Hello' }],
 };
 
@@ -35,6 +34,7 @@ describe('chatCompletion', () => {
   const originalFetch = globalThis.fetch;
 
   beforeEach(() => {
+    vi.stubEnv('GROQ_API_KEY', 'test-groq-key');
     vi.stubEnv('OPENROUTER_API_KEY', 'test-openrouter-key');
     vi.stubEnv('NVIDIA_NIM_API_KEY', 'test-nvidia-key');
   });
@@ -44,7 +44,7 @@ describe('chatCompletion', () => {
     vi.unstubAllEnvs();
   });
 
-  it('sends correct payload to OpenRouter with required headers', async () => {
+  it('sends correct payload to Groq (primary provider) with auth header', async () => {
     const mockFetch = vi.fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>().mockResolvedValue(
       new Response(JSON.stringify(createMockChatResponse()), { status: 200 }),
     );
@@ -54,18 +54,16 @@ describe('chatCompletion', () => {
 
     expect(mockFetch).toHaveBeenCalledOnce();
     const [url, init] = mockFetch.mock.calls[0];
-    expect(url).toBe('https://openrouter.ai/api/v1/chat/completions');
+    expect(url).toBe('https://api.groq.com/openai/v1/chat/completions');
     expect(init?.method).toBe('POST');
 
     const body = JSON.parse(init?.body as string) as ChatCompletionOptions;
-    expect(body.model).toBe('google/gemini-2.0-flash-exp:free');
+    expect(body.model).toBe('llama-3.3-70b-versatile');
     expect(body.messages).toEqual([{ role: 'user', content: 'Hello' }]);
 
     const headers = init?.headers as Record<string, string>;
-    expect(headers['Authorization']).toBe('Bearer test-openrouter-key');
+    expect(headers['Authorization']).toBe('Bearer test-groq-key');
     expect(headers['Content-Type']).toBe('application/json');
-    expect(headers['HTTP-Referer']).toBeDefined();
-    expect(headers['X-Title']).toBeDefined();
   });
 
   it('returns string content in non-streaming mode', async () => {
@@ -114,7 +112,7 @@ describe('chatCompletion', () => {
     expect(chunks).toEqual(['Hello', ' world', '!']);
   });
 
-  it('falls back to NVIDIA NIM when OpenRouter returns 500', async () => {
+  it('falls back to OpenRouter when Groq returns 500', async () => {
     const mockFetch = vi.fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
       .mockResolvedValueOnce(new Response('Internal Server Error', { status: 500 }))
       .mockResolvedValueOnce(
@@ -128,10 +126,10 @@ describe('chatCompletion', () => {
     expect(result).toBe('Fallback response');
 
     const [fallbackUrl] = mockFetch.mock.calls[1];
-    expect(fallbackUrl).toBe('https://integrate.api.nvidia.com/v1/chat/completions');
+    expect(fallbackUrl).toBe('https://openrouter.ai/api/v1/chat/completions');
   });
 
-  it('falls back when OpenRouter fetch throws network error', async () => {
+  it('falls back when Groq fetch throws network error', async () => {
     const mockFetch = vi.fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
       .mockRejectedValueOnce(new Error('Network error'))
       .mockResolvedValueOnce(
@@ -145,24 +143,19 @@ describe('chatCompletion', () => {
     expect(result).toBe('Fallback response');
   });
 
-  it('throws descriptive error when both providers fail', async () => {
+  it('throws descriptive error when all providers fail', async () => {
     const mockFetch = vi.fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
       .mockRejectedValueOnce(new Error('Primary failed'))
-      .mockRejectedValueOnce(new Error('Fallback failed'));
+      .mockRejectedValueOnce(new Error('Secondary failed'))
+      .mockRejectedValueOnce(new Error('Tertiary failed'));
     globalThis.fetch = mockFetch;
 
-    await expect(chatCompletion(defaultOptions)).rejects.toThrow(/openrouter/i);
-
-    mockFetch
-      .mockRejectedValueOnce(new Error('Primary failed'))
-      .mockRejectedValueOnce(new Error('Fallback failed'));
-
-    await expect(chatCompletion(defaultOptions)).rejects.toThrow(/nvidia-nim/i);
+    await expect(chatCompletion(defaultOptions)).rejects.toThrow(/groq/i);
   });
 
   it('throws if API key env var is missing', async () => {
-    vi.stubEnv('OPENROUTER_API_KEY', '');
+    vi.stubEnv('GROQ_API_KEY', '');
 
-    await expect(chatCompletion(defaultOptions)).rejects.toThrow(/OPENROUTER_API_KEY/);
+    await expect(chatCompletion(defaultOptions)).rejects.toThrow(/GROQ_API_KEY/);
   });
 });

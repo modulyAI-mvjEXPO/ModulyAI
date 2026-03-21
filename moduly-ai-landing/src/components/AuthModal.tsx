@@ -133,7 +133,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             }
             setSuccessMessage('Logged in successfully. Welcome back!');
             setTimeout(onClose, 1200);
-        } catch (err) {
+        } catch {
             setErrors({ form: 'Login failed. Please try again later.' });
         } finally {
             setIsSubmitting(false);
@@ -163,7 +163,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 return;
             }
             setView('otp');
-        } catch (err) {
+        } catch {
             setErrors({ form: 'Signup failed. Please try again.' });
         } finally {
             setIsSubmitting(false);
@@ -222,7 +222,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
             setSuccessMessage('Account verified! Welcome to MODULY AI.');
             setTimeout(onClose, 1400);
-        } catch (err) {
+        } catch {
             setErrors({ otp: 'Verification failed. Please try again.' });
         } finally {
             setIsSubmitting(false);

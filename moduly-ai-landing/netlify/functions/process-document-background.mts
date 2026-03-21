@@ -55,7 +55,7 @@ const updateDocumentStatus = async (
   status: string,
   chunkCount?: number,
 ): Promise<void> => {
-  await supabase
+  const { error } = await supabase
     .from('documents')
     .update({
       status,
@@ -63,6 +63,10 @@ const updateDocumentStatus = async (
       updated_at: new Date().toISOString(),
     })
     .eq('id', documentId);
+
+  if (error) {
+    throw new Error(`Failed to update document status to ${status}: ${error.message}`);
+  }
 };
 
 const embedAndStoreChunks = async (
@@ -71,18 +75,30 @@ const embedAndStoreChunks = async (
   chunks: ReturnType<typeof chunkText>,
   pageCount: number,
 ): Promise<void> => {
-  for (const chunk of chunks) {
-    const embedding = await getEmbedding(chunk.content);
+  const BATCH_SIZE = 5;
+  for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
+    const batch = chunks.slice(i, i + BATCH_SIZE);
+    await Promise.all(
+      batch.map(async (chunk) => {
+        const embedding = await getEmbedding(chunk.content);
 
-    await supabase.from('document_chunks').insert({
-      document_id: documentId,
-      content: chunk.content,
-      metadata: {
-        chunk_index: chunk.chunkIndex,
-        page_count: pageCount,
-      },
-      embedding: embedding as unknown as string,
-    });
+        const { error } = await supabase.from('document_chunks').insert({
+          document_id: documentId,
+          content: chunk.content,
+          chunk_index: chunk.chunkIndex,
+          metadata: {
+            page_count: pageCount,
+          },
+          embedding: embedding as unknown as string,
+        });
+
+        if (error) {
+          throw new Error(
+            `Failed to insert chunk ${chunk.chunkIndex}: ${error.message}`,
+          );
+        }
+      }),
+    );
   }
 };
 
@@ -91,16 +107,33 @@ const processDocument = async (
   filePath: string,
 ): Promise<void> => {
   const supabase = createServerSupabaseClient();
-  
-  // MOCK PROCESSING: Wait 3 seconds to simulate AI chunking and embedding
-  await new Promise(resolve => setTimeout(resolve, 3000));
+  const s3Client = createS3Client();
 
-  await updateDocumentStatus(
-    supabase,
-    documentId,
-    'ready',
-    12, // Mock chunk count
-  );
+  try {
+    console.log(`Downloading PDF from S3 for document ${documentId}...`);
+    const pdfBuffer = await downloadPdfFromS3(s3Client, filePath);
+
+    console.log(`Extracting text from PDF for document ${documentId}...`);
+    const { text, pageCount, isScanned } = await extractPdfText(pdfBuffer);
+
+    if (!text.trim() || isScanned) {
+      console.warn(`No readable text or scanned PDF detected for document ${documentId}.`);
+      await updateDocumentStatus(supabase, documentId, 'no_text', 0);
+      return;
+    }
+
+    console.log(`Chunking extracted text for document ${documentId}...`);
+    const chunks = chunkText(text);
+
+    console.log(`Embedding and storing ${chunks.length} chunks for document ${documentId}...`);
+    await embedAndStoreChunks(supabase, documentId, chunks, pageCount);
+
+    console.log(`Document ${documentId} processed successfully!`);
+    await updateDocumentStatus(supabase, documentId, 'ready', chunks.length);
+  } catch (error) {
+    console.error(`Document processing failed internally for ${documentId}:`, error);
+    throw error;
+  }
 };
 
 export const handler = async (

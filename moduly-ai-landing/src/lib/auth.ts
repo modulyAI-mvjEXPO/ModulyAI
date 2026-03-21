@@ -100,7 +100,7 @@ export async function resendOtp(email: string): Promise<{ error: string | null }
         const { error } = await withTimeout(supabase.auth.resend({ type: 'signup', email }));
         if (error) return { error: formatError(error) };
         return { error: null };
-    } catch (e) {
+    } catch {
         return { error: 'Failed to resend code. Please try again.' };
     }
 }
@@ -123,7 +123,7 @@ export async function getCurrentUser(): Promise<User | null> {
     try {
         const { data: { user } } = await withTimeout(supabase.auth.getUser(), 3000);
         return user;
-    } catch (e) {
+    } catch {
         return null;
     }
 }

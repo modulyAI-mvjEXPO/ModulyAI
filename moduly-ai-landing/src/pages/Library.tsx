@@ -139,7 +139,7 @@ export function Library({ user, onNavigate }: LibraryProps) {
         if (!isMounted) return;
 
         // Handle Supabase result
-        let dbDocs: any[] = [];
+        let dbDocs: DocumentRow[] = [];
         if (dbSettled.status === 'fulfilled') {
           const { data, error: dbError } = dbSettled.value;
           if (!dbError) {
@@ -190,7 +190,8 @@ export function Library({ user, onNavigate }: LibraryProps) {
 
         setDocs(mergedDocs);
         setFetchError('');
-      } catch (e: any) {
+      } catch (err: unknown) {
+        const e = err as Error;
         if (e.name === 'AbortError') return;
         console.error('Error fetching library documents:', e);
         setFetchError('Could not load documents from storage. Please try again.');

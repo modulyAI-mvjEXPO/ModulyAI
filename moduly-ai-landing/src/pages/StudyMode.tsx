@@ -107,7 +107,8 @@ async function chatWithAI(
   subjectId: string | undefined,
   history: ReadonlyArray<{ role: 'user' | 'assistant'; content: string }>,
 ): Promise<ChatResponse> {
-  const res = await fetch('/chat', {
+  const backendBase = import.meta.env.VITE_BACKEND_URL || '';
+  const res = await fetch(`${backendBase}/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -188,6 +189,8 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
   const [topics, setTopics] = useState<TopicItem[]>(() => getTopicsForSubject(''));
   const [isTyping, setIsTyping] = useState(false);
   const [docsLoading, setDocsLoading] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Progressive reveal state
   const [revealingId, setRevealingId] = useState<string | null>(null);
@@ -220,6 +223,45 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
     };
     fetchDocs();
   }, [user.id]);
+
+  // ── Poll for Processing documents ──────────────────────────────────────
+  useEffect(() => {
+    const processingDocs = docs.filter(d => d.meta === 'Processing...');
+    if (processingDocs.length === 0) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const ids = processingDocs.map(d => d.id);
+        const { data, error } = await supabase
+          .from('documents')
+          .select('id, status, chunk_count')
+          .in('id', ids);
+
+        if (error) throw error;
+        
+        let changed = false;
+        const updates = Object.fromEntries(data.map((r: { id: string; status: string; chunk_count: number }) => [r.id, r]));
+        
+        const nextDocs = docs.map(d => {
+          const u = updates[d.id];
+          if (u && u.status === 'ready') {
+            changed = true;
+            return { ...d, meta: `${u.chunk_count} chunks · Just now` };
+          } else if (u && u.status === 'failed') {
+            changed = true;
+            return { ...d, meta: 'Failed to process' };
+          }
+          return d;
+        });
+
+        if (changed) setDocs(nextDocs);
+      } catch (err) {
+        console.error('Polling error:', err);
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [docs]);
 
   // auto‑scroll
   useEffect(() => {
@@ -274,6 +316,87 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
   const resetChat = () => {
     setRevealingId(null);
     setMessages([getWelcome(docs.length)]);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const uploadingMsgId = uid();
+    setMessages(prev => [...prev, {
+      id: uploadingMsgId,
+      role: 'ai',
+      content: `Uploading **${file.name}** and preparing it for analysis...`,
+      time: ts()
+    }]);
+
+    try {
+      const backendBase = import.meta.env.VITE_BACKEND_URL || '';
+
+      const backendResponse = await fetch(`${backendBase}/get-upload-url`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
+          contentType: file.type || 'application/octet-stream',
+        }),
+      });
+
+      if (!backendResponse.ok) throw new Error('Failed to get upload URL');
+      const { uploadUrl, filename } = await backendResponse.json();
+
+      const uthoResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+        body: file,
+      });
+
+      if (!uthoResponse.ok) throw new Error('Failed to upload file to storage');
+
+      const processResponse = await fetch(`${backendBase}/process-document`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: file.name,
+          filePath: filename,
+          fileType: file.type || 'application/octet-stream',
+          userId: user.id,
+          fileSize: file.size,
+        }),
+      });
+
+      if (!processResponse.ok) throw new Error('Failed to trigger document processing');
+      const processData = await processResponse.json();
+      const documentId = processData.documentId;
+
+      if (!documentId) throw new Error('No document ID returned');
+
+      const newDoc: DocItem = {
+        id: documentId,
+        name: file.name,
+        type: file.type === 'application/pdf' ? 'pdf' : 'doc',
+        meta: 'Processing...',
+        selected: true
+      };
+
+      setDocs(prev => [newDoc, ...prev]);
+
+      setMessages(prev => prev.map(m => m.id === uploadingMsgId ? {
+        ...m,
+        content: `**${file.name}** has been successfully uploaded! It is currently being scanned into our database. **Please wait until it finishes Processing** in the sidebar before asking questions about it.`
+      } : m));
+
+    } catch (error) {
+      console.error('Upload Error:', error);
+      setMessages(prev => prev.map(m => m.id === uploadingMsgId ? {
+        ...m,
+        content: `Sorry, I met an error while uploading **${file.name}**. Please try again.`
+      } : m));
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   const sendMessage = useCallback(async (override?: string) => {
@@ -595,9 +718,24 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
 
           {/* Textarea row */}
           <div className="sm-input-row">
-            <button className="sm-icon-btn" title="Attach file" aria-label="Attach file">
-              <span className="material-icons-outlined">attach_file</span>
+            <button
+               className={`sm-icon-btn ${isUploading ? 'sm-icon-btn--disabled' : ''}`}
+               title="Attach file"
+               aria-label="Attach file"
+               onClick={() => !isUploading && fileInputRef.current?.click()}
+               disabled={isUploading}
+            >
+              <span className={`material-icons-outlined ${isUploading ? 'sm-spin' : ''}`}>
+                 {isUploading ? 'autorenew' : 'attach_file'}
+              </span>
             </button>
+            <input
+               type="file"
+               ref={fileInputRef}
+               style={{ display: 'none' }}
+               accept=".pdf,.doc,.docx"
+               onChange={(e) => { void handleFileUpload(e); }}
+            />
             <div className="sm-textarea-wrap">
               <textarea
                 ref={textareaRef}

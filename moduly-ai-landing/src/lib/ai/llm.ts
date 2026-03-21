@@ -2,22 +2,22 @@ import type { AIProviderConfig, ChatCompletionOptions, ChatCompletionResponse, S
 
 const LLM_PROVIDERS: readonly AIProviderConfig[] = [
   {
+    name: 'groq',
+    baseUrl: 'https://api.groq.com/openai/v1',
+    apiKeyEnvVar: 'GROQ_API_KEY',
+    defaultModel: 'llama-3.3-70b-versatile',
+  },
+  {
     name: 'openrouter',
     baseUrl: 'https://openrouter.ai/api/v1',
     apiKeyEnvVar: 'OPENROUTER_API_KEY',
-    defaultModel: 'google/gemini-2.0-flash-exp:free',
+    defaultModel: 'openrouter/free',
   },
   {
     name: 'nvidia-nim',
     baseUrl: 'https://integrate.api.nvidia.com/v1',
     apiKeyEnvVar: 'NVIDIA_NIM_API_KEY',
     defaultModel: 'meta/llama-3.1-8b-instruct',
-  },
-  {
-    name: 'groq',
-    baseUrl: 'https://api.groq.com/openai/v1',
-    apiKeyEnvVar: 'GROQ_API_KEY',
-    defaultModel: 'llama-3.3-70b-versatile',
   },
 ];
 
@@ -100,7 +100,7 @@ const callLLMProvider = async (
     method: 'POST',
     headers: buildHeaders(config, apiKey),
     body: JSON.stringify({
-      model: options.model,
+      model: options.model ?? config.defaultModel,
       messages: options.messages,
       stream: options.stream ?? false,
       ...(options.temperature !== undefined ? { temperature: options.temperature } : {}),
