@@ -5,11 +5,19 @@ const EMBEDDING_PROVIDERS: readonly AIProviderConfig[] = [
     name: 'nvidia-nim',
     baseUrl: 'https://integrate.api.nvidia.com/v1',
     apiKeyEnvVar: 'NVIDIA_NIM_API_KEY',
-    defaultModel: 'nvidia/nv-embedqa-e5-v5',
+    // Purpose-built for RAG retrieval — tuned for query-passage matching
+    defaultModel: 'nvidia/llama-3.2-nv-embedqa-1b-v2',
+  },
+  {
+    // Fallback: Groq's nomic model if NVIDIA NIM is unavailable
+    name: 'groq',
+    baseUrl: 'https://api.groq.com/openai/v1',
+    apiKeyEnvVar: 'GROQ_API_KEY',
+    defaultModel: 'nomic-embed-text-v1.5',
   },
 ];
 
-const TIMEOUT_MS = 10_000;
+const TIMEOUT_MS = 15_000;
 
 const getApiKey = (envVar: string): string => {
   const key = process.env[envVar];
@@ -35,7 +43,8 @@ const callEmbeddingProvider = async (
     body: JSON.stringify({
       model: config.defaultModel,
       input: [text],
-      input_type: inputType,
+      ...(config.name === 'nvidia-nim' ? { input_type: inputType } : {}),
+      // Some NIM models require an explicit encoding format
       encoding_format: 'float'
     }),
     signal: AbortSignal.timeout(TIMEOUT_MS),
