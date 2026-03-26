@@ -79,7 +79,8 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    void fetch('/warm', { method: 'POST' }).catch(() => {});
+    const backendBase = import.meta.env.VITE_BACKEND_URL || '';
+    void fetch(`${backendBase}/warm`, { method: 'POST' }).catch(() => {});
   }, []);
 
   useEffect(() => {

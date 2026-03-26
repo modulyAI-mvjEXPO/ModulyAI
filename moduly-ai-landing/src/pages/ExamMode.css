@@ -1071,3 +1071,235 @@
 }
 
 /* ── Light mode overrides ─────────────────────────────────────────────────── */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   EXAM MODE DASHBOARD  –  Types → Subjects → Chat hierarchy
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Shared dashboard shell */
+.em-dash {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 36px 52px;
+  overflow-y: auto;
+  background: var(--background);
+}
+
+.em-dash-head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 36px;
+}
+
+.em-dash-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--foreground);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.em-dash-subtitle {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.em-dash-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted-foreground);
+  background: none;
+  border: 2px solid var(--border);
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  width: fit-content;
+  transition: all 0.15s;
+}
+
+.em-dash-back-btn:hover {
+  color: var(--foreground);
+  background: var(--muted);
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0px var(--border);
+}
+
+.em-dash-back-btn span {
+  font-size: 18px !important;
+}
+
+/* ── Exam Types Grid ──────────────────────────────────────────────────────── */
+.em-types-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 24px;
+  max-width: 900px;
+}
+
+.em-type-card {
+  position: relative;
+  min-height: 160px;
+  border-radius: 16px;
+  border: 2px solid var(--border);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.2s, box-shadow 0.2s;
+  overflow: hidden;
+}
+
+.em-type-card:hover {
+  transform: translate(-4px, -4px);
+  box-shadow: 8px 8px 0px var(--foreground);
+}
+
+.em-type-card--blue   { background: #3b82f6; color: #fff; border-color: #2563eb; }
+.em-type-card--green  { background: #22c55e; color: #fff; border-color: #16a34a; }
+.em-type-card--amber  { background: #eab308; color: #fff; border-color: #ca8a04; }
+.em-type-card--rose   { background: #ef4444; color: #fff; border-color: #dc2626; }
+
+.em-type-card-label {
+  font-size: 1.75rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  position: relative;
+  z-index: 2;
+}
+
+.em-type-card-sub {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  opacity: 0.9;
+  line-height: 1.4;
+  position: relative;
+  z-index: 2;
+}
+
+.em-type-card-menu {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 20px !important;
+  opacity: 0.8;
+  z-index: 3;
+}
+
+.em-type-card-bg-icon {
+  position: absolute;
+  bottom: -8px;
+  right: -8px;
+  font-size: 96px !important;
+  opacity: 0.15;
+  z-index: 1;
+}
+
+/* ── Subjects Dashboard (shared patterns with Study Mode) ─────────────────── */
+.em-dash-content {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.em-dash-subject-row {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.em-dash-sub-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.em-dash-sub-title h3 {
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: 0.05em;
+  color: var(--foreground);
+}
+
+.em-dash-sub-icons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.em-dash-sub-icons span {
+  font-size: 18px !important;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.em-dash-sub-icons span:hover { color: var(--foreground); }
+
+.em-dash-kits {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+/* ── Module / Kit Cards ───────────────────────────────────────────────────── */
+.em-kit-card {
+  position: relative;
+  width: 180px;
+  height: 110px;
+  border-radius: 14px;
+  border: 2px solid var(--border);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  overflow: hidden;
+  text-align: left;
+}
+
+.em-kit-card:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 6px 6px 0px var(--foreground);
+}
+
+.em-kit-card--blue   { background: #3b82f6; color: #fff; border-color: #2563eb; }
+.em-kit-card--green  { background: #22c55e; color: #fff; border-color: #16a34a; }
+.em-kit-card--amber  { background: #eab308; color: #fff; border-color: #ca8a04; }
+.em-kit-card--rose   { background: #ef4444; color: #fff; border-color: #dc2626; }
+
+.em-kit-card-title {
+  font-size: 14px;
+  font-weight: 800;
+  position: relative;
+  z-index: 2;
+}
+
+.em-kit-card-menu {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 18px !important;
+  z-index: 3;
+  opacity: 0.8;
+}
+
+.em-kit-card-icon {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  font-size: 44px !important;
+  opacity: 0.25;
+  z-index: 1;
+}

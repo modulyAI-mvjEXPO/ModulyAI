@@ -1,11 +1,28 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import type { User } from '@supabase/supabase-js';
+import { getProfile } from '../lib/profile';
 import type {
   ExamRequest,
   ExamResponse,
   PyqIntelligenceResponse,
 } from '../lib/ai/types.ts';
 import './ExamMode.css';
+
+type ExamView = 'types' | 'subjects' | 'chat';
+
+const EXAM_TYPES: { id: string; label: string; subtitle: string; colorClass: string; icon: string }[] = [
+  { id: 'IA-1', label: 'IA-1', subtitle: 'Internal Assessment 1 · Modules 1 & 2', colorClass: 'em-type-card--blue', icon: 'looks_one' },
+  { id: 'IA-2', label: 'IA-2', subtitle: 'Internal Assessment 2 · Modules 3 & 4', colorClass: 'em-type-card--green', icon: 'looks_two' },
+  { id: 'IA-3', label: 'IA-3', subtitle: 'Internal Assessment 3 · Module 5', colorClass: 'em-type-card--amber', icon: 'looks_3' },
+  { id: 'Semester', label: 'Semester Exam', subtitle: 'End Semester Exam · All Modules', colorClass: 'em-type-card--rose', icon: 'school' },
+];
+
+const MODULES_BY_TYPE: Record<string, string[]> = {
+  'IA-1': ['Module 1', 'Module 2'],
+  'IA-2': ['Module 3', 'Module 4'],
+  'IA-3': ['Module 5'],
+  'Semester': ['Module 1', 'Module 2', 'Module 3', 'Module 4', 'Module 5'],
+};
 
 interface ExamModeProps { user: User; }
 
@@ -110,7 +127,8 @@ function parseQuestions(raw: string): string[] {
 async function solveWithAI(question: string, mark: string): Promise<string> {
   const requestBody: ExamRequest = { question, mark };
 
-  const res = await fetch('/exam-solve', {
+  const backendBase = import.meta.env.VITE_BACKEND_URL || '';
+  const res = await fetch(`${backendBase}/exam-solve`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(requestBody),
@@ -128,7 +146,8 @@ async function solveWithAI(question: string, mark: string): Promise<string> {
 }
 
 async function fetchPyqIntelligence(): Promise<PyqIntelligenceResponse> {
-  const res = await fetch('/pyq-intelligence', {
+  const backendBase = import.meta.env.VITE_BACKEND_URL || '';
+  const res = await fetch(`${backendBase}/pyq-intelligence`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({}),
@@ -159,6 +178,12 @@ export function ExamMode({ user }: ExamModeProps) {
   const firstName = displayName.split(' ')[0];
   const initials = firstName.charAt(0).toUpperCase();
 
+  // ── Dashboard navigation state ─────────────────────────────────────────
+  const [examView, setExamView] = useState<ExamView>('types');
+  const [selectedType, setSelectedType] = useState('');
+  const [subjects, setSubjects] = useState<string[]>([]);
+
+  // ── Chat / session state ───────────────────────────────────────────────
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [selectedMark, setSelectedMark] = useState<typeof MARKS[number]>('10M');
@@ -216,6 +241,19 @@ export function ExamMode({ user }: ExamModeProps) {
       mounted = false;
     };
   }, []);
+
+  // ── Load user subjects ─────────────────────────────────────────────────
+  useEffect(() => {
+    const load = async () => {
+      const profile = await getProfile(user.id);
+      if (profile?.subjects && profile.subjects.length > 0) {
+        setSubjects(profile.subjects);
+      } else {
+        setSubjects(['DSA', 'OS', 'DDCO', 'JAVA']);
+      }
+    };
+    void load();
+  }, [user.id]);
 
   const analysisData = analysis ?? FALLBACK_ANALYSIS;
 
@@ -280,7 +318,80 @@ export function ExamMode({ user }: ExamModeProps) {
 
   return (
     <div className="em-shell">
-      {/* ── Main content area ────────────────────────────────────────────── */}
+
+      {/* ── TYPES VIEW ──────────────────────────────────────────────────── */}
+      {examView === 'types' && (
+        <div className="em-dash">
+          <div className="em-dash-head">
+            <h1 className="em-dash-title">
+              Exam Mode
+              <span className="em-badge-beta">BETA v2.4</span>
+            </h1>
+            <p className="em-dash-subtitle">Choose an exam type to start generating AI-powered solutions and patterns.</p>
+          </div>
+          <div className="em-types-grid">
+            {EXAM_TYPES.map(t => (
+              <button
+                key={t.id}
+                className={`em-type-card ${t.colorClass}`}
+                onClick={() => { setSelectedType(t.id); setExamView('subjects'); }}
+              >
+                <span className="material-icons-outlined em-type-card-menu">more_vert</span>
+                <span className="material-icons-outlined em-type-card-bg-icon">{t.icon}</span>
+                <span className="em-type-card-label">{t.label}</span>
+                <span className="em-type-card-sub">{t.subtitle}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── SUBJECTS VIEW ───────────────────────────────────────────────── */}
+      {examView === 'subjects' && (
+        <div className="em-dash">
+          <div className="em-dash-head">
+            <button className="em-dash-back-btn" onClick={() => setExamView('types')}>
+              <span className="material-icons-outlined">arrow_back</span>
+              Back
+            </button>
+            <h1 className="em-dash-title">{selectedType} — Select Subject & Module</h1>
+            <p className="em-dash-subtitle">Choose a subject and the module you want to practise for.</p>
+          </div>
+          <div className="em-dash-content">
+            {subjects.map((sub, si) => {
+              const colorClasses = ['em-kit-card--blue', 'em-kit-card--green', 'em-kit-card--amber', 'em-kit-card--rose'];
+              const modules = MODULES_BY_TYPE[selectedType] ?? ['Module 1', 'Module 2'];
+              return (
+                <div key={sub} className="em-dash-subject-row">
+                  <div className="em-dash-sub-title">
+                    <h3>{sub.toUpperCase()}</h3>
+                    <div className="em-dash-sub-icons">
+                      <span className="material-icons-outlined">edit</span>
+                      <span className="material-icons-outlined">palette</span>
+                    </div>
+                  </div>
+                  <div className="em-dash-kits">
+                    {modules.map((mod, mi) => (
+                      <button
+                        key={mod}
+                        className={`em-kit-card ${colorClasses[(si + mi) % 4]}`}
+                        onClick={() => setExamView('chat')}
+                      >
+                        <span className="material-icons-outlined em-kit-card-menu">more_vert</span>
+                        <span className="em-kit-card-title">{mod}</span>
+                        <span className="material-icons-outlined em-kit-card-icon">quiz</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── CHAT VIEW (existing page) ────────────────────────────────────── */}
+      {examView === 'chat' && (
       <main className="em-grid">
 
         {/* Left Col: Upload & Analysis */}
@@ -289,7 +400,7 @@ export function ExamMode({ user }: ExamModeProps) {
           <div className="em-header">
             <div className="em-title-wrap">
               <h1 className="em-title">
-                Exam Mode
+                {selectedType || 'Exam'} Mode
                 <span className="em-badge-beta">BETA v2.4</span>
               </h1>
               <p className="em-subtitle">
@@ -297,8 +408,8 @@ export function ExamMode({ user }: ExamModeProps) {
               </p>
             </div>
             <div className="em-actions">
-              <button className="em-btn-history">
-                <span className="material-icons-outlined em-icon-18">history</span> History
+              <button className="em-btn-history" onClick={() => setExamView('subjects')}>
+                <span className="material-icons-outlined em-icon-18">arrow_back</span> Back
               </button>
               <button className="em-btn-new">
                 <span className="material-icons-outlined em-icon-18">add</span> New Session
@@ -583,6 +694,7 @@ export function ExamMode({ user }: ExamModeProps) {
           </div>
         </div>
       </main>
+      )}
     </div>
   );
 }

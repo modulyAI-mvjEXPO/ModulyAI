@@ -329,7 +329,7 @@
   background: var(--foreground);
   cursor: pointer;
   box-shadow: var(--shadow);
-  transition: box-shadow var(--transition-base), transform var(--transition-base);
+  transition: box-shadow var(--transition-base), transform var(--transition-base), opacity var(--transition-base);
   letter-spacing: 0.02em;
 }
 
@@ -344,18 +344,21 @@
 }
 
 .auth-submit:disabled {
-  opacity: 0.6;
+  opacity: 0.7;
   cursor: not-allowed;
+  transform: none !important;
+  box-shadow: var(--shadow) !important;
 }
 
-/* Spinner */
+/* Spinner — uses currentColor to match the button's text (always visible) */
 .spinner {
-  width: 20px;
-  height: 20px;
-  border: 2.5px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid currentColor;
+  border-top-color: transparent;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
 }
 
 @keyframes spin {
@@ -364,10 +367,10 @@
 
 .spinner-sm {
   display: inline-block;
-  width: 14px;
-  height: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.25);
-  border-top-color: currentColor;
+  width: 13px;
+  height: 13px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
   vertical-align: middle;

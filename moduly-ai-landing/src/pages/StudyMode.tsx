@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { getProfile } from '../lib/profile';
 import type { DocumentRow, ChatResponse } from '../lib/ai/types';
 import './StudyMode.css';
 
@@ -179,6 +180,8 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
   const initials = firstName.charAt(0).toUpperCase();
 
   // ── State ──────────────────────────────────────────────────────────────
+  const [studyView, setStudyView] = useState<'dashboard' | 'chat'>('dashboard');
+  const [subjects, setSubjects] = useState<string[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [kitOpen, setKitOpen] = useState(true);
@@ -222,6 +225,19 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
       }
     };
     fetchDocs();
+  }, [user.id]);
+
+  // ── Fetch subjects for dashboard ───────────────────────────────────────
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const profile = await getProfile(user.id);
+      if (profile?.subjects && profile.subjects.length > 0) {
+        setSubjects(profile.subjects);
+      } else {
+        setSubjects(['DSA', 'OS', 'DDCO', 'JAVA']);
+      }
+    };
+    fetchProfile();
   }, [user.id]);
 
   // ── Poll for Processing documents ──────────────────────────────────────
@@ -448,8 +464,71 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
       <div className="sm-blob sm-blob-1" aria-hidden="true" />
       <div className="sm-blob sm-blob-2" aria-hidden="true" />
 
-      {/* ── Study Kit Sidebar ──────────────────────────────────────── */}
-      <aside className={`sm-kit ${kitOpen ? 'sm-kit--open' : ''}`} aria-label="Study Kit">
+      {studyView === 'dashboard' ? (
+        <div className="sm-dash">
+          {/* Header */}
+          <div className="sm-dash-head">
+            <button className="sm-dash-create-btn">
+              <div className="sm-dash-create-group">
+                <span className="material-icons-outlined sm-dash-spark-icon">auto_awesome</span>
+                <span>Create a study kit</span>
+              </div>
+              <span className="material-icons-outlined">arrow_forward</span>
+            </button>
+            <div className="sm-dash-subhead">
+              <div className="sm-dash-search">
+                <span className="material-icons-outlined">search</span>
+                <input placeholder="Search" />
+              </div>
+              <div className="sm-dash-class">
+                <button className="sm-dash-class-btn">
+                  <span className="material-icons-outlined">folder</span> Class <span className="material-icons-outlined">expand_more</span>
+                </button>
+                <div className="sm-dash-toggle" title="Toggle Grid/List">
+                  <div className="sm-toggle-knob"/>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="sm-dash-content">
+            {subjects.map((sub, i) => {
+              const colorClass = ['sm-kit-card--amber', 'sm-kit-card--blue', 'sm-kit-card--green', 'sm-kit-card--rose'][i % 4];
+              const isJava = sub.toUpperCase() === 'JAVA';
+              return (
+                <div key={sub} className="sm-dash-subject-row">
+                  <div className="sm-dash-sub-title">
+                    <h3>{sub.toUpperCase()}</h3>
+                    <div className="sm-dash-sub-icons">
+                      <span className="material-icons-outlined" title="Edit">edit</span>
+                      <span className="material-icons-outlined" title="Theme">palette</span>
+                      <span className="material-icons-outlined" title="Invite">person_add</span>
+                    </div>
+                  </div>
+                  <div className="sm-dash-kits">
+                    <button 
+                      className={`sm-kit-card ${colorClass}`} 
+                      onClick={() => { setSubjectId(sub.toLowerCase()); setStudyView('chat'); }}
+                    >
+                      <span className="material-icons-outlined sm-kit-card-menu">more_vert</span>
+                      <span className="sm-kit-card-title">Module 1 & 2</span>
+                      <span className="material-icons-outlined sm-kit-card-icon">laptop_mac</span>
+                      {isJava && (
+                        <div className="sm-kit-progress">
+                          <div className="sm-kit-progress-bar sm-w-60" />
+                        </div>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+      <>
+        {/* ── Study Kit Sidebar ──────────────────────────────────────── */}
+        <aside className={`sm-kit ${kitOpen ? 'sm-kit--open' : ''}`} aria-label="Study Kit">
         <div className="sm-kit-head">
           <h2 className="sm-kit-heading">
             <span className="material-icons-outlined sm-kit-heading-icon">build</span>
@@ -582,8 +661,15 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
           <div className="sm-chat-head-l">
             <button
               className="sm-icon-btn"
+              onClick={() => setStudyView('dashboard')}
+              title="Back to Dashboard"
+            >
+              <span className="material-icons-outlined">arrow_back</span>
+            </button>
+            <button
+              className="sm-icon-btn"
               onClick={() => setKitOpen(v => !v)}
-              title={kitOpen ? 'Close Study Kit' : 'Open Study Kit'}
+              title={kitOpen ? 'Close Study Kit Context' : 'Open Study Kit Context'}
             >
               <span className="material-icons-outlined">
                 {kitOpen ? 'menu_open' : 'menu'}
@@ -732,7 +818,9 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
             <input
                type="file"
                ref={fileInputRef}
-               style={{ display: 'none' }}
+               className="sm-file-input"
+               title="Upload Document"
+               aria-label="Upload Document"
                accept=".pdf,.doc,.docx"
                onChange={(e) => { void handleFileUpload(e); }}
             />
@@ -772,6 +860,8 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
           </p>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }
