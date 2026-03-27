@@ -2,7 +2,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { getProfile } from '../lib/profile';
-import type { DocumentRow, ChatResponse } from '../lib/ai/types';
+import type { ChatResponse } from '../lib/ai/types';
+import { DocumentPickerModal } from '../components/DocumentPickerModal';
 import './StudyMode.css';
 
 interface StudyModeProps {
@@ -91,13 +92,6 @@ function getWelcome(docCount: number): Message {
   return { id: uid(), role: 'ai', content, time: 'Just now' };
 }
 
-function mapDocRow(row: DocumentRow): DocItem {
-  const fileType: DocItem['type'] = row.file_type === 'application/pdf' ? 'pdf' : 'doc';
-  const date = new Date(row.created_at);
-  const meta = `${row.chunk_count} chunks · ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
-  return { id: row.id, name: row.title, type: fileType, meta, selected: true };
-}
-
 // ─── Chat API ──────────────────────────────────────────────────────────────
 
 async function chatWithAI(
@@ -180,8 +174,9 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
   const initials = firstName.charAt(0).toUpperCase();
 
   // ── State ──────────────────────────────────────────────────────────────
-  const [studyView, setStudyView] = useState<'dashboard' | 'chat'>('dashboard');
-  const [subjects, setSubjects] = useState<string[]>([]);
+  const [studyView, setStudyView] = useState<'dashboard' | 'pick-docs' | 'chat'>('dashboard');
+  const [subjects, setSubjects] = useState<string[]>(['DSA', 'OS', 'DDCO', 'JAVA']);
+  const [selectedKitSubject, setSelectedKitSubject] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [kitOpen, setKitOpen] = useState(true);
@@ -191,8 +186,11 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
   const [subjectId, setSubjectId] = useState('');
   const [topics, setTopics] = useState<TopicItem[]>(() => getTopicsForSubject(''));
   const [isTyping, setIsTyping] = useState(false);
-  const [docsLoading, setDocsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [parsingDocs, setParsingDocs] = useState(false);
+  const docsLoading = false;
+  const [parsingDocNames, setParsingDocNames] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Progressive reveal state
@@ -202,30 +200,6 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // ── Fetch documents from Supabase ──────────────────────────────────────
-  useEffect(() => {
-    const fetchDocs = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('documents')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('status', 'ready')
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        const rows = data as ReadonlyArray<DocumentRow>;
-        setDocs(rows.map(mapDocRow));
-        setMessages([getWelcome(rows.length)]);
-      } catch (e) {
-        console.error('Failed to load documents:', e);
-        setMessages([getWelcome(0)]);
-      } finally {
-        setDocsLoading(false);
-      }
-    };
-    fetchDocs();
-  }, [user.id]);
 
   // ── Fetch subjects for dashboard ───────────────────────────────────────
   useEffect(() => {
@@ -233,8 +207,6 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
       const profile = await getProfile(user.id);
       if (profile?.subjects && profile.subjects.length > 0) {
         setSubjects(profile.subjects);
-      } else {
-        setSubjects(['DSA', 'OS', 'DDCO', 'JAVA']);
       }
     };
     fetchProfile();
@@ -328,6 +300,114 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
   const selectAllDocs = () => setDocs(prev => prev.map(d => ({ ...d, selected: true })));
   const selectNoneDocs = () => setDocs(prev => prev.map(d => ({ ...d, selected: false })));
   const toggleTopic = (id: string) => setTopics(prev => prev.map(t => t.id === id ? { ...t, active: !t.active } : t));
+
+
+  const handleStartSession = async () => {
+    const selectedRows = docs.filter(d => d.selected);
+    const unparsed = selectedRows.filter(d => d.id.startsWith('utho-'));
+
+    // Immediately enter chat view
+    setStudyView('chat');
+    setMessages([getWelcome(selectedRows.length)]);
+
+    if (unparsed.length === 0) return;
+
+    // Track which docs are parsing (for the banner)
+    setParsingDocs(true);
+    setParsingDocNames(unparsed.map(d => d.name));
+
+    try {
+      const backendBase = import.meta.env.VITE_BACKEND_URL || '';
+      const idMap = new Map<string, string>();
+
+      // Fire off all parse requests
+      await Promise.all(unparsed.map(async (unp) => {
+        try {
+          const res = await fetch(`${backendBase}/process-document`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: unp.name,
+              filePath: unp.id.replace('utho-', ''),
+              fileType: 'application/pdf',
+              userId: user.id,
+            }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            idMap.set(unp.id, data.documentId);
+          }
+        } catch (err) {
+          console.error(`Failed to trigger parsing for ${unp.name}:`, err);
+        }
+      }));
+
+      // Swap utho- IDs to real Supabase IDs immediately
+      if (idMap.size > 0) {
+        setDocs(prev => prev.map(d => {
+          const realId = idMap.get(d.id);
+          if (realId) {
+            return { ...d, id: realId, meta: 'Processing...' };
+          }
+          return d;
+        }));
+      }
+
+      // Background poll — check every 3s, update docs individually as they finish
+      const realIds = Array.from(idMap.values());
+      if (realIds.length > 0) {
+        const pending = new Set(realIds);
+        const poll = async () => {
+          while (pending.size > 0) {
+            await new Promise(r => setTimeout(r, 3000));
+            try {
+              const { data } = await supabase
+                .from('documents')
+                .select('id, status, chunk_count')
+                .in('id', Array.from(pending));
+
+              if (!data) continue;
+
+              for (const row of data) {
+                if (row.status === 'ready' || row.status === 'failed') {
+                  pending.delete(row.id);
+                  setDocs(prev => prev.map(d => {
+                    if (d.id === row.id) {
+                      return {
+                        ...d,
+                        meta: row.status === 'ready'
+                          ? `${row.chunk_count} chunks · Just now`
+                          : 'Failed to process',
+                      };
+                    }
+                    return d;
+                  }));
+                  // Remove from parsing names
+                  setParsingDocNames(prev => {
+                    const next = prev.filter((_, i) => i !== 0);
+                    return next;
+                  });
+                }
+              }
+            } catch (err) {
+              console.error('Polling error:', err);
+            }
+          }
+          setParsingDocs(false);
+          setParsingDocNames([]);
+        };
+        // Fire-and-forget — runs in the background while user chats
+        void poll();
+      } else {
+        setParsingDocs(false);
+        setParsingDocNames([]);
+      }
+    } catch (e) {
+      console.error('Error starting session:', e);
+      setParsingDocs(false);
+      setParsingDocNames([]);
+    }
+  };
 
   const resetChat = () => {
     setRevealingId(null);
@@ -508,7 +588,7 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
                   <div className="sm-dash-kits">
                     <button 
                       className={`sm-kit-card ${colorClass}`} 
-                      onClick={() => { setSubjectId(sub.toLowerCase()); setStudyView('chat'); }}
+                      onClick={() => { setSelectedKitSubject(sub); setSubjectId(sub.toLowerCase()); setStudyView('pick-docs'); }}
                     >
                       <span className="material-icons-outlined sm-kit-card-menu">more_vert</span>
                       <span className="sm-kit-card-title">Module 1 & 2</span>
@@ -524,6 +604,98 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
               );
             })}
           </div>
+        </div>      ) : studyView === 'pick-docs' ? (
+        /* ── Document Picker (Library Modal Pattern) ─────────────────────────────────────── */
+        <div className="sm-pick">
+          <div className="sm-pick-head">
+            <button className="sm-dash-back-btn" onClick={() => setStudyView('dashboard')}>
+              <span className="material-icons-outlined">arrow_back</span>
+              Back
+            </button>
+            <h1 className="sm-pick-title">
+              {selectedKitSubject.toUpperCase()} — Selected Documents
+            </h1>
+            <p className="sm-pick-subtitle">
+              These documents will provide the context for your AI study session.
+            </p>
+          </div>
+
+          <div className="sm-pick-list">
+            {docs.length === 0 ? (
+              <div className="sm-pick-empty-state">
+                <span className="material-icons-outlined">library_books</span>
+                <p>No documents selected yet.</p>
+                <button className="sm-pick-upload-btn" onClick={() => setPickerOpen(true)}>
+                  <span className="material-icons-outlined">add</span>
+                  Select from Library
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="sm-pick-actions">
+                  <span className="sm-pick-count">{docs.length} document(s) ready</span>
+                  <button className="sm-pick-select-btn" onClick={() => setPickerOpen(true)}>+ Add More</button>
+                </div>
+                {docs.map(doc => (
+                  <div key={doc.id} className="sm-pick-item sm-pick-item--on">
+                    <span 
+                      className="material-icons-outlined sm-pick-item-check" 
+                      onClick={() => toggleDoc(doc.id)} 
+                      style={{ cursor: 'pointer', transition: 'transform 0.1s' }}
+                      onMouseOver={e => e.currentTarget.style.transform = 'scale(1.2)'}
+                      onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
+                      title="Remove from session"
+                    >
+                      remove_circle_outline
+                    </span>
+                    <span className={`material-icons-outlined sm-pick-item-icon ${doc.type === 'pdf' ? 'sm-pick-item-icon--pdf' : ''}`}>
+                      {doc.type === 'pdf' ? 'picture_as_pdf' : 'description'}
+                    </span>
+                    <div className="sm-pick-item-info">
+                      <span className="sm-pick-item-name">{doc.name}</span>
+                      <span className="sm-pick-item-meta">{doc.meta}</span>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+
+          <div className="sm-pick-footer">
+            <button
+              className="sm-pick-start-btn"
+              onClick={handleStartSession}
+              disabled={parsingDocs}
+            >
+              {parsingDocs ? (
+                <>
+                  <span className="material-icons-outlined ud-spin">sync</span>
+                  Parsing New Documents...
+                </>
+              ) : (
+                <>
+                  <span className="material-icons-outlined">play_arrow</span>
+                  {docs.length === 0 ? 'Start Without Documents' : 'Start Study Kit'}
+                </>
+              )}
+            </button>
+          </div>
+          
+          <DocumentPickerModal
+            isOpen={pickerOpen}
+            onClose={() => setPickerOpen(false)}
+            initialSelectedIds={new Set(docs.map(d => d.id))}
+            onSave={(selectedRows) => {
+              const newDocs = selectedRows.map(r => ({
+                id: r.id,
+                name: r.title,
+                type: (r.file_type === 'application/pdf' ? 'pdf' : 'doc') as 'pdf' | 'doc',
+                meta: r.id.startsWith('utho-') ? 'Admin Upload · Unparsed' : `${r.chunk_count} chunks`,
+                selected: true
+              }));
+              setDocs(newDocs);
+            }}
+          />
         </div>
       ) : (
       <>
@@ -681,6 +853,12 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
                 <span className="sm-dot" />
                 Online · {selectedDocs.length} doc{selectedDocs.length !== 1 ? 's' : ''} loaded
               </p>
+              {parsingDocs && (
+                <p className="sm-chat-parsing">
+                  <span className="material-icons-outlined sm-spin-sm">sync</span>
+                  Parsing {parsingDocNames.length} doc{parsingDocNames.length !== 1 ? 's' : ''}...
+                </p>
+              )}
             </div>
           </div>
 

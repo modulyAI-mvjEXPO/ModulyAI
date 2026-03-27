@@ -1,14 +1,16 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { getProfile } from '../lib/profile';
+import { supabase } from '../lib/supabase';
 import type {
   ExamRequest,
   ExamResponse,
   PyqIntelligenceResponse,
+  DocumentRow,
 } from '../lib/ai/types.ts';
 import './ExamMode.css';
 
-type ExamView = 'types' | 'subjects' | 'chat';
+type ExamView = 'types' | 'subjects' | 'pick-docs' | 'chat';
 
 const EXAM_TYPES: { id: string; label: string; subtitle: string; colorClass: string; icon: string }[] = [
   { id: 'IA-1', label: 'IA-1', subtitle: 'Internal Assessment 1 · Modules 1 & 2', colorClass: 'em-type-card--blue', icon: 'looks_one' },
@@ -31,6 +33,21 @@ interface Message {
   role: 'ai' | 'user';
   content: string;
   time: string;
+}
+
+interface DocItem {
+  id: string;
+  name: string;
+  type: 'pdf' | 'doc';
+  meta: string;
+  selected: boolean;
+}
+
+function mapDocRow(row: DocumentRow): DocItem {
+  const fileType: DocItem['type'] = row.file_type === 'application/pdf' ? 'pdf' : 'doc';
+  const date = new Date(row.created_at);
+  const meta = `${row.chunk_count} chunks · ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+  return { id: row.id, name: row.title, type: fileType, meta, selected: true };
 }
 
 const MARKS = ['2M', '5M', '10M', '15M'] as const;
@@ -124,8 +141,12 @@ function parseQuestions(raw: string): string[] {
 }
 
 // ─── Call /exam-solve Netlify Function ────────────────────────────────────────
-async function solveWithAI(question: string, mark: string): Promise<string> {
-  const requestBody: ExamRequest = { question, mark };
+async function solveWithAI(question: string, mark: string, documentIds: ReadonlyArray<string>): Promise<string> {
+  const requestBody: ExamRequest = { 
+    question, 
+    mark,
+    documentIds: documentIds.length > 0 ? documentIds : undefined,
+  };
 
   const backendBase = import.meta.env.VITE_BACKEND_URL || '';
   const res = await fetch(`${backendBase}/exam-solve`, {
@@ -181,7 +202,12 @@ export function ExamMode({ user }: ExamModeProps) {
   // ── Dashboard navigation state ─────────────────────────────────────────
   const [examView, setExamView] = useState<ExamView>('types');
   const [selectedType, setSelectedType] = useState('');
-  const [subjects, setSubjects] = useState<string[]>([]);
+  const [selectedModule, setSelectedModule] = useState('');
+  const [subjects, setSubjects] = useState<string[]>(['DSA', 'OS', 'DDCO', 'JAVA']);
+  
+  // ── Documents / RAG state ──────────────────────────────────────────────
+  const [docs, setDocs] = useState<DocItem[]>([]);
+  const [docsLoading, setDocsLoading] = useState(true);
 
   // ── Chat / session state ───────────────────────────────────────────────
   const [messages, setMessages] = useState<Message[]>([]);
@@ -242,20 +268,46 @@ export function ExamMode({ user }: ExamModeProps) {
     };
   }, []);
 
+  // ── Fetch documents from Supabase ──────────────────────────────────────
+  useEffect(() => {
+    const fetchDocs = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('documents')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('status', 'ready')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        const rows = data as ReadonlyArray<DocumentRow>;
+        setDocs(rows.map(mapDocRow));
+      } catch (e) {
+        console.error('Failed to load documents:', e);
+      } finally {
+        setDocsLoading(false);
+      }
+    };
+    fetchDocs();
+  }, [user.id]);
+
   // ── Load user subjects ─────────────────────────────────────────────────
   useEffect(() => {
     const load = async () => {
       const profile = await getProfile(user.id);
       if (profile?.subjects && profile.subjects.length > 0) {
         setSubjects(profile.subjects);
-      } else {
-        setSubjects(['DSA', 'OS', 'DDCO', 'JAVA']);
       }
     };
     void load();
   }, [user.id]);
 
+  const toggleDoc = (id: string) => setDocs(prev => prev.map(d => d.id === id ? { ...d, selected: !d.selected } : d));
+  const selectAllDocs = () => setDocs(prev => prev.map(d => ({ ...d, selected: true })));
+  const selectNoneDocs = () => setDocs(prev => prev.map(d => ({ ...d, selected: false })));
+
   const analysisData = analysis ?? FALLBACK_ANALYSIS;
+  const selectedDocIds = docs.filter(d => d.selected).map(d => d.id);
 
   const sendMessage = useCallback(async (override?: string) => {
     const text = (override ?? input).trim();
@@ -267,7 +319,7 @@ export function ExamMode({ user }: ExamModeProps) {
     setIsTyping(true);
 
     try {
-      const htmlContent = await solveWithAI(text, selectedMark);
+      const htmlContent = await solveWithAI(text, selectedMark, selectedDocIds);
       const aiMsg: Message = { id: uid(), role: 'ai', content: htmlContent, time: ts() };
       setMessages(prev => [...prev, aiMsg]);
     } catch (err: unknown) {
@@ -278,7 +330,7 @@ export function ExamMode({ user }: ExamModeProps) {
     } finally {
       setIsTyping(false);
     }
-  }, [input, isTyping, selectedMark]);
+  }, [input, isTyping, selectedMark, selectedDocIds]);
 
   const solvePaper = useCallback(async () => {
     const questions = parseQuestions(paperInput);
@@ -292,7 +344,7 @@ export function ExamMode({ user }: ExamModeProps) {
     for (let i = 0; i < questions.length; i++) {
       setBatchProgress({ current: i + 1, total: questions.length });
       try {
-        const html = await solveWithAI(questions[i]!, selectedMark);
+        const html = await solveWithAI(questions[i]!, selectedMark, selectedDocIds);
         answers.push({ question: questions[i]!, html });
       } catch (err: unknown) {
         const errText = err instanceof Error ? err.message : 'Error generating answer';
@@ -306,7 +358,7 @@ export function ExamMode({ user }: ExamModeProps) {
 
     setBatchProgress(null);
     setIsTyping(false);
-  }, [paperInput, isTyping, selectedMark]);
+  }, [paperInput, isTyping, selectedMark, selectedDocIds]);
 
   const handleKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (paperMode) return;
@@ -375,7 +427,7 @@ export function ExamMode({ user }: ExamModeProps) {
                       <button
                         key={mod}
                         className={`em-kit-card ${colorClasses[(si + mi) % 4]}`}
-                        onClick={() => setExamView('chat')}
+                        onClick={() => { setSelectedModule(mod); setExamView('pick-docs'); }}
                       >
                         <span className="material-icons-outlined em-kit-card-menu">more_vert</span>
                         <span className="em-kit-card-title">{mod}</span>
@@ -386,6 +438,77 @@ export function ExamMode({ user }: ExamModeProps) {
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* ── PICK-DOCS VIEW ───────────────────────────────────────────────── */}
+      {examView === 'pick-docs' && (
+        <div className="em-pick">
+          <div className="em-pick-head">
+            <button className="em-dash-back-btn" onClick={() => setExamView('subjects')}>
+              <span className="material-icons-outlined">arrow_back</span>
+              Back to Subjects
+            </button>
+            <h1 className="em-pick-title">
+              {selectedType} — {selectedModule}
+            </h1>
+            <p className="em-pick-subtitle">
+              Choose which uploaded documents the AI should reference for these PYQs.
+            </p>
+          </div>
+
+          <div className="em-pick-list">
+            {docsLoading ? (
+              <p className="em-pick-empty">Loading documents…</p>
+            ) : docs.length === 0 ? (
+              <div className="em-pick-empty-state">
+                <span className="material-icons-outlined">folder_open</span>
+                <p>No documents uploaded yet.</p>
+              </div>
+            ) : (
+              <>
+                <div className="em-pick-actions">
+                  <button className="em-pick-select-btn" onClick={selectAllDocs}>Select All</button>
+                  <button className="em-pick-select-btn" onClick={selectNoneDocs}>Deselect All</button>
+                  <span className="em-pick-count">{docs.filter(d => d.selected).length} of {docs.length} selected</span>
+                </div>
+                {docs.map(doc => (
+                  <button
+                    key={doc.id}
+                    className={`em-pick-item ${doc.selected ? 'em-pick-item--on' : ''}`}
+                    onClick={() => toggleDoc(doc.id)}
+                  >
+                    <span className={`material-icons-outlined em-pick-item-check`}>
+                      {doc.selected ? 'check_box' : 'check_box_outline_blank'}
+                    </span>
+                    <span className={`material-icons-outlined em-pick-item-icon ${doc.type === 'pdf' ? 'em-pick-item-icon--pdf' : ''}`}>
+                      {doc.type === 'pdf' ? 'picture_as_pdf' : 'description'}
+                    </span>
+                    <div className="em-pick-item-info">
+                      <span className="em-pick-item-name">{doc.name}</span>
+                      <span className="em-pick-item-meta">{doc.meta}</span>
+                    </div>
+                  </button>
+                ))}
+              </>
+            )}
+          </div>
+
+          <div className="em-pick-footer">
+            <button
+              className="em-pick-start-btn"
+              onClick={() => setExamView('chat')}
+              disabled={docs.length > 0 && docs.filter(d => d.selected).length === 0}
+            >
+              <span className="material-icons-outlined">play_arrow</span>
+              {docs.length === 0 ? 'Start Without Context' : 'Start Exam Intelligence'}
+            </button>
+            {docs.length > 0 && (
+              <button className="em-pick-skip-btn" onClick={() => { selectAllDocs(); setExamView('chat'); }}>
+                Skip — Use All Documents
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -408,7 +531,7 @@ export function ExamMode({ user }: ExamModeProps) {
               </p>
             </div>
             <div className="em-actions">
-              <button className="em-btn-history" onClick={() => setExamView('subjects')}>
+              <button className="em-btn-history" onClick={() => setExamView('pick-docs')}>
                 <span className="material-icons-outlined em-icon-18">arrow_back</span> Back
               </button>
               <button className="em-btn-new">

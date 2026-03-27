@@ -452,18 +452,16 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
               </table>
             ) : (
               <div className="db-table-empty">
-                <span className="material-icons-outlined">folder_open</span>
-                <p>No documents uploaded yet.</p>
+                <div className="db-table-empty-msg">
+                  <span className="material-icons-outlined">folder_open</span>
+                  <p>No documents uploaded yet.</p>
+                </div>
                 <button
-                  className="db-action-card db-action-card--purple db-table-empty-btn"
+                  className="db-table-empty-btn-new"
                   onClick={() => setActivePage('upload')}
                 >
-                  <span className="material-icons-outlined db-action-bg-icon">cloud_upload</span>
-                  <div className="db-action-icon-wrap">
-                    <span className="material-icons-outlined db-action-icon">upload_file</span>
-                  </div>
-                  <h3 className="db-action-title">Upload Documents</h3>
-                  <p className="db-action-desc">Add notes or syllabus for AI processing.</p>
+                  <span className="material-icons-outlined">cloud_upload</span>
+                  Upload Documents
                 </button>
               </div>
             )}
