@@ -209,7 +209,7 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
                 }
               }}
             >
-              <div className="db-brand-logo">M</div>
+              <img className="db-brand-logo" src="/logos/logo-transparent.png" alt="Moduly AI Logo" />
               <span className="db-brand-name">MODULY AI</span>
             </div>
 

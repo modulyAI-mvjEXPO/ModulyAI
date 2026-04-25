@@ -27,16 +27,7 @@
 .logo-icon {
   width: 40px;
   height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--primary);
-  color: #ffffff;
-  font-weight: 800;
-  font-size: var(--font-size-xl);
-  border-radius: var(--radius);
-  border: 2px solid var(--border);
-  box-shadow: var(--shadow-sm);
+  object-fit: contain;
 }
 
 .logo-text {

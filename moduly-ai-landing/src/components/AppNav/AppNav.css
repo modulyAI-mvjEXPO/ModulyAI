@@ -36,16 +36,8 @@
 .app-nav-logo-icon {
   width: 36px;
   height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--primary);
-  color: white;
-  font-weight: 800;
-  font-size: var(--font-size-base);
-  border-radius: var(--radius);
+  object-fit: contain;
   flex-shrink: 0;
-  border: 2px solid var(--border);
 }
 
 .app-nav-logo-text {

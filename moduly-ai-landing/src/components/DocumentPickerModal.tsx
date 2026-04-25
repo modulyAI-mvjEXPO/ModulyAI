@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { DocumentRow } from '../lib/ai/types';
+import { supabase } from '../lib/supabase';
 import './DocumentPickerModal.css';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -65,21 +66,20 @@ export function DocumentPickerModal({ isOpen, onClose, initialSelectedIds, onSav
     try {
       const backendBase = import.meta.env.VITE_BACKEND_URL || '';
 
-      // Fetch both sources in parallel
-      const [supaRes, s3Res] = await Promise.allSettled([
-        fetch(`${backendBase}/list-files?source=supabase`).then(r => r.ok ? r.json() : Promise.reject(new Error('Supabase fetch failed'))),
-        fetch(`${backendBase}/list-files`).then(r => r.ok ? r.json() : Promise.reject(new Error('S3 fetch failed'))),
-      ]);
+      // 1. Fetch parsed docs from Supabase using the frontend client
+      const { data: supaData, error: supaErr } = await supabase
+        .from('documents')
+        .select('*');
+        
+      if (supaErr) throw new Error(`Supabase query failed: ${supaErr.message}`);
 
-      // Parse Supabase documents (already processed)
-      const supabaseDocs: DocumentRow[] = supaRes.status === 'fulfilled' && Array.isArray(supaRes.value?.files)
-        ? supaRes.value.files
-        : [];
+      // 2. Fetch all S3 files from backend list-files endpoint
+      const s3Res = await fetch(`${backendBase}/list-files`);
+      if (!s3Res.ok) throw new Error('S3 fetch failed');
+      const s3Data = await s3Res.json();
 
-      // Parse S3 files (raw uploads)
-      const s3Files: S3File[] = s3Res.status === 'fulfilled' && Array.isArray(s3Res.value?.files)
-        ? s3Res.value.files
-        : [];
+      const supabaseDocs: DocumentRow[] = supaData || [];
+      const s3Files: S3File[] = Array.isArray(s3Data?.files) ? s3Data.files : [];
 
       // Build a set of file_paths that are already in Supabase
       const parsedPaths = new Set(supabaseDocs.map(d => d.file_path));

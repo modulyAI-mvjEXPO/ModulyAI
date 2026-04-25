@@ -266,7 +266,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 </button>
 
                 <div className="modal-brand">
-                    <div className="modal-logo">M</div>
+                    <img className="modal-logo" src="/logos/logo-transparent.png" alt="Moduly AI Logo" />
                     <span className="modal-logo-text">MODULY AI</span>
                 </div>
 

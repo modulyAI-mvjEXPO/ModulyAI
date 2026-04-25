@@ -75,30 +75,33 @@ const embedAndStoreChunks = async (
   chunks: ReturnType<typeof chunkText>,
   pageCount: number,
 ): Promise<void> => {
-  const BATCH_SIZE = 5;
+  const BATCH_SIZE = 20; // Increased batch size for faster parallel processing
+  
   for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
     const batch = chunks.slice(i, i + BATCH_SIZE);
-    await Promise.all(
-      batch.map(async (chunk) => {
-        const embedding = await getEmbedding(chunk.content);
-
-        const { error } = await supabase.from('document_chunks').insert({
-          document_id: documentId,
-          content: chunk.content,
-          chunk_index: chunk.chunkIndex,
-          metadata: {
-            page_count: pageCount,
-          },
-          embedding: embedding as unknown as string,
-        });
-
-        if (error) {
-          throw new Error(
-            `Failed to insert chunk ${chunk.chunkIndex}: ${error.message}`,
-          );
-        }
-      }),
+    
+    // 1. Generate embeddings in parallel
+    const embeddings = await Promise.all(
+      batch.map(chunk => getEmbedding(chunk.content))
     );
+
+    // 2. Prepare bulk insert rows
+    const rows = batch.map((chunk, index) => ({
+      document_id: documentId,
+      content: chunk.content,
+      chunk_index: chunk.chunkIndex,
+      metadata: {
+        page_count: pageCount,
+      },
+      embedding: embeddings[index] as unknown as string,
+    }));
+
+    // 3. Bulk insert into Supabase
+    const { error } = await supabase.from('document_chunks').insert(rows);
+
+    if (error) {
+      throw new Error(`Failed to bulk insert chunks ${i} to ${i + batch.length - 1}: ${error.message}`);
+    }
   }
 };
 

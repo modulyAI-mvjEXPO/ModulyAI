@@ -17,7 +17,7 @@ export function AppNav({ onSignOut, showSignOut = true }: AppNavProps) {
             <div className="app-nav-inner">
                 {/* Logo */}
                 <div className="app-nav-logo">
-                    <span className="app-nav-logo-icon">M</span>
+                    <img className="app-nav-logo-icon" src="/logos/logo-transparent.png" alt="Moduly AI Logo" />
                     <span className="app-nav-logo-text">MODULY AI</span>
                 </div>
 

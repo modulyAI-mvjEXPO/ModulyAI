@@ -31,16 +31,7 @@
 .footer-logo .logo-icon {
   width: 36px;
   height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--primary);
-  color: #ffffff;
-  font-weight: 800;
-  font-size: var(--font-size-lg);
-  border-radius: var(--radius);
-  border: 2px solid var(--border);
-  box-shadow: var(--shadow-sm);
+  object-fit: contain;
 }
 
 .footer-logo .logo-text {

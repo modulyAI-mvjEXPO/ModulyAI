@@ -102,16 +102,7 @@
 .modal-logo {
   width: 44px;
   height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--primary);
-  color: #ffffff;
-  font-weight: 800;
-  font-size: var(--font-size-xl);
-  border-radius: var(--radius);
-  border: 2px solid var(--border);
-  box-shadow: var(--shadow-sm);
+  object-fit: contain;
 }
 
 .modal-logo-text {

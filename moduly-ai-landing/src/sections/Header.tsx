@@ -10,7 +10,7 @@ export function Header({ onAuthOpen }: HeaderProps) {
         <header className="header">
             <div className="header-container">
                 <div className="logo">
-                    <span className="logo-icon">M</span>
+                    <img className="logo-icon" src="/logos/logo-transparent.png" alt="Moduly AI Logo" />
                     <span className="logo-text">MODULY AI</span>
                 </div>
                 <nav className="nav">

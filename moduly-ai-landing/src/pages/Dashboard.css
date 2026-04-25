@@ -59,16 +59,8 @@
 .db-brand-logo {
   width: 32px;
   height: 32px;
-  border-radius: 0;
-  background: var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-weight: 700;
-  font-size: 18px;
-  border: 2px solid var(--foreground);
-  box-shadow: 2px 2px 0px var(--foreground);
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .db-brand-name {

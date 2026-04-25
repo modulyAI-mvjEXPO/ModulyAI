@@ -7,7 +7,7 @@ export function Footer() {
                 <div className="footer-main">
                     <div className="footer-brand">
                         <div className="footer-logo">
-                            <span className="logo-icon">M</span>
+                            <img className="logo-icon" src="/logos/logo-transparent.png" alt="Moduly AI Logo" />
                             <span className="logo-text">MODULY AI</span>
                         </div>
                         <p className="footer-tagline">Study smarter. Module by module.</p>

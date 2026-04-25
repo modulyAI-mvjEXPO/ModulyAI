@@ -159,7 +159,7 @@ export function Onboarding({ user, onComplete, onSignOut }: OnboardingProps) {
         <div className="ob-card">
           {/* Header */}
           <div className="ob-header">
-            <div className="ob-logo">M</div>
+            <img className="ob-logo" src="/logos/logo-transparent.png" alt="Moduly AI Logo" />
             <h1 className="ob-title">
               {step === 0 ? "Hey there! Let's get to know you 👋" : "Your Academic Profile 🎓"}
             </h1>
