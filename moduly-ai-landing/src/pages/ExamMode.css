@@ -17,6 +17,10 @@
   position: relative;
 }
 
+[data-theme="dark"] .em-shell {
+  background: transparent;
+}
+
 /* Scrollbar styling */
 .em-shell *::-webkit-scrollbar { width: 4px; }
 .em-shell *::-webkit-scrollbar-track { background: transparent; }

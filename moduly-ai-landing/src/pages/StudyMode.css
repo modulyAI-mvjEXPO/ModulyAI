@@ -18,6 +18,10 @@
   font-size: 14px;
 }
 
+[data-theme="dark"] .sm-shell {
+  background: transparent;
+}
+
 /* ─── Ambient blobs — hidden in brutalist theme ──────────────────────────── */
 .sm-blob { display: none; }
 .sm-blob-1 { display: none; }

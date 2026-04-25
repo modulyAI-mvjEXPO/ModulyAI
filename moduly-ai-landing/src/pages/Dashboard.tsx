@@ -9,6 +9,7 @@ import { ExamMode } from './ExamMode';
 import { Library } from './Library';
 import { UploadDocs } from './UploadDocs';
 import { Settings } from './Settings';
+import { DashedBackground } from '../components/ui/demo';
 import './Dashboard.css';
 
 type DashboardPage = 'overview' | 'study' | 'exam' | 'library' | 'upload' | 'settings';
@@ -193,6 +194,9 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
 
   return (
     <div className="db-shell">
+      <div className="hidden dark:block">
+        <DashedBackground />
+      </div>
       {/* ── Top header (Full Width) ── */}
       <header className="db-header">
         <div className="db-header-left">
