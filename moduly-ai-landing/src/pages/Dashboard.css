@@ -197,7 +197,7 @@
   border: 2px solid var(--border);
   color: var(--foreground);
   padding: 6px 32px 6px 12px;
-  border-radius: 0;
+  border-radius: var(--radius);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -220,7 +220,7 @@
 
 .db-sem-badge {
   padding: 2px 10px;
-  border-radius: 0;
+  border-radius: var(--radius);
   font-size: 11px;
   font-weight: 700;
   background: var(--accent);
@@ -251,7 +251,7 @@
   width: 240px;
   padding: 7px 12px 7px 36px;
   border: 2px solid var(--border);
-  border-radius: 0;
+  border-radius: var(--radius);
   background: var(--background);
   color: var(--foreground);
   font-size: 13px;
@@ -272,7 +272,7 @@
   cursor: pointer;
   color: var(--foreground);
   padding: 6px;
-  border-radius: 0;
+  border-radius: var(--radius);
   display: flex;
   align-items: center;
   transition: background 0.1s, box-shadow 0.1s;
@@ -287,7 +287,7 @@
   position: absolute;
   top: 6px; right: 6px;
   width: 8px; height: 8px;
-  border-radius: 0;
+  border-radius: var(--radius);
   background: var(--primary);
   border: 2px solid var(--muted);
 }
@@ -295,7 +295,7 @@
 /* Header avatar */
 .db-avatar-ring {
   width: 34px; height: 34px;
-  border-radius: 0;
+  border-radius: var(--radius);
   background: var(--foreground);
   padding: 2px;
   cursor: pointer;
@@ -303,7 +303,7 @@
 
 .db-header-avatar {
   width: 100%; height: 100%;
-  border-radius: 0;
+  border-radius: var(--radius);
   background: var(--accent);
   color: var(--on-secondary);
   font-weight: 700;
@@ -337,17 +337,18 @@
 
 .db-content::-webkit-scrollbar { width: 6px; }
 .db-content::-webkit-scrollbar-track { background: transparent; }
-.db-content::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 0; }
+.db-content::-webkit-scrollbar-thumb { background: var(--muted); border-radius: var(--radius); }
 
 /* ─── Welcome hero ────────────────────────────────────────────────────── */
 .db-hero {
-  border-radius: 0;
+  border-radius: var(--radius);
   padding: 32px;
-  background: var(--background);
-  border: 3px solid var(--border);
+  background: linear-gradient(135deg, #c96442, #b05730);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   position: relative;
   overflow: hidden;
   box-shadow: var(--shadow);
+  color: #ffffff;
 }
 
 /* Remove old glassmorphic blob */
@@ -366,25 +367,21 @@
 .db-hero-title {
   font-size: clamp(22px, 3vw, 30px);
   font-weight: 800;
-  color: var(--foreground);
+  color: #ffffff;
   margin: 0 0 10px;
 }
 
 /* Brutalist accent: yellow highlight instead of gradient text */
 .db-grad-text {
-  background: var(--secondary) !important;
-  color: var(--on-secondary) !important;
-  padding: 2px 8px !important;
-  border: 2px solid var(--foreground) !important;
+  background: transparent !important;
+  color: inherit !important;
+  color: #ffffff !important;
+  padding: 0 !important;
   display: inline-block !important;
-  transform: rotate(-2deg);
 }
 
 .db-stat-card--amber .db-grad-text {
-  background: transparent !important;
-  border: none !important;
-  transform: none !important;
-  padding: 0 !important;
+  color: #ffffff;
 }
 
 .db-hero-meta {
@@ -393,7 +390,7 @@
   align-items: center;
   gap: 10px;
   font-size: 13px;
-  color: var(--muted-foreground);
+  color: #ffffff;
   margin-bottom: 12px;
 }
 
@@ -403,37 +400,46 @@
   gap: 4px;
 }
 
-.db-hero-meta-icon { font-size: 16px !important; }
+.db-hero-meta-icon { 
+  font-size: 16px !important; 
+  color: #ffffff;
+}
 
 .db-dot {
   width: 4px; height: 4px;
-  border-radius: 0;
-  background: var(--muted);
+  border-radius: var(--radius);
+  background: #ffffff;
+  opacity: 0.6;
 }
 
-.db-hero-subjects { color: var(--accent); font-weight: 700; }
+.db-hero-subjects { color: #ffffff; font-weight: 700; }
 
 .db-hero-desc {
   font-size: 13px;
-  color: var(--muted-foreground);
+  color: #ffffff;
   max-width: 520px;
   line-height: 1.6;
   margin: 0;
 }
 
-.db-hero-desc strong { color: var(--foreground); font-weight: 700; }
+.db-hero-desc strong {
+  color: #ffffff;
+  font-weight: 800;
+}
+
 
 /* Circular progress */
 .db-progress-ring-wrap {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: var(--background);
+  background: var(--primary);
   padding: 16px;
-  border-radius: 0;
-  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: var(--shadow-sm);
   flex-shrink: 0;
+  color: #ffffff;
 }
 
 .db-progress-ring {
@@ -452,34 +458,40 @@
 
 .db-ring-track {
   fill: none;
-  stroke: var(--border);
+  stroke: rgba(255, 255, 255, 0.2);
   stroke-width: 4;
 }
 
 .db-ring-fill {
   fill: none;
-  stroke: var(--primary);
+  stroke: #ffffff;
   stroke-width: 4;
-  stroke-linecap: butt;
-  transition: stroke-dashoffset 1s ease;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.5s ease;
 }
 
 .db-ring-label {
   position: absolute;
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--foreground);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 9px;
+  font-weight: 800;
+  color: #ffffff;
+  font-family: var(--font-mono);
 }
 
 .db-ring-sub {
-  font-size: 11px;
-  color: var(--muted-foreground);
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.8);
+  text-transform: uppercase;
+  margin-bottom: 1px;
 }
 
 .db-ring-val {
   font-size: 13px;
-  font-weight: 700;
-  color: var(--foreground);
+  font-weight: 800;
+  color: #ffffff;
 }
 
 /* ─── Quick-action cards ──────────────────────────────────────────────── */
@@ -492,14 +504,15 @@
 .db-action-card {
   position: relative;
   padding: 24px;
-  border-radius: 0;
-  background: var(--background);
-  border: 3px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--primary);
+  border: 1px solid var(--border);
   text-align: left;
   cursor: pointer;
   overflow: hidden;
-  transition: box-shadow 0.15s, transform 0.15s;
+  transition: all 0.2s ease;
   box-shadow: var(--shadow);
+  color: #ffffff;
 }
 
 .db-action-card:hover {
@@ -512,33 +525,27 @@
 
 .db-action-icon-wrap {
   width: 42px; height: 42px;
-  border-radius: 0;
+  border-radius: var(--radius);
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 16px;
-  border: 2px solid var(--foreground);
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-.db-action-card--primary .db-action-icon-wrap { background: var(--accent); }
-.db-action-card--teal    .db-action-icon-wrap { background: var(--primary); }
-.db-action-card--purple  .db-action-icon-wrap { background: var(--secondary); }
-
-.db-action-icon { font-size: 22px !important; }
-.db-action-card--primary .db-action-icon { color: #ffffff; }
-.db-action-card--teal    .db-action-icon { color: #ffffff; }
-.db-action-card--purple  .db-action-icon { color: var(--on-secondary); }
+.db-action-icon { font-size: 22px !important; color: #ffffff; }
 
 .db-action-title {
   font-size: 15px;
   font-weight: 700;
-  color: var(--foreground);
+  color: #ffffff;
   margin: 0 0 6px;
 }
 
 .db-action-desc {
   font-size: 12px;
-  color: var(--muted-foreground);
+  color: #ffffff;
   margin: 0;
   line-height: 1.5;
 }
@@ -556,30 +563,21 @@
 
 .db-stat-card {
   padding: 20px;
-  border-radius: 0;
-  background: var(--background);
-  border: 4px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--primary);
+  border: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   gap: 4px;
   position: relative;
   overflow: hidden;
   box-shadow: var(--shadow-sm);
+  color: #ffffff;
 }
 
-/* Specific high-contrast card for 'Important Qs' */
-.db-stat-card--amber {
-  background: var(--secondary) !important;
-  border-color: var(--border) !important;
-}
-
-[data-theme="dark"] .db-stat-card--amber {
-  border-color: var(--foreground) !important;
-}
-
-.db-stat-card--amber .db-stat-value,
-.db-stat-card--amber .db-stat-label {
-  color: var(--on-secondary) !important;
+/* Important Qs card now matches others */
+.db-stat-card--amber .db-stat-glow {
+  display: none;
 }
 
 /* Remove old glow */
@@ -588,7 +586,7 @@
 .db-stat-value {
   font-size: 30px;
   font-weight: 800;
-  color: var(--foreground);
+  color: #ffffff;
   font-family: var(--font-mono);
   line-height: 1;
 }
@@ -596,16 +594,16 @@
 .db-stat-label {
   font-size: 11px;
   font-weight: 700;
-  color: var(--muted-foreground);
+  color: #ffffff;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
 /* ─── Recent sessions ─────────────────────────────────────────────────── */
 .db-table-card {
-  border-radius: 0;
-  background: var(--background);
-  border: 3px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  border: 1px solid var(--border);
   overflow: hidden;
   box-shadow: var(--shadow);
 }
@@ -616,31 +614,32 @@
   align-items: center;
   padding: 20px 24px;
   border-bottom: 2px solid var(--border);
-  background: var(--secondary);
+  background: var(--primary);
 }
 
 .db-table-title {
   font-size: 16px;
   font-weight: 800;
-  color: var(--on-secondary);
+  color: #ffffff;
   margin: 0;
 }
 
 .db-table-view-all {
   font-size: 13px;
   font-weight: 700;
-  color: var(--on-secondary);
+  color: #ffffff;
   text-decoration: none;
   background: transparent;
-  border: 2px solid var(--on-secondary);
+  border: 1px solid #ffffff;
+  border-radius: var(--radius);
   padding: 4px 12px;
   cursor: pointer;
   transition: all 0.1s;
 }
 
 .db-table-view-all:hover {
-  background: var(--on-secondary);
-  color: var(--secondary);
+  background: #ffffff;
+  color: var(--primary);
 }
 
 .db-table-wrap { overflow-x: auto; }
@@ -656,47 +655,50 @@
   text-align: left;
   font-size: 11px;
   font-weight: 700;
-  color: var(--foreground);
+  color: #ffffff;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  background: var(--background);
-  border-bottom: 2px solid var(--border);
+  background: var(--primary);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .db-table-right { text-align: right !important; }
 
 .db-table-row {
-  border-top: 1px solid var(--border);
+  background: var(--primary);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   transition: background 0.1s;
+  color: #ffffff;
 }
 
-.db-table-row:hover { background: var(--background); }
+.db-table-row:hover { background: #d97757; }
 
 .db-table-row td { padding: 14px 24px; }
 
 .db-table-subject {
   font-weight: 700;
-  color: var(--foreground);
+  color: #ffffff;
 }
 
-.db-table-module { color: var(--muted-foreground); }
+.db-table-module { color: #ffffff; }
 
-.db-table-date { color: var(--muted-foreground); font-family: var(--font-mono); font-size: 12px; }
+.db-table-date { color: #ffffff; font-family: var(--font-mono); font-size: 12px; }
 
 /* Mode badges */
 .db-mode-badge {
   display: inline-flex;
   align-items: center;
   padding: 3px 10px;
-  border-radius: 0;
+  border-radius: var(--radius);
   font-size: 11px;
   font-weight: 700;
-  border: 2px solid var(--foreground);
+  border: 1px solid #ffffff;
 }
 
 .db-mode-badge--learning {
-  background: var(--accent);
-  color: var(--on-secondary);
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border: 1px solid #ffffff;
 }
 
 .db-mode-badge--quiz {
@@ -705,20 +707,23 @@
 }
 
 .db-resume-btn {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
-  color: var(--accent);
-  background: none;
-  border: 2px solid var(--accent);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid #ffffff;
+  border-radius: var(--radius);
   cursor: pointer;
-  padding: 2px 10px;
+  padding: 4px 12px;
   font-family: var(--font-sans);
-  transition: background 0.1s, color 0.1s;
+  transition: all 0.1s;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .db-resume-btn:hover {
-  background: var(--accent);
-  color: #ffffff;
+  background: #ffffff;
+  color: var(--primary);
 }
 
 /* ─── Footer ──────────────────────────────────────────────────────────── */

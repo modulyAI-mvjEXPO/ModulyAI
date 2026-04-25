@@ -9,6 +9,7 @@ import type {
   DocumentRow,
 } from '../lib/ai/types.ts';
 import './ExamMode.css';
+import { LiquidButton } from '../components/ui/liquid-glass-button';
 
 type ExamView = 'types' | 'subjects' | 'pick-docs' | 'chat';
 
@@ -496,14 +497,13 @@ export function ExamMode({ user }: ExamModeProps) {
           </div>
 
           <div className="em-pick-footer">
-            <button
-              className="em-pick-start-btn"
+            <LiquidButton
               onClick={() => setExamView('chat')}
-              disabled={docs.length > 0 && docs.filter(d => d.selected).length === 0}
+              size="lg"
             >
               <span className="material-icons-outlined">play_arrow</span>
               {docs.length === 0 ? 'Start Without Context' : 'Start Exam Intelligence'}
-            </button>
+            </LiquidButton>
             {docs.length > 0 && (
               <button className="em-pick-skip-btn" onClick={() => { selectAllDocs(); setExamView('chat'); }}>
                 Skip — Use All Documents
@@ -768,16 +768,15 @@ export function ExamMode({ user }: ExamModeProps) {
                 />
 
                 {/* Solve button */}
-                <button
-                  className="em-btn-solve-all"
+                <LiquidButton
                   onClick={() => { void solvePaper(); }}
-                  disabled={!paperInput.trim() || isTyping}
+                  size="lg"
                 >
                   <span className="material-icons-outlined em-icon-18">auto_awesome</span>
                   {isTyping && batchProgress
                     ? `Solving ${batchProgress.current} of ${batchProgress.total}...`
                     : 'Generate All Answers'}
-                </button>
+                </LiquidButton>
 
                 {/* Answer sheet */}
                 {paperAnswers.length > 0 && (

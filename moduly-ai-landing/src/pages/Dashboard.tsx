@@ -9,7 +9,8 @@ import { ExamMode } from './ExamMode';
 import { Library } from './Library';
 import { UploadDocs } from './UploadDocs';
 import { Settings } from './Settings';
-import { DashedBackground } from '../components/ui/demo';
+import { DashedBackground } from '../components/ui/dashed-background';
+import { Button, LiquidButton } from '../components/ui/liquid-glass-button';
 import './Dashboard.css';
 
 type DashboardPage = 'overview' | 'study' | 'exam' | 'library' | 'upload' | 'settings';
@@ -445,12 +446,13 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
                         </span>
                       </td>
                       <td className="db-table-right">
-                        <button
-                          className="db-resume-btn"
+                        <Button
                           onClick={() => handleResume()}
+                          size="sm"
+                          className="db-resume-btn"
                         >
                           Resume
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -462,13 +464,12 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
                   <span className="material-icons-outlined">folder_open</span>
                   <p>No documents uploaded yet.</p>
                 </div>
-                <button
-                  className="db-table-empty-btn-new"
+                <LiquidButton
                   onClick={() => setActivePage('upload')}
+                  size="lg"
                 >
-                  <span className="material-icons-outlined">cloud_upload</span>
                   Upload Documents
-                </button>
+                </LiquidButton>
               </div>
             )}
           </div>

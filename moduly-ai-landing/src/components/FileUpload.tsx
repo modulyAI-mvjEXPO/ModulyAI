@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { LiquidButton } from './ui/liquid-glass-button';
 
 export interface UploadedFile {
     id: number;
@@ -191,13 +192,12 @@ export function FileUpload({ onUploadSuccess, userId }: FileUploadProps) {
             </div>
 
             <div className="ud-submit-wrap">
-                <button
-                    className="ud-submit-btn"
+                <LiquidButton
                     onClick={handleUpload}
-                    disabled={!file || uploading}
+                    size="lg"
                 >
                     {uploading ? 'Uploading...' : 'Upload File'}
-                </button>
+                </LiquidButton>
             </div>
 
             {message && (
