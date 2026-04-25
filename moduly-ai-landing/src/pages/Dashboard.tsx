@@ -194,9 +194,7 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
 
   return (
     <div className="db-shell">
-      <div className="hidden dark:block">
-        <DashedBackground />
-      </div>
+      <DashedBackground />
       {/* ── Top header (Full Width) ── */}
       <header className="db-header">
         <div className="db-header-left">

@@ -13,13 +13,13 @@ const techStack = [
     },
     {
         category: 'Storage',
-        items: ['Cloudflare R2'],
+        items: ['Utho Cloud R3 Object Storage'],
         description: 'Scalable object storage for documents'
     },
     {
         category: 'AI Model',
-        items: ['Kimi K 2.5 via OpenRouter'],
-        description: 'Advanced language model with document context'
+        items: ['Groq API', 'NVIDIA API Models'],
+        description: 'Advanced language models for fast and accurate processing'
     },
     {
         category: 'Architecture',
