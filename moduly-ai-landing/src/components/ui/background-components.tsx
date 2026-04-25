@@ -1,9 +1,4 @@
-import { cn } from "../../lib/utils";
-import { useState } from "react";
-
 export function SoftGlowBackground() {
-  const [count, setCount] = useState(0);
-
   return (
     <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
       {/* Soft Yellow Glow */}
