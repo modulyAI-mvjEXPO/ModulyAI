@@ -22,11 +22,13 @@ export const handler = async (event) => {
         });
 
         const data = await s3Client.send(command);
-        const files = (data.Contents || []).map(obj => ({
-            filename: obj.Key,
-            size: obj.Size,
-            lastModified: obj.LastModified,
-        }));
+        const files = (data.Contents || [])
+            .filter(obj => !obj.Key.startsWith('parsed/'))
+            .map(obj => ({
+                filename: obj.Key,
+                size: obj.Size,
+                lastModified: obj.LastModified,
+            }));
 
         return {
             statusCode: 200,

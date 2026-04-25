@@ -1046,7 +1046,6 @@
 
 /* Dash */
 [data-theme="dark"] .sm-dash            { background: var(--background); }
-[data-theme="dark"] .sm-dash-head       { background: var(--sidebar); border-bottom-color: var(--border); }
 [data-theme="dark"] .sm-dash-search     { background: var(--card); border-color: var(--border); color: var(--foreground); }
 [data-theme="dark"] .sm-dash-class-btn  { background: var(--card); border-color: var(--border); color: var(--foreground); }
 [data-theme="dark"] .sm-dash-sub-title  { border-bottom-color: var(--border); }

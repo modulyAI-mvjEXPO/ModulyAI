@@ -10,6 +10,7 @@ import {
   getCachedResult,
   setCachedResult,
   makeCacheKey,
+  loadUthoDoc,
 } from '../lib/docGrounding';
 import type { StudySet } from '../lib/ai/types';
 import { fetchStudySets, createStudySet, updateStudySetMessages, deleteStudySet, renameStudySet } from '../lib/studySets';
@@ -213,18 +214,6 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
   // ── Document-Grounded Mode state ─────────────────────────────────────
   type GroundingMode = 'general' | 'document';
   const [groundingMode, setGroundingMode] = useState<GroundingMode>('general');
-  const [selectedDemoDocIds, setSelectedDemoDocIds] = useState<ReadonlyArray<string>>(
-    DEMO_DOCUMENTS.slice(0, 2).map(d => d.doc_id)
-  );
-
-  const toggleDemoDoc = (docId: string) => {
-    setSelectedDemoDocIds(prev =>
-      prev.includes(docId)
-        ? prev.filter(id => id !== docId)
-        : prev.length < 3 ? [...prev, docId] : prev
-    );
-  };
-
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -327,25 +316,32 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
   }, [messages, currentSessionId]);
 
   // ── Helpers ──────────────────────────────────────────────────────────
-  const selectedDocs = docs.filter(d => d.selected);
+  const selectedDocs = docs;
   const activeTopics = topics.filter(t => t.active);
   const isRevealing = !!revealingId;
   const isBusy = isTyping || isRevealing;
 
-  const toggleDoc = (id: string) => setDocs(prev => prev.map(d => d.id === id ? { ...d, selected: !d.selected } : d));
-  const selectAllDocs = () => setDocs(prev => prev.map(d => ({ ...d, selected: true })));
-  const selectNoneDocs = () => setDocs(prev => prev.map(d => ({ ...d, selected: false })));
+  const toggleDoc = (id: string) => setDocs(prev => prev.filter(d => d.id !== id));
+  const selectAllDocs = () => {}; // No longer needed as docs are selected in modal
+  const selectNoneDocs = () => setDocs([]);
   const toggleTopic = (id: string) => setTopics(prev => prev.map(t => t.id === id ? { ...t, active: !t.active } : t));
 
 
   const handleStartSession = async () => {
-    const selectedRows = docs.filter(d => d.selected);
+    const selectedRows = docs;
     const unparsed = selectedRows.filter(d => d.id.startsWith('utho-'));
 
     // Create session in Supabase
-    const title = selectedRows.length > 0 ? `Study Session: ${selectedRows[0].name}` : 'New Study Session';
+    const d = new Date();
+    const formattedDate = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }).format(d).replace(/ /g, '-');
+    const title = formattedDate;
     const docIds = selectedRows.map(d => d.id).filter(id => !id.startsWith('utho-')); // skip utho until parsed
-    const session = await createStudySet(user.id, title, docIds, groundingMode);
+    
+    // Auto-set grounding mode if docs are present
+    const finalMode = docIds.length > 0 ? 'document' : 'general';
+    setGroundingMode(finalMode);
+
+    const session = await createStudySet(user.id, title, docIds, finalMode);
     
     if (session) {
       setCurrentSessionId(session.id);
@@ -553,8 +549,9 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
 
     try {
       // ── Document-Grounded Mode ─────────────────────────────────────────
-      if (groundingMode === 'document' && selectedDemoDocIds.length > 0) {
-        const cacheKey = makeCacheKey(text, selectedDemoDocIds);
+      if (groundingMode === 'document' && docs.length > 0) {
+        const docIds = docs.map(d => d.id);
+        const cacheKey = makeCacheKey(text, docIds);
         const cached = getCachedResult(cacheKey);
 
         if (cached) {
@@ -572,7 +569,7 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
           return;
         }
 
-        const chunks = retrieveChunks(text, selectedDemoDocIds);
+        const chunks = retrieveChunks(text, docIds);
         const { context, sources, confidenceScore } = buildGroundedContext(chunks);
 
         let responseText: string;
@@ -653,7 +650,7 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
       setIsTyping(false);
       setMessages(prev => [...prev, errMsg]);
     }
-  }, [input, isBusy, selectedMark, strict, subjectId, docs, messages, groundingMode, selectedDemoDocIds]);
+  }, [input, isBusy, selectedMark, strict, subjectId, docs, messages, groundingMode]);
 
   const handleKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -836,10 +833,23 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
                 id: r.id,
                 name: r.title,
                 type: (r.file_type === 'application/pdf' ? 'pdf' : 'doc') as 'pdf' | 'doc',
-                meta: r.id.startsWith('utho-') ? 'Admin Upload · Unparsed' : `${r.chunk_count} chunks`,
+                meta: r.id.startsWith('utho-') ? 'Loading AI Context...' : `${r.chunk_count} chunks`,
                 selected: true
               }));
               setDocs(newDocs);
+
+              // Load Utho docs in background
+              newDocs.forEach(d => {
+                if (d.id.startsWith('utho-')) {
+                  void loadUthoDoc(d.id).then(success => {
+                    if (success) {
+                      setDocs(prev => prev.map(p => p.id === d.id ? { ...p, meta: 'Ready for AI Mode' } : p));
+                    } else {
+                      setDocs(prev => prev.map(p => p.id === d.id ? { ...p, meta: 'Offline / Parsing Error' } : p));
+                    }
+                  });
+                }
+              });
             }}
           />
         </div>

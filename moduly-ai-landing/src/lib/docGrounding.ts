@@ -43,149 +43,93 @@ export interface GroundingResult {
 
 export const DEMO_DOCUMENTS: ReadonlyArray<GroundedDoc> = [
   {
-    doc_id: 'demo-ds-notes',
-    title: 'Data Structures Notes',
+    doc_id: 'demo-ml-notes',
+    title: 'Machine Learning Fundamentals',
     type: 'notes',
-    subject: 'data-structures',
+    subject: 'machine-learning',
     chunks: [
       {
-        id: 'ds-c1',
-        text: 'An AVL tree is a self-balancing Binary Search Tree (BST). The balance factor of every node must be -1, 0, or +1. If after insertion or deletion the balance factor violates this, rotations are performed to restore balance.',
+        id: 'ml-c1',
+        text: 'Supervised Learning is a paradigm where the model is trained on labeled data. The algorithm learns a mapping function from input variables (X) to an output variable (Y). Common algorithms include Linear Regression (used for continuous outputs), Logistic Regression (used for binary classification), Support Vector Machines (SVM) which find the optimal hyperplane, and Random Forests which use an ensemble of decision trees to improve accuracy and prevent overfitting.',
       },
       {
-        id: 'ds-c2',
-        text: 'AVL Tree Rotations: (1) Right Rotation (LL case) – applied when imbalance is in the left subtree of the left child. (2) Left Rotation (RR case) – applied when imbalance is in the right subtree of the right child. (3) Left-Right (LR) – left rotate child, then right rotate root. (4) Right-Left (RL) – right rotate child, then left rotate root. All rotations are O(1).',
+        id: 'ml-c2',
+        text: 'Unsupervised Learning involves training a model on data that does not have historical labels. The system tries to learn without a teacher by finding hidden structures or patterns in the data. Key algorithms include K-Means clustering (grouping data into k distinct clusters based on feature similarity), Hierarchical clustering (building a tree of clusters), and Principal Component Analysis (PCA) which is used for dimensionality reduction while preserving maximum variance.',
       },
       {
-        id: 'ds-c3',
-        text: 'BFS (Breadth-First Search) explores nodes level by level using a Queue. DFS (Depth-First Search) explores as far as possible down each branch before backtracking, using a Stack or recursion. Both have time complexity O(V+E) and space complexity O(V).',
+        id: 'ml-c3',
+        text: 'Overfitting occurs when a machine learning model learns the training data too well, including the noise and outliers, resulting in poor performance on unseen test data. Underfitting happens when a model is too simple to capture the underlying trend of the data. Regularization techniques like L1 (Lasso) and L2 (Ridge) are commonly used to penalize complex models and prevent overfitting by adding a penalty term to the loss function.',
+      }
+    ],
+  },
+  {
+    doc_id: 'demo-os-notes',
+    title: 'Operating Systems Process Management',
+    type: 'notes',
+    subject: 'os',
+    chunks: [
+      {
+        id: 'os-c1',
+        text: 'A Process is a program in execution. It contains the program code (text section), current activity represented by the value of the program counter and the contents of the processor\'s registers. It also includes the process stack (temporary data like function parameters, return addresses) and a data section (global variables). Process Scheduling algorithms determine which process in the ready queue is to be allocated the CPU. FCFS is simple but suffers from the convoy effect. SJF minimizes average waiting time but requires knowing future CPU bursts.',
       },
       {
-        id: 'ds-c4',
-        text: 'Heap Sort uses a Binary Max-Heap. Steps: (1) Build a max-heap from the input array. (2) Repeatedly extract the maximum (swap root with last element, reduce heap size, heapify). Time: O(n log n), Space: O(1). Not stable.',
+        id: 'os-c2',
+        text: 'Deadlock is a situation where a set of processes are blocked because each process is holding a resource and waiting for another resource acquired by some other process. Four necessary conditions for deadlock are: Mutual Exclusion, Hold and Wait, No Preemption, and Circular Wait. Deadlock handling strategies include Prevention (invalidating one of the four conditions), Avoidance (using Banker\'s Algorithm to dynamically analyze resource allocation state), Detection, and Recovery.',
       },
       {
-        id: 'ds-c5',
-        text: 'Hashing maps keys to indices using a hash function. Collision resolution: Open Addressing (linear probing, quadratic probing, double hashing) and Chaining (linked lists at each bucket). Average case O(1) for insert, search, delete.',
-      },
-      {
-        id: 'ds-c6',
-        text: 'A Binary Search Tree (BST) stores elements such that for each node, left subtree contains smaller values and right subtree contains larger values. Insertion, search, and deletion are O(h) where h is the height. Worst case O(n) for skewed trees.',
-      },
-      {
-        id: 'ds-c7',
-        text: 'Dijkstra\'s algorithm finds the shortest path from a source node to all other nodes in a weighted graph with non-negative edges. Uses a min-priority queue. Time complexity O((V+E) log V) with a binary heap.',
-      },
-      {
-        id: 'ds-c8',
-        text: 'B-Trees and B+ Trees are balanced multi-way search trees used in databases and file systems. B+ Trees store all data in leaf nodes and have linked leaf nodes for range queries. Order m B-Tree has at most m children and at least ⌈m/2⌉ children per internal node.',
-      },
+        id: 'os-c3',
+        text: 'Virtual Memory is a technique that allows the execution of processes that are not completely in memory. It provides the illusion of a very large main memory. When a process tries to access a page that is mapped in the page table but not loaded in physical memory, a Page Fault occurs. The OS then handles this by loading the required page from the secondary storage (disk) into a free frame in physical memory.',
+      }
     ],
   },
   {
     doc_id: 'demo-ds-pyqs',
-    title: 'Data Structures PYQs',
+    title: 'Data Structures PYQs (2021-2023)',
     type: 'pyqs',
     subject: 'data-structures',
     chunks: [
       {
         id: 'pyq-ds-1',
-        text: 'VTU Dec 2023 – 10M: Construct an AVL tree by inserting the following elements in order: 10, 20, 30, 40, 50, 25. Show all rotations. Answer: Insert 10 (root). Insert 20 (right child). Insert 30 – RR imbalance at 10 → Left rotation → 20 becomes root, 10 left, 30 right. Insert 40 – right child of 30. Insert 50 – RR imbalance at 30 → Left rotation → 30 becomes left of 40. Insert 25 – RL imbalance at 20 → Right-Left rotation.',
+        text: 'VTU Dec 2023 (10 Marks): Explain the working of Dijkstra\'s shortest path algorithm with a suitable example. Answer: Dijkstra\'s algorithm solves the single-source shortest path problem for a directed graph with non-negative edge weights. It maintains a set of unvisited vertices and calculates the tentative distance from the source. It repeatedly selects the unvisited vertex with the smallest tentative distance, marks it as visited, and relaxes all of its outgoing edges by checking if the path through this vertex offers a shorter route. It utilizes a Min-Priority Queue for efficient vertex extraction, resulting in an O((V+E) log V) time complexity when implemented with a binary heap.',
       },
       {
         id: 'pyq-ds-2',
-        text: 'VTU June 2023 – 8M: With a suitable example, explain BFS and DFS graph traversal. Key points: BFS uses Queue, visits level by level, finds shortest path in unweighted graphs. DFS uses Stack/recursion, finds connected components, detects cycles. Example: Graph {A-B, A-C, B-D, C-D, D-E}. BFS from A: A, B, C, D, E. DFS from A: A, B, D, C, E (stack order).',
-      },
-      {
-        id: 'pyq-ds-3',
-        text: 'VTU Dec 2022 – 10M: Explain Dijkstra\'s shortest path algorithm with example. Consider graph with vertices {A,B,C,D,E} and edges with weights. Initialize dist[source]=0, all others=∞. Greedily pick minimum distance vertex, relax its neighbours. Show step-by-step table with distance updates.',
-      },
-      {
-        id: 'pyq-ds-4',
-        text: 'VTU June 2022 – 8M: What is hashing? Explain collision resolution techniques with examples. Linear probing: probe next slot (h(k)+i)%n. Quadratic probing: (h(k)+i²)%n. Double hashing: (h1(k)+i*h2(k))%n. Chaining: each slot is a linked list – handles unlimited collisions.',
-      },
+        text: 'VTU June 2022 (8 Marks): What is hashing? Explain any two collision resolution techniques. Answer: Hashing is the process of mapping a large amount of data to a smaller table using a hash function. A collision occurs when two keys map to the same index. Collision Resolution Techniques: 1) Chaining (Open Hashing): Each slot in the hash table points to a linked list of elements that hash to the same slot. 2) Linear Probing (Open Addressing): When a collision occurs, the algorithm linearly probes for the next empty slot in the table using the formula (h(k) + i) % n.',
+      }
     ],
   },
   {
-    doc_id: 'demo-cn-notes',
-    title: 'Computer Networks Notes',
-    type: 'notes',
+    doc_id: 'demo-cn-pyqs',
+    title: 'Computer Networks PYQs (2021-2023)',
+    type: 'pyqs',
     subject: 'computer-networks',
     chunks: [
       {
-        id: 'cn-c1',
-        text: 'The OSI Model has 7 layers: Physical (Layer 1) – bit transmission; Data Link (Layer 2) – framing, MAC addressing, error detection; Network (Layer 3) – IP addressing, routing; Transport (Layer 4) – TCP/UDP, end-to-end delivery; Session (Layer 5) – session management; Presentation (Layer 6) – encryption, compression; Application (Layer 7) – HTTP, FTP, SMTP.',
+        id: 'pyq-cn-1',
+        text: 'VTU Jan 2023 (8 Marks): Differentiate between TCP and UDP protocols. Answer: TCP (Transmission Control Protocol) is a connection-oriented, reliable protocol that guarantees in-order packet delivery. It uses a 3-way handshake (SYN, SYN-ACK, ACK) to establish a connection and incorporates flow control (sliding window) and congestion control mechanisms. UDP (User Datagram Protocol) is a connectionless, unreliable, and lightweight protocol. It does not establish a connection, offers no guarantees of delivery or ordering, and lacks flow/congestion control, making it much faster and suitable for real-time applications like VoIP and gaming.',
       },
       {
-        id: 'cn-c2',
-        text: 'TCP (Transmission Control Protocol) is connection-oriented, reliable, uses 3-way handshake (SYN, SYN-ACK, ACK), provides flow control (sliding window), congestion control, and ordered delivery. UDP (User Datagram Protocol) is connectionless, unreliable, no handshake, fast, used for streaming, DNS, gaming.',
-      },
-      {
-        id: 'cn-c3',
-        text: 'IP Subnetting: Given an IP address and subnet mask, the network address is obtained by ANDing them. CIDR notation: 192.168.1.0/24 means 24 bits for network, 8 bits for host (256 addresses, 254 usable). Subnetting divides a network into smaller sub-networks to reduce broadcast domains.',
-      },
-      {
-        id: 'cn-c4',
-        text: 'DNS (Domain Name System) resolves domain names to IP addresses. Process: Browser checks cache → OS cache → Recursive Resolver → Root Name Server → TLD Name Server → Authoritative Name Server → returns IP. Uses UDP port 53 for queries, TCP for zone transfers.',
-      },
-      {
-        id: 'cn-c5',
-        text: 'Routing algorithms: (1) Dijkstra\'s (Link State) – each router knows full topology, computes shortest path. (2) Bellman-Ford (Distance Vector) – routers share distance tables with neighbours, converges to shortest paths. Count-to-infinity problem in distance vector routing.',
-      },
+        id: 'pyq-cn-2',
+        text: 'VTU July 2021 (10 Marks): Explain the functioning of the OSI Reference Model layers. Answer: The OSI model consists of 7 layers: 1) Physical: transmission of raw bit streams. 2) Data Link: Node-to-node data transfer and error detection (MAC addressing). 3) Network: Routing and IP addressing. 4) Transport: End-to-end communication and reliability (TCP/UDP). 5) Session: Establishes, manages, and terminates connections. 6) Presentation: Data formatting, encryption, and compression. 7) Application: Network applications interacting with the user (HTTP, FTP, SMTP).',
+      }
     ],
   },
   {
-    doc_id: 'demo-dbms-notes',
-    title: 'DBMS Notes',
+    doc_id: 'demo-graph-handwritten',
+    title: 'Handwritten Notes - Advanced Graph Algorithms',
     type: 'notes',
-    subject: 'dbms',
+    subject: 'data-structures',
     chunks: [
       {
-        id: 'db-c1',
-        text: 'Normalisation reduces data redundancy and improves data integrity. 1NF: atomic values, no repeating groups. 2NF: 1NF + no partial dependencies (all non-key attributes depend on the entire primary key). 3NF: 2NF + no transitive dependencies. BCNF: for every X→Y, X must be a superkey.',
+        id: 'hw-graph-1',
+        text: '[Transcribed from Handwritten Notes] Minimum Spanning Tree (MST): A spanning tree of a connected, undirected graph is a subgraph that is a tree and includes all the vertices. An MST is a spanning tree with weight less than or equal to the weight of every other spanning tree. Kruskal\'s Algorithm is a greedy approach that sorts all edges in non-decreasing order of their weight and iteratively adds the smallest edge to the MST, provided it doesn\'t form a cycle (using a Disjoint-Set or Union-Find data structure).',
       },
       {
-        id: 'db-c2',
-        text: 'ACID Properties: Atomicity – all-or-nothing execution; Consistency – database moves from one valid state to another; Isolation – concurrent transactions appear serial; Durability – committed transactions persist even after system failures. Implemented via write-ahead logging (WAL) and locking protocols.',
-      },
-      {
-        id: 'db-c3',
-        text: 'SQL Joins: INNER JOIN returns matching rows from both tables. LEFT JOIN returns all rows from left table and matching from right (NULL if no match). RIGHT JOIN is the opposite. FULL OUTER JOIN returns all rows from both tables. CROSS JOIN returns Cartesian product.',
-      },
-      {
-        id: 'db-c4',
-        text: 'Two-Phase Locking (2PL) for concurrency control: Growing phase – transactions acquire locks and cannot release any. Shrinking phase – transactions release locks and cannot acquire new ones. Ensures serializability. Strict 2PL: hold all locks until commit/abort to prevent cascading rollbacks.',
-      },
-      {
-        id: 'db-c5',
-        text: 'ER Model to Relational Schema: (1) Entity → Table with primary key. (2) Attribute → Column. (3) 1:1 relationship → add FK in either table. (4) 1:N relationship → add FK in the N side. (5) M:N relationship → create a new relation (junction table) with FKs from both entities as composite PK.',
-      },
-      {
-        id: 'db-c6',
-        text: 'B+ Tree Indexing: All data stored at leaf level. Leaf nodes linked for sequential access. Internal nodes are guides for search. Order m: max m-1 keys per node. Height h = ⌈log⌈m/2⌉(n+1)⌉. Used in most database systems (MySQL InnoDB, PostgreSQL). Supports range queries efficiently.',
-      },
+        id: 'hw-graph-2',
+        text: '[Transcribed from Handwritten Notes] Prim\'s Algorithm for MST: Unlike Kruskal\'s which builds a forest, Prim\'s algorithm starts with a single source vertex and continuously grows a single tree. At each step, it adds the cheapest edge that connects a vertex in the MST to a vertex outside the MST. This is efficiently implemented using a Min-Priority Queue to track the minimum weight edges connecting the tree to the unvisited vertices. Both Kruskal\'s and Prim\'s run in O(E log V) time.',
+      }
     ],
-  },
-  {
-    doc_id: 'demo-os-concepts',
-    title: 'OS Concepts',
-    type: 'concepts',
-    subject: 'os',
-    chunks: [
-      {
-        id: 'os-c1',
-        text: 'Process Scheduling algorithms: FCFS (First Come First Served) – non-preemptive, convoy effect. SJF (Shortest Job First) – minimum average waiting time, preemptive version is SRTF. Round Robin – preemptive, time quantum, fair allocation. Priority Scheduling – preemptive or non-preemptive, risk of starvation (solved by aging).',
-      },
-      {
-        id: 'os-c2',
-        text: 'Deadlock: Four necessary conditions – Mutual Exclusion, Hold and Wait, No Preemption, Circular Wait. Prevention: negate one condition. Avoidance: Banker\'s Algorithm. Detection: Resource Allocation Graph or Banker\'s. Recovery: process termination or resource preemption.',
-      },
-      {
-        id: 'os-c3',
-        text: 'Virtual Memory allows execution of processes not fully in physical memory. Page Table maps virtual pages to physical frames. Page fault occurs when page is not in memory → OS loads it from disk. Replacement algorithms: FIFO (Belady\'s anomaly), Optimal (theoretical), LRU (approximated by Clock algorithm).',
-      },
-    ],
-  },
+  }
 ];
 
 // ── Keyword Extraction ─────────────────────────────────────────────────────
@@ -233,6 +177,38 @@ function scoreChunk(keywords: ReadonlyArray<string>, chunk: DocChunk): number {
 // ── Retrieval Engine ───────────────────────────────────────────────────────
 
 const TOP_K = 4;
+export const UTHO_DOCUMENTS: Array<GroundedDoc> = [];
+
+export async function loadUthoDoc(docId: string): Promise<boolean> {
+  if (UTHO_DOCUMENTS.find(d => d.doc_id === docId)) return true;
+  if (!docId.startsWith('utho-')) return false;
+
+  const filename = docId.replace('utho-', '');
+  const jsonKey = `parsed/${filename}.json`;
+
+  try {
+    const backendBase = import.meta.env.VITE_BACKEND_URL || '';
+    const res = await fetch(`${backendBase}/get-view-url?filename=${encodeURIComponent(jsonKey)}`);
+    if (!res.ok) return false;
+    
+    const { url } = await res.json();
+    const jsonRes = await fetch(url);
+    if (!jsonRes.ok) return false;
+
+    const data = await jsonRes.json();
+    UTHO_DOCUMENTS.push({
+      doc_id: docId,
+      title: data.metadata?.title || filename,
+      type: data.metadata?.type || 'notes',
+      subject: data.metadata?.subject || 'general',
+      chunks: data.chunks || []
+    });
+    return true;
+  } catch (e) {
+    console.error(`Failed to load Utho doc: ${docId}`, e);
+    return false;
+  }
+}
 
 export function retrieveChunks(
   query: string,
@@ -241,7 +217,10 @@ export function retrieveChunks(
   const keywords = extractKeywords(query);
   if (keywords.length === 0) return [];
 
-  const targetDocs = DEMO_DOCUMENTS.filter(d => selectedDocIds.includes(d.doc_id));
+  const targetDocs = [
+    ...DEMO_DOCUMENTS.filter(d => selectedDocIds.includes(d.doc_id)),
+    ...UTHO_DOCUMENTS.filter(d => selectedDocIds.includes(d.doc_id))
+  ];
   if (targetDocs.length === 0) return [];
 
   const scored: Array<RetrievedChunk> = [];

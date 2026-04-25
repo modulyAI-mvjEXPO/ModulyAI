@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Fragment } from 'react';
 import type { DocumentRow } from '../lib/ai/types';
 import { supabase } from '../lib/supabase';
 import './DocumentPickerModal.css';
@@ -57,6 +57,7 @@ export function DocumentPickerModal({ isOpen, onClose, initialSelectedIds, onSav
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [filterTab, setFilterTab] = useState<'all' | 'parsed' | 'unparsed'>('all');
 
   // ── Fetch and merge data ─────────────────────────────────────────────────
 
@@ -154,12 +155,19 @@ export function DocumentPickerModal({ isOpen, onClose, initialSelectedIds, onSav
 
   // ── Filtering ────────────────────────────────────────────────────────────
 
-  const filtered = search.trim()
-    ? merged.filter(d => d.title.toLowerCase().includes(search.toLowerCase()))
-    : merged;
+  let filtered = merged;
+  if (search.trim()) {
+    filtered = filtered.filter(d => d.title.toLowerCase().includes(search.toLowerCase()));
+  }
 
   const parsedCount = filtered.filter(d => d.source === 'supabase').length;
   const unparsedCount = filtered.filter(d => d.source === 'utho').length;
+
+  if (filterTab === 'parsed') {
+    filtered = filtered.filter(d => d.source === 'supabase');
+  } else if (filterTab === 'unparsed') {
+    filtered = filtered.filter(d => d.source === 'utho');
+  }
 
   if (!isOpen) return null;
 
@@ -213,20 +221,29 @@ export function DocumentPickerModal({ isOpen, onClose, initialSelectedIds, onSav
 
         {/* Category tabs */}
         <div className="dp-tabs">
-          <span className="dp-tab dp-tab--active">
-            All ({filtered.length})
-          </span>
+          <button 
+            className={`dp-tab ${filterTab === 'all' ? 'dp-tab--active' : ''}`}
+            onClick={() => setFilterTab('all')}
+          >
+            All ({merged.length})
+          </button>
           {parsedCount > 0 && (
-            <span className="dp-tab">
+            <button 
+              className={`dp-tab ${filterTab === 'parsed' ? 'dp-tab--active' : ''}`}
+              onClick={() => setFilterTab('parsed')}
+            >
               <span className="dp-tab-dot dp-tab-dot--ready" />
-              Parsed ({parsedCount})
-            </span>
+              Ready for AI ({parsedCount})
+            </button>
           )}
           {unparsedCount > 0 && (
-            <span className="dp-tab">
+            <button 
+              className={`dp-tab ${filterTab === 'unparsed' ? 'dp-tab--active' : ''}`}
+              onClick={() => setFilterTab('unparsed')}
+            >
               <span className="dp-tab-dot dp-tab-dot--unparsed" />
               Admin Uploads ({unparsedCount})
-            </span>
+            </button>
           )}
         </div>
 
@@ -249,41 +266,47 @@ export function DocumentPickerModal({ isOpen, onClose, initialSelectedIds, onSav
               <p>{search ? 'No documents match your search.' : 'No documents available.'}</p>
             </div>
           ) : (
-            filtered.map(doc => {
+            filtered.map((doc, index) => {
               const isSelected = selectedIds.has(doc.id);
               const isUnparsed = doc.source === 'utho';
               const isPdf = doc.file_type === 'application/pdf';
 
+              const showParsedHeader = filterTab === 'all' && index === 0 && !isUnparsed;
+              const showUnparsedHeader = filterTab === 'all' && isUnparsed && (index === 0 || filtered[index - 1].source !== 'utho');
+
               return (
-                <button
-                  key={doc.id}
-                  className={`dp-item ${isSelected ? 'dp-item--selected' : ''} ${isUnparsed ? 'dp-item--unparsed' : ''}`}
-                  onClick={() => toggleDoc(doc.id)}
-                >
-                  <div className={`dp-check ${isSelected ? 'dp-check--on' : ''}`}>
-                    {isSelected && <span className="material-icons-outlined dp-check-icon">check</span>}
-                  </div>
-                  <span className={`material-icons-outlined dp-item-icon ${isPdf ? 'dp-item-icon--pdf' : 'dp-item-icon--doc'}`}>
-                    {isPdf ? 'picture_as_pdf' : 'description'}
-                  </span>
-                  <div className="dp-item-info">
-                    <span className="dp-item-name">{doc.title}</span>
-                    <span className="dp-item-meta">
-                      {isUnparsed ? (
-                        <>
-                          <span className="dp-badge dp-badge--unparsed">Admin Upload · Unparsed</span>
-                          {doc.file_size ? ` · ${formatBytes(doc.file_size)}` : ''}
-                        </>
-                      ) : (
-                        <>
-                          {doc.chunk_count > 0 && <span className="dp-badge dp-badge--ready">{doc.chunk_count} chunks</span>}
-                          {doc.file_size ? ` · ${formatBytes(doc.file_size)}` : ''}
-                          {doc.created_at ? ` · ${timeAgo(doc.created_at)}` : ''}
-                        </>
-                      )}
+                <Fragment key={doc.id}>
+                  {showParsedHeader && <div className="dp-section-title">Ready for AI ({parsedCount})</div>}
+                  {showUnparsedHeader && <div className="dp-section-title">Admin Uploads - Needs Parsing ({unparsedCount})</div>}
+                  <button
+                    className={`dp-item ${isSelected ? 'dp-item--selected' : ''} ${isUnparsed ? 'dp-item--unparsed' : ''}`}
+                    onClick={() => toggleDoc(doc.id)}
+                  >
+                    <div className={`dp-check ${isSelected ? 'dp-check--on' : ''}`}>
+                      {isSelected && <span className="material-icons-outlined dp-check-icon">check</span>}
+                    </div>
+                    <span className={`material-icons-outlined dp-item-icon ${isPdf ? 'dp-item-icon--pdf' : 'dp-item-icon--doc'}`}>
+                      {isPdf ? 'picture_as_pdf' : 'description'}
                     </span>
-                  </div>
-                </button>
+                    <div className="dp-item-info">
+                      <span className="dp-item-name">{doc.title}</span>
+                      <span className="dp-item-meta">
+                        {isUnparsed ? (
+                          <>
+                            <span className="dp-badge dp-badge--unparsed">Admin Upload · Unparsed</span>
+                            {doc.file_size ? ` · ${formatBytes(doc.file_size)}` : ''}
+                          </>
+                        ) : (
+                          <>
+                            {doc.chunk_count > 0 && <span className="dp-badge dp-badge--ready">{doc.chunk_count} chunks</span>}
+                            {doc.file_size ? ` · ${formatBytes(doc.file_size)}` : ''}
+                            {doc.created_at ? ` · ${timeAgo(doc.created_at)}` : ''}
+                          </>
+                        )}
+                      </span>
+                    </div>
+                  </button>
+                </Fragment>
               );
             })
           )}

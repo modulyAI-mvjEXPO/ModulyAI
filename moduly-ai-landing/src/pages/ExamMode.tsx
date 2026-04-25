@@ -304,12 +304,12 @@ export function ExamMode({ user }: ExamModeProps) {
     void load();
   }, [user.id]);
 
-  const toggleDoc = (id: string) => setDocs(prev => prev.map(d => d.id === id ? { ...d, selected: !d.selected } : d));
-  const selectAllDocs = () => setDocs(prev => prev.map(d => ({ ...d, selected: true })));
-  const selectNoneDocs = () => setDocs(prev => prev.map(d => ({ ...d, selected: false })));
+  const toggleDoc = (id: string) => setDocs(prev => prev.filter(d => d.id !== id));
+  const selectAllDocs = () => {};
+  const selectNoneDocs = () => setDocs([]);
 
   const analysisData = analysis ?? FALLBACK_ANALYSIS;
-  const selectedDocIds = docs.filter(d => d.selected).map(d => d.id);
+  const selectedDocIds = docs.map(d => d.id);
 
   const sendMessage = useCallback(async (override?: string) => {
     const text = (override ?? input).trim();
