@@ -9,10 +9,7 @@ import type {
   DocumentRow,
 } from '../lib/ai/types.ts';
 import './ExamMode.css';
-<<<<<<< HEAD
-=======
-import { LiquidButton } from '../components/ui/liquid-glass-button';
->>>>>>> parent of 9466db5 (Holy push.)
+
 
 type ExamView = 'types' | 'subjects' | 'pick-docs' | 'chat';
 
@@ -500,7 +497,6 @@ export function ExamMode({ user }: ExamModeProps) {
           </div>
 
           <div className="em-pick-footer">
-<<<<<<< HEAD
             <button
               className="em-pick-start-btn"
               onClick={() => setExamView('chat')}
@@ -509,15 +505,6 @@ export function ExamMode({ user }: ExamModeProps) {
               <span className="material-icons-outlined">play_arrow</span>
               {docs.length === 0 ? 'Start Without Context' : 'Start Exam Intelligence'}
             </button>
-=======
-            <LiquidButton
-              onClick={() => setExamView('chat')}
-              size="lg"
-            >
-              <span className="material-icons-outlined">play_arrow</span>
-              {docs.length === 0 ? 'Start Without Context' : 'Start Exam Intelligence'}
-            </LiquidButton>
->>>>>>> parent of 9466db5 (Holy push.)
             {docs.length > 0 && (
               <button className="em-pick-skip-btn" onClick={() => { selectAllDocs(); setExamView('chat'); }}>
                 Skip — Use All Documents
@@ -782,26 +769,16 @@ export function ExamMode({ user }: ExamModeProps) {
                 />
 
                 {/* Solve button */}
-<<<<<<< HEAD
                 <button
                   className="em-btn-solve-all"
                   onClick={() => { void solvePaper(); }}
                   disabled={!paperInput.trim() || isTyping}
-=======
-                <LiquidButton
-                  onClick={() => { void solvePaper(); }}
-                  size="lg"
->>>>>>> parent of 9466db5 (Holy push.)
                 >
                   <span className="material-icons-outlined em-icon-18">auto_awesome</span>
                   {isTyping && batchProgress
                     ? `Solving ${batchProgress.current} of ${batchProgress.total}...`
                     : 'Generate All Answers'}
-<<<<<<< HEAD
                 </button>
-=======
-                </LiquidButton>
->>>>>>> parent of 9466db5 (Holy push.)
 
                 {/* Answer sheet */}
                 {paperAnswers.length > 0 && (

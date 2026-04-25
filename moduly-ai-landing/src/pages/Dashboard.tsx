@@ -9,12 +9,7 @@ import { ExamMode } from './ExamMode';
 import { Library } from './Library';
 import { UploadDocs } from './UploadDocs';
 import { Settings } from './Settings';
-<<<<<<< HEAD
 import { DashedBackground } from '../components/ui/demo';
-=======
-import { DashedBackground } from '../components/ui/dashed-background';
-import { Button, LiquidButton } from '../components/ui/liquid-glass-button';
->>>>>>> parent of 9466db5 (Holy push.)
 import './Dashboard.css';
 
 type DashboardPage = 'overview' | 'study' | 'exam' | 'library' | 'upload' | 'settings';
@@ -450,22 +445,12 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
                         </span>
                       </td>
                       <td className="db-table-right">
-<<<<<<< HEAD
                         <button
                           className="db-resume-btn"
                           onClick={() => handleResume()}
                         >
                           Resume
                         </button>
-=======
-                        <Button
-                          onClick={() => handleResume()}
-                          size="sm"
-                          className="db-resume-btn"
-                        >
-                          Resume
-                        </Button>
->>>>>>> parent of 9466db5 (Holy push.)
                       </td>
                     </tr>
                   ))}
@@ -477,7 +462,6 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
                   <span className="material-icons-outlined">folder_open</span>
                   <p>No documents uploaded yet.</p>
                 </div>
-<<<<<<< HEAD
                 <button
                   className="db-table-empty-btn-new"
                   onClick={() => setActivePage('upload')}
@@ -485,14 +469,6 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
                   <span className="material-icons-outlined">cloud_upload</span>
                   Upload Documents
                 </button>
-=======
-                <LiquidButton
-                  onClick={() => setActivePage('upload')}
-                  size="lg"
-                >
-                  Upload Documents
-                </LiquidButton>
->>>>>>> parent of 9466db5 (Holy push.)
               </div>
             )}
           </div>

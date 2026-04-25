@@ -287,11 +287,7 @@
   position: absolute;
   top: 6px; right: 6px;
   width: 8px; height: 8px;
-<<<<<<< HEAD
   border-radius: 0;
-=======
-  border-radius: var(--radius);
->>>>>>> parent of 9466db5 (Holy push.)
   background: var(--primary);
   border: 2px solid var(--muted);
 }
@@ -299,11 +295,7 @@
 /* Header avatar */
 .db-avatar-ring {
   width: 34px; height: 34px;
-<<<<<<< HEAD
   border-radius: 0;
-=======
-  border-radius: var(--radius);
->>>>>>> parent of 9466db5 (Holy push.)
   background: var(--foreground);
   padding: 2px;
   cursor: pointer;
@@ -311,11 +303,7 @@
 
 .db-header-avatar {
   width: 100%; height: 100%;
-<<<<<<< HEAD
   border-radius: 0;
-=======
-  border-radius: var(--radius);
->>>>>>> parent of 9466db5 (Holy push.)
   background: var(--accent);
   color: var(--on-secondary);
   font-weight: 700;
@@ -349,11 +337,7 @@
 
 .db-content::-webkit-scrollbar { width: 6px; }
 .db-content::-webkit-scrollbar-track { background: transparent; }
-<<<<<<< HEAD
 .db-content::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 0; }
-=======
-.db-content::-webkit-scrollbar-thumb { background: var(--muted); border-radius: var(--radius); }
->>>>>>> parent of 9466db5 (Holy push.)
 
 /* ─── Welcome hero ────────────────────────────────────────────────────── */
 .db-hero {
@@ -419,7 +403,6 @@
   gap: 4px;
 }
 
-<<<<<<< HEAD
 .db-hero-meta-icon { font-size: 16px !important; }
 
 .db-dot {
@@ -429,21 +412,6 @@
 }
 
 .db-hero-subjects { color: var(--accent); font-weight: 700; }
-=======
-.db-hero-meta-icon { 
-  font-size: 16px !important; 
-  color: #ffffff;
-}
-
-.db-dot {
-  width: 4px; height: 4px;
-  border-radius: var(--radius);
-  background: #ffffff;
-  opacity: 0.6;
-}
-
-.db-hero-subjects { color: #ffffff; font-weight: 700; }
->>>>>>> parent of 9466db5 (Holy push.)
 
 .db-hero-desc {
   font-size: 13px;
@@ -460,22 +428,12 @@
   display: flex;
   align-items: center;
   gap: 12px;
-<<<<<<< HEAD
   background: var(--background);
   padding: 16px;
   border-radius: 0;
   border: 2px solid var(--border);
   box-shadow: var(--shadow-sm);
   flex-shrink: 0;
-=======
-  background: var(--primary);
-  padding: 16px;
-  border-radius: var(--radius);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: var(--shadow-sm);
-  flex-shrink: 0;
-  color: #ffffff;
->>>>>>> parent of 9466db5 (Holy push.)
 }
 
 .db-progress-ring {
@@ -494,11 +452,7 @@
 
 .db-ring-track {
   fill: none;
-<<<<<<< HEAD
   stroke: var(--border);
-=======
-  stroke: rgba(255, 255, 255, 0.2);
->>>>>>> parent of 9466db5 (Holy push.)
   stroke-width: 4;
 }
 
@@ -512,7 +466,6 @@
 
 .db-ring-label {
   position: absolute;
-<<<<<<< HEAD
   font-size: 10px;
   font-weight: 700;
   color: var(--foreground);
@@ -521,33 +474,12 @@
 .db-ring-sub {
   font-size: 11px;
   color: var(--muted-foreground);
-=======
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 9px;
-  font-weight: 800;
-  color: #ffffff;
-  font-family: var(--font-mono);
-}
-
-.db-ring-sub {
-  font-size: 10px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.8);
-  text-transform: uppercase;
-  margin-bottom: 1px;
->>>>>>> parent of 9466db5 (Holy push.)
 }
 
 .db-ring-val {
   font-size: 13px;
-<<<<<<< HEAD
   font-weight: 700;
   color: var(--foreground);
-=======
-  font-weight: 800;
-  color: #ffffff;
->>>>>>> parent of 9466db5 (Holy push.)
 }
 
 /* ─── Quick-action cards ──────────────────────────────────────────────── */
@@ -580,11 +512,7 @@
 
 .db-action-icon-wrap {
   width: 42px; height: 42px;
-<<<<<<< HEAD
   border-radius: 0;
-=======
-  border-radius: var(--radius);
->>>>>>> parent of 9466db5 (Holy push.)
   display: flex;
   align-items: center;
   justify-content: center;
@@ -592,7 +520,6 @@
   border: 2px solid var(--foreground);
 }
 
-<<<<<<< HEAD
 .db-action-card--primary .db-action-icon-wrap { background: var(--accent); }
 .db-action-card--teal    .db-action-icon-wrap { background: var(--primary); }
 .db-action-card--purple  .db-action-icon-wrap { background: var(--secondary); }
@@ -601,9 +528,6 @@
 .db-action-card--primary .db-action-icon { color: #ffffff; }
 .db-action-card--teal    .db-action-icon { color: #ffffff; }
 .db-action-card--purple  .db-action-icon { color: var(--on-secondary); }
-=======
-.db-action-icon { font-size: 22px !important; color: #ffffff; }
->>>>>>> parent of 9466db5 (Holy push.)
 
 .db-action-title {
   font-size: 15px;
@@ -632,25 +556,16 @@
 
 .db-stat-card {
   padding: 20px;
-<<<<<<< HEAD
   border-radius: 0;
   background: var(--background);
   border: 4px solid var(--border);
-=======
-  border-radius: var(--radius);
-  background: var(--primary);
-  border: 1px solid var(--border);
->>>>>>> parent of 9466db5 (Holy push.)
   display: flex;
   flex-direction: column;
   gap: 4px;
   position: relative;
   overflow: hidden;
   box-shadow: var(--shadow-sm);
-<<<<<<< HEAD
-=======
-  color: #ffffff;
->>>>>>> parent of 9466db5 (Holy push.)
+
 }
 
 /* Specific high-contrast card for 'Important Qs' */
@@ -674,11 +589,7 @@
 .db-stat-value {
   font-size: 30px;
   font-weight: 800;
-<<<<<<< HEAD
   color: var(--foreground);
-=======
-  color: #ffffff;
->>>>>>> parent of 9466db5 (Holy push.)
   font-family: var(--font-mono);
   line-height: 1;
 }
@@ -686,11 +597,7 @@
 .db-stat-label {
   font-size: 11px;
   font-weight: 700;
-<<<<<<< HEAD
   color: var(--muted-foreground);
-=======
-  color: #ffffff;
->>>>>>> parent of 9466db5 (Holy push.)
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -723,31 +630,18 @@
 .db-table-view-all {
   font-size: 13px;
   font-weight: 700;
-<<<<<<< HEAD
   color: var(--on-secondary);
   text-decoration: none;
   background: transparent;
   border: 2px solid var(--on-secondary);
-=======
-  color: #ffffff;
-  text-decoration: none;
-  background: transparent;
-  border: 1px solid #ffffff;
-  border-radius: var(--radius);
->>>>>>> parent of 9466db5 (Holy push.)
   padding: 4px 12px;
   cursor: pointer;
   transition: all 0.1s;
 }
 
 .db-table-view-all:hover {
-<<<<<<< HEAD
   background: var(--on-secondary);
   color: var(--secondary);
-=======
-  background: #ffffff;
-  color: var(--primary);
->>>>>>> parent of 9466db5 (Holy push.)
 }
 
 .db-table-wrap { overflow-x: auto; }
@@ -763,59 +657,32 @@
   text-align: left;
   font-size: 11px;
   font-weight: 700;
-<<<<<<< HEAD
   color: var(--foreground);
   text-transform: uppercase;
   letter-spacing: 0.07em;
   background: var(--background);
   border-bottom: 2px solid var(--border);
-=======
-  color: #ffffff;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  background: var(--primary);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
->>>>>>> parent of 9466db5 (Holy push.)
 }
 
 .db-table-right { text-align: right !important; }
 
 .db-table-row {
-<<<<<<< HEAD
   border-top: 1px solid var(--border);
   transition: background 0.1s;
 }
 
 .db-table-row:hover { background: var(--background); }
-=======
-  background: var(--primary);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  transition: background 0.1s;
-  color: #ffffff;
-}
-
-.db-table-row:hover { background: #d97757; }
->>>>>>> parent of 9466db5 (Holy push.)
 
 .db-table-row td { padding: 14px 24px; }
 
 .db-table-subject {
   font-weight: 700;
-<<<<<<< HEAD
   color: var(--foreground);
 }
 
 .db-table-module { color: var(--muted-foreground); }
 
 .db-table-date { color: var(--muted-foreground); font-family: var(--font-mono); font-size: 12px; }
-=======
-  color: #ffffff;
-}
-
-.db-table-module { color: #ffffff; }
-
-.db-table-date { color: #ffffff; font-family: var(--font-mono); font-size: 12px; }
->>>>>>> parent of 9466db5 (Holy push.)
 
 /* Mode badges */
 .db-mode-badge {
@@ -825,22 +692,12 @@
   border-radius: 0;
   font-size: 11px;
   font-weight: 700;
-<<<<<<< HEAD
   border: 2px solid var(--foreground);
 }
 
 .db-mode-badge--learning {
   background: var(--accent);
   color: var(--on-secondary);
-=======
-  border: 1px solid #ffffff;
-}
-
-.db-mode-badge--learning {
-  background: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-  border: 1px solid #ffffff;
->>>>>>> parent of 9466db5 (Holy push.)
 }
 
 .db-mode-badge--quiz {
@@ -849,7 +706,6 @@
 }
 
 .db-resume-btn {
-<<<<<<< HEAD
   font-size: 13px;
   font-weight: 700;
   color: var(--accent);
@@ -864,25 +720,6 @@
 .db-resume-btn:hover {
   background: var(--accent);
   color: #ffffff;
-=======
-  font-size: 11px;
-  font-weight: 700;
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid #ffffff;
-  border-radius: var(--radius);
-  cursor: pointer;
-  padding: 4px 12px;
-  font-family: var(--font-sans);
-  transition: all 0.1s;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-}
-
-.db-resume-btn:hover {
-  background: #ffffff;
-  color: var(--primary);
->>>>>>> parent of 9466db5 (Holy push.)
 }
 
 /* ─── Footer ──────────────────────────────────────────────────────────── */

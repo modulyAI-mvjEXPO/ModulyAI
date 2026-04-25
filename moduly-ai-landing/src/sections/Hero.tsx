@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react';
 import './Hero.css';
 import { WavyBackground } from '../components/ui/wavy-background';
-<<<<<<< HEAD
-=======
-import { LiquidButton } from '../components/ui/liquid-glass-button';
->>>>>>> parent of 9466db5 (Holy push.)
+
 
 export function Hero() {
     const [isDark, setIsDark] = useState(document.documentElement.getAttribute('data-theme') === 'dark');
@@ -47,15 +44,7 @@ export function Hero() {
                             — structured around syllabus, modules, PYQs, and exam performance.
                         </p>
 
-<<<<<<< HEAD
-=======
-                        <div className="hero-actions" style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center' }}>
-                            <LiquidButton>
-                                Start Learning Now
-                            </LiquidButton>
-                        </div>
 
->>>>>>> parent of 9466db5 (Holy push.)
                         <div className="hero-visual">
                             <div className="visual-card">
                                 <div className="visual-header">
