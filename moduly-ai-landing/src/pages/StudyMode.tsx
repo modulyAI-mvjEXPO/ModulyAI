@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { getProfile } from '../lib/profile';
 import type { ChatResponse } from '../lib/ai/types';
 import { DocumentPickerModal } from '../components/DocumentPickerModal';
-import { LiquidButton } from '../components/ui/liquid-glass-button';
+import { ButtonColorful } from '../components/ui/button-colorful';
 import './StudyMode.css';
 
 interface StudyModeProps {
@@ -549,15 +549,11 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
         <div className="sm-dash">
           {/* Header */}
           <div className="sm-dash-head">
-            <LiquidButton
-              onClick={() => {}} // Internal logic for create kit if any
-              size="lg"
-            >
-              <div className="sm-dash-create-group">
-                <span className="material-icons-outlined sm-dash-spark-icon">auto_awesome</span>
-                <span>Create a study kit</span>
-              </div>
-            </LiquidButton>
+            <ButtonColorful
+              onClick={() => {}}
+              label="Create a study kit"
+              className="w-full"
+            />
             <div className="sm-dash-subhead">
               <div className="sm-dash-search">
                 <span className="material-icons-outlined">search</span>
@@ -628,9 +624,10 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
               <div className="sm-pick-empty-state">
                 <span className="material-icons-outlined">library_books</span>
                 <p>No documents selected yet.</p>
-                <LiquidButton onClick={() => setPickerOpen(true)} size="lg">
-                  Select from Library
-                </LiquidButton>
+                <ButtonColorful
+                  onClick={() => setPickerOpen(true)}
+                  label="Select from Library"
+                />
               </div>
             ) : (
               <>
@@ -664,22 +661,11 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
           </div>
 
           <div className="sm-pick-footer">
-            <LiquidButton
+            <ButtonColorful
               onClick={handleStartSession}
-              size="xl"
-            >
-              {parsingDocs ? (
-                <>
-                  <span className="material-icons-outlined ud-spin">sync</span>
-                  Parsing New Documents...
-                </>
-              ) : (
-                <>
-                  <span className="material-icons-outlined">play_arrow</span>
-                  {docs.length === 0 ? 'Start Without Documents' : 'Start Study Kit'}
-                </>
-              )}
-            </LiquidButton>
+              label={parsingDocs ? "Parsing New Documents..." : (docs.length === 0 ? 'Start Without Documents' : 'Start Study Kit')}
+              className="w-full"
+            />
           </div>
           
           <DocumentPickerModal

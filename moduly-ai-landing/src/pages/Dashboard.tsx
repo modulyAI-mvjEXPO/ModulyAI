@@ -10,7 +10,7 @@ import { Library } from './Library';
 import { UploadDocs } from './UploadDocs';
 import { Settings } from './Settings';
 import { DashedBackground } from '../components/ui/dashed-background';
-import { Button, LiquidButton } from '../components/ui/liquid-glass-button';
+import { ButtonColorful } from '../components/ui/button-colorful';
 import './Dashboard.css';
 
 type DashboardPage = 'overview' | 'study' | 'exam' | 'library' | 'upload' | 'settings';
@@ -415,12 +415,12 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
         <section className="db-table-card">
           <div className="db-table-header">
             <h2 className="db-table-title">Recent Study Sessions</h2>
-            <button
-              className="db-table-view-all"
+            <ButtonColorful
+              label="View All"
               onClick={() => setActivePage('library')}
-            >
-              View All
-            </button>
+              className="db-table-view-all"
+              textColor="black"
+            />
           </div>
           <div className="db-table-wrap">
             {recentDocs.length > 0 ? (
@@ -446,13 +446,11 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
                         </span>
                       </td>
                       <td className="db-table-right">
-                        <Button
+                        <ButtonColorful
                           onClick={() => handleResume()}
-                          size="sm"
                           className="db-resume-btn"
-                        >
-                          Resume
-                        </Button>
+                          label="Resume"
+                        />
                       </td>
                     </tr>
                   ))}
@@ -464,12 +462,10 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
                   <span className="material-icons-outlined">folder_open</span>
                   <p>No documents uploaded yet.</p>
                 </div>
-                <LiquidButton
+                <ButtonColorful
                   onClick={() => setActivePage('upload')}
-                  size="lg"
-                >
-                  Upload Documents
-                </LiquidButton>
+                  label="Upload Documents"
+                />
               </div>
             )}
           </div>

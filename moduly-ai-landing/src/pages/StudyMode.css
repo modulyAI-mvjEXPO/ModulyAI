@@ -255,20 +255,8 @@
   text-align: center;
 }
 .sm-dash-back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: transparent;
-  border: 2px solid var(--border);
-  padding: 6px 12px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  margin-bottom: 24px;
-  transition: background 0.15s;
+  /* Let ButtonColorful handle styles */
 }
-.sm-dash-back-btn:hover { background: var(--muted); }
-.sm-dash-back-btn .material-icons-outlined { font-size: 16px !important; }
 .sm-pick-title {
   font-size: 28px;
   font-weight: 800;
@@ -367,23 +355,8 @@
   max-width: 700px;
 }
 .sm-pick-start-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 16px;
-  background: var(--primary);
-  color: #fff;
-  border: 3px solid var(--foreground);
-  box-shadow: 4px 4px 0px var(--foreground);
-  font-size: 16px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: transform 0.1s;
+  /* Let ButtonColorful handle styles */
 }
-.sm-pick-start-btn:hover:not(:disabled) { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px var(--foreground); }
-.sm-pick-start-btn:disabled { opacity: 0.5; cursor: not-allowed; border-color: var(--border); box-shadow: none; background: var(--muted); color: var(--muted-foreground); }
 .sm-pick-skip-btn {
   background: none;
   border: none;

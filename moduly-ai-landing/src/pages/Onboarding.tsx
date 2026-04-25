@@ -3,6 +3,7 @@ import type { User } from '@supabase/supabase-js';
 import { upsertProfile } from '../lib/profile';
 import { VTU_COLLEGES, VTU_COURSES, getSubjects } from '../lib/vtuData';
 import { AppNav } from '../components/AppNav/AppNav';
+import { ButtonColorful } from '../components/ui/button-colorful';
 import './Onboarding.css';
 
 interface OnboardingProps {
@@ -246,14 +247,12 @@ export function Onboarding({ user, onComplete, onSignOut }: OnboardingProps) {
                     {personalErrors.region && <span className="ob-field-err">{personalErrors.region}</span>}
                   </div>
 
-                  <button
-                    className="ob-btn ob-btn-next"
+                  <ButtonColorful
                     onClick={handleNext}
                     disabled={!step1Valid}
-                  >
-                    Next Step
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
-                  </button>
+                    label="Next Step"
+                    className="w-full"
+                  />
                 </div>
               </div>
 
@@ -359,24 +358,13 @@ export function Onboarding({ user, onComplete, onSignOut }: OnboardingProps) {
                       className="ob-btn ob-btn-back"
                       onClick={() => goToStep(0, 'right')}
                     >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg>
                       Back
                     </button>
-                    <button
-                      type="button"
-                      className="ob-btn ob-btn-finish"
+                    <ButtonColorful
                       onClick={handleFinish}
                       disabled={!step2Valid || isSubmitting}
-                    >
-                      {isSubmitting ? (
-                        <span className="ob-spinner" />
-                      ) : (
-                        <>
-                          Finish
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
-                        </>
-                      )}
-                    </button>
+                      label={isSubmitting ? "Finishing..." : "Finish"}
+                    />
                   </div>
                 </div>
               </div>

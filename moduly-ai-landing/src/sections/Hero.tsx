@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import './Hero.css';
 import { WavyBackground } from '../components/ui/wavy-background';
-import { LiquidButton } from '../components/ui/liquid-glass-button';
+import { ButtonColorful } from '../components/ui/button-colorful';
 
 export function Hero() {
     const [isDark, setIsDark] = useState(document.documentElement.getAttribute('data-theme') === 'dark');
@@ -45,9 +45,7 @@ export function Hero() {
                         </p>
 
                         <div className="hero-actions" style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center' }}>
-                            <LiquidButton>
-                                Start Learning Now
-                            </LiquidButton>
+                            <ButtonColorful label="Start Learning Now" />
                         </div>
 
                         <div className="hero-visual">

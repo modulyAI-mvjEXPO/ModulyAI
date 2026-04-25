@@ -78,25 +78,5 @@
 
 /* Sign out button */
 .app-nav-signout {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-4);
-  background: var(--muted);
-  border: 2px solid var(--border);
-  border-radius: var(--radius);
-  font-family: var(--font-sans);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--muted-foreground);
-  cursor: pointer;
-  transition: all var(--transition-base);
-}
-
-.app-nav-signout:hover {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: white;
-  transform: translate(-2px, -2px);
-  box-shadow: var(--shadow-sm);
+  /* Let ButtonColorful handle styles */
 }

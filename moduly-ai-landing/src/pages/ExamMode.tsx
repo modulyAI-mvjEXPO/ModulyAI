@@ -9,7 +9,7 @@ import type {
   DocumentRow,
 } from '../lib/ai/types.ts';
 import './ExamMode.css';
-import { LiquidButton } from '../components/ui/liquid-glass-button';
+import { ButtonColorful } from '../components/ui/button-colorful';
 
 type ExamView = 'types' | 'subjects' | 'pick-docs' | 'chat';
 
@@ -497,13 +497,11 @@ export function ExamMode({ user }: ExamModeProps) {
           </div>
 
           <div className="em-pick-footer">
-            <LiquidButton
+            <ButtonColorful
               onClick={() => setExamView('chat')}
-              size="lg"
-            >
-              <span className="material-icons-outlined">play_arrow</span>
-              {docs.length === 0 ? 'Start Without Context' : 'Start Exam Intelligence'}
-            </LiquidButton>
+              label={docs.length === 0 ? 'Start Without Context' : 'Start Exam Intelligence'}
+              className="w-full"
+            />
             {docs.length > 0 && (
               <button className="em-pick-skip-btn" onClick={() => { selectAllDocs(); setExamView('chat'); }}>
                 Skip — Use All Documents
@@ -768,15 +766,13 @@ export function ExamMode({ user }: ExamModeProps) {
                 />
 
                 {/* Solve button */}
-                <LiquidButton
+                <ButtonColorful
                   onClick={() => { void solvePaper(); }}
-                  size="lg"
-                >
-                  <span className="material-icons-outlined em-icon-18">auto_awesome</span>
-                  {isTyping && batchProgress
+                  label={isTyping && batchProgress
                     ? `Solving ${batchProgress.current} of ${batchProgress.total}...`
                     : 'Generate All Answers'}
-                </LiquidButton>
+                  className="w-full"
+                />
 
                 {/* Answer sheet */}
                 {paperAnswers.length > 0 && (

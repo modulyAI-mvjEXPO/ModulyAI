@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { DocumentRow } from '../lib/ai/types';
 import { supabase } from '../lib/supabase';
+import { ButtonColorful } from './ui/button-colorful';
 import './DocumentPickerModal.css';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -241,7 +242,7 @@ export function DocumentPickerModal({ isOpen, onClose, initialSelectedIds, onSav
             <div className="dp-error">
               <span className="material-icons-outlined">error_outline</span>
               <p>{error}</p>
-              <button className="dp-retry-btn" onClick={() => { void fetchDocuments(); }}>Retry</button>
+              <ButtonColorful onClick={() => { void fetchDocuments(); }} label="Try Again" />
             </div>
           ) : filtered.length === 0 ? (
             <div className="dp-empty">
@@ -296,10 +297,10 @@ export function DocumentPickerModal({ isOpen, onClose, initialSelectedIds, onSav
           </span>
           <div className="dp-footer-actions">
             <button className="dp-cancel-btn" onClick={onClose}>Cancel</button>
-            <button className="dp-save-btn" onClick={handleSave}>
-              <span className="material-icons-outlined">check</span>
-              Confirm Selection
-            </button>
+            <ButtonColorful
+              onClick={handleSave}
+              label="Confirm Selection"
+            />
           </div>
         </div>
       </div>

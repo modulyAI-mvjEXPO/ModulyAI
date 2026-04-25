@@ -1031,26 +1031,7 @@
   resize: vertical;
 }
 .em-btn-solve-all {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--accent);
-  color: #fff;
-  border: 2px solid var(--foreground);
-  border-radius: var(--radius);
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 700;
-  font-family: var(--font-sans);
-  cursor: pointer;
-  align-self: flex-start;
-  transition: all 0.15s;
-  box-shadow: var(--shadow-sm);
-}
-.em-btn-solve-all:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
-.em-btn-solve-all:hover:not(:disabled) {
-  box-shadow: var(--shadow);
-  transform: translate(-2px, -2px);
+  /* Let ButtonColorful handle styles */
 }
 
 /* ── Paper Mode: Answer Sheet ─────────────────────────────────────────────── */
@@ -1115,30 +1096,7 @@
 }
 
 .em-dash-back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--muted-foreground);
-  background: none;
-  border: 2px solid var(--border);
-  padding: 6px 14px;
-  border-radius: 6px;
-  cursor: pointer;
-  width: fit-content;
-  transition: all 0.15s;
-}
-
-.em-dash-back-btn:hover {
-  color: var(--foreground);
-  background: var(--muted);
-  transform: translate(-2px, -2px);
-  box-shadow: 4px 4px 0px var(--border);
-}
-
-.em-dash-back-btn span {
-  font-size: 18px !important;
+  /* Let ButtonColorful handle styles */
 }
 
 /* ── Exam Types Grid ──────────────────────────────────────────────────────── */
@@ -1411,23 +1369,8 @@
   max-width: 700px;
 }
 .em-pick-start-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 16px;
-  background: var(--primary);
-  color: #fff;
-  border: 3px solid var(--foreground);
-  box-shadow: 4px 4px 0px var(--foreground);
-  font-size: 16px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: transform 0.1s;
+  /* Let ButtonColorful handle styles */
 }
-.em-pick-start-btn:hover:not(:disabled) { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px var(--foreground); }
-.em-pick-start-btn:disabled { opacity: 0.5; cursor: not-allowed; border-color: var(--border); box-shadow: none; background: var(--muted); color: var(--muted-foreground); }
 .em-pick-skip-btn {
   background: none;
   border: none;

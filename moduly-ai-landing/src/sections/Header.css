@@ -79,31 +79,7 @@
 }
 
 .header-cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-2) var(--space-5);
-  font-family: var(--font-sans);
-  font-size: var(--font-size-sm);
-  font-weight: 700;
-  color: var(--background);
-  background: var(--foreground);
-  border: 2px solid var(--border);
-  border-radius: var(--radius);
-  cursor: pointer;
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--transition-base), transform var(--transition-base);
-  letter-spacing: 0.02em;
-}
-
-.header-cta:hover {
-  box-shadow: var(--shadow);
-  transform: translate(-2px, -2px);
-}
-
-.header-cta:active {
-  transform: translate(0, 0);
-  box-shadow: none;
+  /* Let ButtonColorful handle styles */
 }
 
 @media (max-width: 768px) {

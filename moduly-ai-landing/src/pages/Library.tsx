@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type { DocumentRow } from '../lib/ai/types';
-import { LiquidButton } from '../components/ui/liquid-glass-button';
+import { ButtonColorful } from '../components/ui/button-colorful';
 import './Library.css';
 
 /* ─── Display helpers ────────────────────────────────────────────────────── */
@@ -281,9 +281,10 @@ export function Library({ user, onNavigate }: LibraryProps) {
             <span className="material-icons-outlined lib-btn-icon">history</span>
             History
           </button>
-          <LiquidButton onClick={() => onNavigate?.('upload')} size="lg">
-            Contribute
-          </LiquidButton>
+          <ButtonColorful
+            onClick={() => onNavigate?.('upload')}
+            label="Contribute"
+          />
         </div>
       </div>
 
@@ -428,12 +429,10 @@ export function Library({ user, onNavigate }: LibraryProps) {
                       {alreadyRequested ? 'Requested' : isPending ? '…' : 'Remove'}
                     </button>
                   )}
-                  <LiquidButton
+                  <ButtonColorful
                     onClick={() => void handleView(doc.file_path)}
-                    size="sm"
-                  >
-                    {viewingDoc === doc.file_path ? '…' : 'View'}
-                  </LiquidButton>
+                    label={viewingDoc === doc.file_path ? '…' : 'View'}
+                  />
                 </div>
               </div>
             );

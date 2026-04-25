@@ -85,7 +85,8 @@
   transition: transform 0.2s ease, background 0.1s;
 }
 
-.db-nav-trigger:hover, .db-nav-trigger--active {
+.db-nav-trigger:hover,
+.db-nav-trigger--active {
   background-color: var(--muted);
   border: 2px solid var(--border);
   box-shadow: 2px 2px 0px var(--foreground);
@@ -112,8 +113,15 @@
 }
 
 @keyframes dropdownSlide {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .db-dropdown-item {
@@ -132,7 +140,8 @@
   border: 2px solid transparent;
 }
 
-.db-dropdown-item:hover, .db-dropdown-item:focus {
+.db-dropdown-item:hover,
+.db-dropdown-item:focus {
   background-color: var(--background);
   color: var(--foreground);
   border-color: var(--border);
@@ -145,6 +154,7 @@
   border-color: var(--foreground);
   box-shadow: 3px 3px 0px var(--foreground);
 }
+
 .db-dropdown-item--active:hover {
   background-color: var(--secondary);
 }
@@ -181,7 +191,9 @@
 }
 
 /* Remove ambient blobs — brutalist design is flat */
-.db-blob { display: none; }
+.db-blob {
+  display: none;
+}
 
 /* Subject select */
 .db-subject-wrap {
@@ -189,7 +201,12 @@
   display: none;
 }
 
-@media (min-width: 640px) { .db-subject-wrap { display: flex; align-items: center; } }
+@media (min-width: 640px) {
+  .db-subject-wrap {
+    display: flex;
+    align-items: center;
+  }
+}
 
 .db-subject-select {
   appearance: none;
@@ -229,7 +246,11 @@
   display: none;
 }
 
-@media (min-width: 640px) { .db-sem-badge { display: inline-flex; } }
+@media (min-width: 640px) {
+  .db-sem-badge {
+    display: inline-flex;
+  }
+}
 
 /* Search */
 .db-search-wrap {
@@ -237,7 +258,12 @@
   display: none;
 }
 
-@media (min-width: 768px) { .db-search-wrap { display: flex; align-items: center; } }
+@media (min-width: 768px) {
+  .db-search-wrap {
+    display: flex;
+    align-items: center;
+  }
+}
 
 .db-search-icon {
   position: absolute;
@@ -285,8 +311,10 @@
 
 .db-notif-dot {
   position: absolute;
-  top: 6px; right: 6px;
-  width: 8px; height: 8px;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
   border-radius: var(--radius);
   background: var(--primary);
   border: 2px solid var(--muted);
@@ -294,7 +322,8 @@
 
 /* Header avatar */
 .db-avatar-ring {
-  width: 34px; height: 34px;
+  width: 34px;
+  height: 34px;
   border-radius: var(--radius);
   background: var(--foreground);
   padding: 2px;
@@ -302,7 +331,8 @@
 }
 
 .db-header-avatar {
-  width: 100%; height: 100%;
+  width: 100%;
+  height: 100%;
   border-radius: var(--radius);
   background: var(--accent);
   color: var(--on-secondary);
@@ -322,22 +352,34 @@
   z-index: 10;
   display: flex;
   flex-direction: column;
-  align-items: center; /* Center children horizontally */
+  align-items: center;
+  /* Center children horizontally */
 }
 
-.db-content--hidden { display: none; }
+.db-content--hidden {
+  display: none;
+}
 
 /* Wrapper to restrict width and add vertical spacing */
-.db-content > * {
+.db-content>* {
   flex-shrink: 0;
   width: 100%;
   max-width: 1400px;
   margin-bottom: 28px;
 }
 
-.db-content::-webkit-scrollbar { width: 6px; }
-.db-content::-webkit-scrollbar-track { background: transparent; }
-.db-content::-webkit-scrollbar-thumb { background: var(--muted); border-radius: var(--radius); }
+.db-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.db-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.db-content::-webkit-scrollbar-thumb {
+  background: var(--muted);
+  border-radius: var(--radius);
+}
 
 /* ─── Welcome hero ────────────────────────────────────────────────────── */
 .db-hero {
@@ -352,7 +394,9 @@
 }
 
 /* Remove old glassmorphic blob */
-.db-hero-blob { display: none; }
+.db-hero-blob {
+  display: none;
+}
 
 .db-hero-body {
   position: relative;
@@ -400,19 +444,23 @@
   gap: 4px;
 }
 
-.db-hero-meta-icon { 
-  font-size: 16px !important; 
+.db-hero-meta-icon {
+  font-size: 16px !important;
   color: #ffffff;
 }
 
 .db-dot {
-  width: 4px; height: 4px;
+  width: 4px;
+  height: 4px;
   border-radius: var(--radius);
   background: #ffffff;
   opacity: 0.6;
 }
 
-.db-hero-subjects { color: #ffffff; font-weight: 700; }
+.db-hero-subjects {
+  color: #ffffff;
+  font-weight: 700;
+}
 
 .db-hero-desc {
   font-size: 13px;
@@ -433,18 +481,19 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: var(--primary);
+  background: #faf9f5;
   padding: 16px;
   border-radius: var(--radius);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
   flex-shrink: 0;
-  color: #ffffff;
+  color: #000000;
 }
 
 .db-progress-ring {
   position: relative;
-  width: 52px; height: 52px;
+  width: 52px;
+  height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -452,19 +501,20 @@
 }
 
 .db-ring-svg {
-  width: 52px; height: 52px;
+  width: 52px;
+  height: 52px;
   transform: rotate(-90deg);
 }
 
 .db-ring-track {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.2);
+  stroke: rgba(0, 0, 0, 0.1);
   stroke-width: 4;
 }
 
 .db-ring-fill {
   fill: none;
-  stroke: #ffffff;
+  stroke: var(--primary);
   stroke-width: 4;
   stroke-linecap: round;
   transition: stroke-dashoffset 0.5s ease;
@@ -472,18 +522,19 @@
 
 .db-ring-label {
   position: absolute;
-  top: 50%; left: 50%;
+  top: 50%;
+  left: 50%;
   transform: translate(-50%, -50%);
   font-size: 9px;
   font-weight: 800;
-  color: #ffffff;
+  color: #000000;
   font-family: var(--font-mono);
 }
 
 .db-ring-sub {
   font-size: 10px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(0, 0, 0, 0.6);
   text-transform: uppercase;
   margin-bottom: 1px;
 }
@@ -491,7 +542,7 @@
 .db-ring-val {
   font-size: 13px;
   font-weight: 800;
-  color: #ffffff;
+  color: #000000;
 }
 
 /* ─── Quick-action cards ──────────────────────────────────────────────── */
@@ -521,10 +572,13 @@
 }
 
 /* Remove old transparent bg icon — not brutalist */
-.db-action-bg-icon { display: none; }
+.db-action-bg-icon {
+  display: none;
+}
 
 .db-action-icon-wrap {
-  width: 42px; height: 42px;
+  width: 42px;
+  height: 42px;
   border-radius: var(--radius);
   display: flex;
   align-items: center;
@@ -534,7 +588,10 @@
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-.db-action-icon { font-size: 22px !important; color: #ffffff; }
+.db-action-icon {
+  font-size: 22px !important;
+  color: #ffffff;
+}
 
 .db-action-title {
   font-size: 15px;
@@ -558,13 +615,15 @@
 }
 
 @media (min-width: 768px) {
-  .db-stats-grid { grid-template-columns: repeat(4, 1fr); }
+  .db-stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 .db-stat-card {
   padding: 20px;
   border-radius: var(--radius);
-  background: var(--primary);
+  background: #faf9f5;
   border: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -572,7 +631,7 @@
   position: relative;
   overflow: hidden;
   box-shadow: var(--shadow-sm);
-  color: #ffffff;
+  color: #000000;
 }
 
 /* Important Qs card now matches others */
@@ -581,12 +640,14 @@
 }
 
 /* Remove old glow */
-.db-stat-glow { display: none; }
+.db-stat-glow {
+  display: none;
+}
 
 .db-stat-value {
   font-size: 30px;
   font-weight: 800;
-  color: #ffffff;
+  color: #000000;
   font-family: var(--font-mono);
   line-height: 1;
 }
@@ -594,7 +655,7 @@
 .db-stat-label {
   font-size: 11px;
   font-weight: 700;
-  color: #ffffff;
+  color: #000000;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -625,24 +686,12 @@
 }
 
 .db-table-view-all {
-  font-size: 13px;
-  font-weight: 700;
-  color: #ffffff;
-  text-decoration: none;
-  background: transparent;
-  border: 1px solid #ffffff;
-  border-radius: var(--radius);
-  padding: 4px 12px;
-  cursor: pointer;
-  transition: all 0.1s;
+  /* Let ButtonColorful handle styles */
 }
 
-.db-table-view-all:hover {
-  background: #ffffff;
-  color: var(--primary);
+.db-table-wrap {
+  overflow-x: auto;
 }
-
-.db-table-wrap { overflow-x: auto; }
 
 .db-table {
   width: 100%;
@@ -652,37 +701,50 @@
 
 .db-table-head-row th {
   padding: 10px 24px;
-  text-align: left;
+  text-align: center;
   font-size: 11px;
   font-weight: 700;
-  color: #ffffff;
+  color: #000000;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  background: var(--primary);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  background: #faf9f5;
+  border-bottom: 2px solid var(--border);
 }
 
-.db-table-right { text-align: right !important; }
+.db-table-right {
+  text-align: center !important;
+}
 
 .db-table-row {
-  background: var(--primary);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: #faf9f5;
+  border-top: 1px solid var(--border);
   transition: background 0.1s;
-  color: #ffffff;
+  color: #000000;
 }
 
-.db-table-row:hover { background: #d97757; }
+.db-table-row:hover {
+  background: #f0eee4;
+}
 
-.db-table-row td { padding: 14px 24px; }
+.db-table-row td {
+  padding: 14px 24px;
+  text-align: center;
+}
 
 .db-table-subject {
   font-weight: 700;
-  color: #ffffff;
+  color: #000000;
 }
 
-.db-table-module { color: #ffffff; }
+.db-table-module {
+  color: #000000;
+}
 
-.db-table-date { color: #ffffff; font-family: var(--font-mono); font-size: 12px; }
+.db-table-date {
+  color: #000000;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
 
 /* Mode badges */
 .db-mode-badge {
@@ -692,13 +754,14 @@
   border-radius: var(--radius);
   font-size: 11px;
   font-weight: 700;
-  border: 1px solid #ffffff;
+  border: 1px solid var(--border);
+  color: #000000;
 }
 
 .db-mode-badge--learning {
-  background: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-  border: 1px solid #ffffff;
+  background: rgba(0, 0, 0, 0.05);
+  color: #000000;
+  border: 1px solid var(--border);
 }
 
 .db-mode-badge--quiz {
@@ -707,23 +770,7 @@
 }
 
 .db-resume-btn {
-  font-size: 11px;
-  font-weight: 700;
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid #ffffff;
-  border-radius: var(--radius);
-  cursor: pointer;
-  padding: 4px 12px;
-  font-family: var(--font-sans);
-  transition: all 0.1s;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-}
-
-.db-resume-btn:hover {
-  background: #ffffff;
-  color: var(--primary);
+  /* Let ButtonColorful handle styles */
 }
 
 /* ─── Footer ──────────────────────────────────────────────────────────── */

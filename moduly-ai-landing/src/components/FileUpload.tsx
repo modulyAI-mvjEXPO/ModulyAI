@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { LiquidButton } from './ui/liquid-glass-button';
+import { ButtonColorful } from './ui/button-colorful';
 
 export interface UploadedFile {
     id: number;
@@ -192,12 +192,11 @@ export function FileUpload({ onUploadSuccess, userId }: FileUploadProps) {
             </div>
 
             <div className="ud-submit-wrap">
-                <LiquidButton
+                <ButtonColorful
                     onClick={handleUpload}
-                    size="lg"
-                >
-                    {uploading ? 'Uploading...' : 'Upload File'}
-                </LiquidButton>
+                    label={uploading ? 'Uploading...' : 'Upload File'}
+                    className="w-full"
+                />
             </div>
 
             {message && (

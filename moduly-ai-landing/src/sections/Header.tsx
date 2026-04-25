@@ -1,4 +1,5 @@
 
+import { ButtonColorful } from '../components/ui/button-colorful';
 import './Header.css';
 
 interface HeaderProps {
@@ -20,9 +21,7 @@ export function Header({ onAuthOpen }: HeaderProps) {
                     <a href="#tech-stack" className="nav-link">Tech Stack</a>
                 </nav>
                 <div className="header-actions">
-                    <button className="header-cta" onClick={onAuthOpen}>
-                        Get Started
-                    </button>
+                    <ButtonColorful label="Get Started" onClick={onAuthOpen} className="header-cta" />
                 </div>
             </div>
         </header>

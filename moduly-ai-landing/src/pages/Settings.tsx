@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { getProfile, upsertProfile } from '../lib/profile';
+import { ButtonColorful } from '../components/ui/button-colorful';
 import './Settings.css';
 
 interface SettingsProps {
@@ -205,16 +206,12 @@ export function Settings({ user }: SettingsProps) {
                                 <h2 className="settings-section-title">Public Profile</h2>
                                 <p className="settings-section-desc">Manage your personal information and college verification status.</p>
                             </div>
-                            <button
-                                className="btn btn-primary settings-btn-save"
+                            <ButtonColorful
                                 onClick={handleSave}
                                 disabled={isSaving}
-                            >
-                                <span className="material-icons-outlined settings-btn-icon">
-                                    {isSaving ? 'hourglass_empty' : saveStatus === 'success' ? 'check' : 'save'}
-                                </span>
-                                {isSaving ? 'Saving...' : saveStatus === 'success' ? 'Saved!' : 'Save Changes'}
-                            </button>
+                                label={isSaving ? 'Saving...' : saveStatus === 'success' ? 'Saved!' : 'Save Changes'}
+                                className="settings-btn-save"
+                            />
                         </div>
 
                         {saveStatus === 'error' && (
