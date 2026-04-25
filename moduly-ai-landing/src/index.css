@@ -5,112 +5,120 @@
    Phase 9: New Theme System
    ======================================== */
 
+/* ---- NEW THEME VARIABLES (Flat/Brutalist) ---- */
 :root {
-  --background: #faf9f5;
-  --foreground: #3d3929;
-  --card: #faf9f5;
-  --card-foreground: #141413;
-  --popover: #ffffff;
-  --popover-foreground: #28261b;
-  --primary: #c96442;
-  --primary-foreground: #ffffff;
-  --secondary: #e9e6dc;
-  --secondary-foreground: #535146;
-  --muted: #ede9de;
-  --muted-foreground: #83827d;
-  --accent: #e9e6dc;
-  --accent-foreground: #28261b;
-  --destructive: #141413;
-  --destructive-foreground: #ffffff;
-  --border: #dad9d4;
-  --input: #b4b2a7;
-  --ring: #c96442;
-  --radius: 0.5rem;
+  /* Core palette */
+  --primary: #ff3333;
+  --secondary: #ffff00;
+  --on-secondary: #000000;
+  --accent: #0066ff;
+  --background: #ffffff;
+  --foreground: #000000;
+  --muted: #f5f5f5;
+  --muted-foreground: #555555;
+  --border: #000000;
+  --radius: 0px;
 
-  /* Sidebar */
-  --sidebar: #f5f4ee;
-  --sidebar-foreground: #3d3d3a;
-  --sidebar-primary: #c96442;
-  --sidebar-primary-foreground: #fbfbfb;
-  --sidebar-accent: #e9e6dc;
-  --sidebar-accent-foreground: #343434;
-  --sidebar-border: #ebebeb;
-  --sidebar-ring: #b5b5b5;
-
-  /* Shadows - softer for the new palette */
-  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  /* Shadows - hard brutalist */
+  --shadow: 4px 4px 0px #000000;
+  --shadow-sm: 2px 2px 0px #000000;
+  --shadow-lg: 6px 6px 0px #000000;
+  --shadow-xl: 8px 8px 0px #000000;
 
   /* Typography */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'Space Mono', 'Courier New', monospace;
 
-  /* Bridge aliases */
-  --color-primary: var(--primary);
-  --color-secondary: var(--secondary);
+  /* ---- BRIDGE ALIASES (keep per-page CSS working) ---- */
+  --color-primary: var(--foreground);
+  --color-secondary: var(--primary);
   --color-accent: var(--accent);
   --color-background: var(--background);
-  --color-surface: var(--card);
+  --color-surface: var(--background);
   --color-surface-elevated: var(--muted);
   --color-text-primary: var(--foreground);
   --color-text-secondary: var(--muted-foreground);
-  --color-text-tertiary: #83827d;
+  --color-text-tertiary: #777777;
   --color-border: var(--border);
-  --color-border-subtle: var(--muted);
-  --grid-color: rgba(61, 57, 41, 0.1);
-  --grid-blur: 0px;
+  --color-border-subtle: #cccccc;
+
+  /* Legacy shadow bridge */
   --shadow-md: var(--shadow);
   --shadow-card: var(--shadow-sm);
+
+  /* Legacy font bridge */
   --font-family: var(--font-sans);
+
+  /* Font sizes (unchanged) */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+  --font-size-5xl: 3rem;
+  --font-size-6xl: 3.75rem;
+
+  /* Spacing (unchanged) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+  --space-32: 8rem;
+
+  /* Layout */
+  --max-width: 1440px;
+  --content-width: 1200px;
+
+  /* Border radius — brutalist = 0 */
+  --border-radius-sm: 0px;
+  --border-radius-md: 0px;
+  --border-radius-lg: 0px;
+  --border-radius-xl: 0px;
+  --border-radius-2xl: 0px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 350ms ease;
 }
 
+/* ---- DARK THEME (Brutalist) ---- */
 [data-theme="dark"] {
-  --background: #262624;
-  --foreground: #c3c0b6;
-  --card: #262624;
-  --card-foreground: #faf9f5;
-  --popover: #30302e;
-  --popover-foreground: #e5e5e2;
-  --primary: #d97757;
-  --primary-foreground: #ffffff;
-  --secondary: #faf9f5;
-  --secondary-foreground: #30302e;
-  --muted: #1b1b19;
-  --muted-foreground: #b7b5a9;
-  --accent: #1a1915;
-  --accent-foreground: #f5f4ee;
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  --border: #3e3e38;
-  --input: #52514a;
-  --ring: #d97757;
-
-  /* Sidebar */
-  --sidebar: #1f1e1d;
-  --sidebar-foreground: #c3c0b6;
-  --sidebar-primary: #343434;
-  --sidebar-primary-foreground: #fbfbfb;
-  --sidebar-accent: #0f0f0e;
-  --sidebar-accent-foreground: #c3c0b6;
-  --sidebar-border: #ebebeb;
-  --sidebar-ring: #b5b5b5;
-
-  /* Bridge aliases dark */
-  --color-primary: var(--primary);
-  --color-secondary: var(--secondary);
+  --primary: #ff3333;
+  --secondary: #ffff00;
+  --on-secondary: #000000;
+  --accent: #4488ff;
+  --background: #0a0a0a;
+  --foreground: #ffffff;
+  --muted: #1a1a1a;
+  --muted-foreground: #aaaaaa;
+  --border: #ffffff;
+  --shadow: 4px 4px 0px #ffffff;
+  --shadow-sm: 2px 2px 0px #ffffff;
+  --shadow-lg: 6px 6px 0px #ffffff;
+  --shadow-xl: 8px 8px 0px #ffffff;
+  --color-primary: var(--foreground);
+  --color-secondary: var(--primary);
   --color-accent: var(--accent);
   --color-background: var(--background);
-  --color-surface: var(--card);
+  --color-surface: var(--background);
   --color-surface-elevated: var(--muted);
   --color-text-primary: var(--foreground);
   --color-text-secondary: var(--muted-foreground);
-  --color-text-tertiary: #b7b5a9;
+  --color-text-tertiary: #888888;
   --color-border: var(--border);
-  --color-border-subtle: #3e3e38;
-  --grid-color: rgba(255, 255, 255, 0.05);
-  --grid-blur: 0.8px;
+  --color-border-subtle: #333333;
   --shadow-md: var(--shadow);
   --shadow-card: var(--shadow-sm);
 }

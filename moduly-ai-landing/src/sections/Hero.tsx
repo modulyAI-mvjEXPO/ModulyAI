@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import './Hero.css';
 import { WavyBackground } from '../components/ui/wavy-background';
-import { LiquidButton } from '../components/ui/liquid-glass-button';
 
 export function Hero() {
     const [isDark, setIsDark] = useState(document.documentElement.getAttribute('data-theme') === 'dark');
@@ -43,12 +42,6 @@ export function Hero() {
                             An AI-powered smart education platform designed exclusively for VTU students
                             — structured around syllabus, modules, PYQs, and exam performance.
                         </p>
-
-                        <div className="hero-actions" style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center' }}>
-                            <LiquidButton>
-                                Start Learning Now
-                            </LiquidButton>
-                        </div>
 
                         <div className="hero-visual">
                             <div className="visual-card">

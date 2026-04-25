@@ -126,7 +126,7 @@
   align-items: center;
   gap: 9px;
   padding: 9px 10px;
-  border-radius: var(--radius);
+  border-radius: 0;
   background: var(--background);
   border: 2px solid var(--border);
   cursor: pointer;
@@ -157,7 +157,7 @@
 .sm-doc-meta { font-size: 10px; color: var(--muted-foreground); margin: 0; }
 .sm-check {
   width: 15px; height: 15px;
-  border-radius: var(--radius);
+  border-radius: 0;
   border: 2px solid var(--border);
   flex-shrink: 0;
   display: flex;
@@ -172,7 +172,7 @@
 .sm-topics { display: flex; flex-wrap: wrap; gap: 6px; }
 .sm-topic {
   padding: 4px 10px;
-  border-radius: var(--radius);
+  border-radius: 0;
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
@@ -201,7 +201,7 @@
 .sm-switch-track {
   display: block;
   width: 38px; height: 21px;
-  border-radius: var(--radius);
+  border-radius: 0;
   background: var(--muted-bg, #d1d5db);
   border: 2px solid var(--border);
   position: relative;
@@ -212,7 +212,7 @@
   position: absolute;
   top: 2px; left: 2px;
   width: 13px; height: 13px;
-  border-radius: var(--radius);
+  border-radius: 0;
   background: #fff;
   transition: transform 0.2s;
 }
@@ -225,7 +225,7 @@
   flex-wrap: wrap;
   padding: 10px;
   background: var(--background);
-  border-radius: var(--radius);
+  border-radius: 0;
   border: 2px solid var(--border);
 }
 .sm-context-count {
@@ -450,7 +450,7 @@
 }
 .sm-dot {
   width: 6px; height: 6px;
-  border-radius: var(--radius);
+  border-radius: 0;
   background: #00aa00;
   flex-shrink: 0;
   animation: dotPulse 2s ease-in-out infinite;
@@ -465,7 +465,7 @@
   padding: 7px;
   background: none;
   border: 2px solid transparent;
-  border-radius: var(--radius);
+  border-radius: 0;
   cursor: pointer;
   color: var(--muted-foreground);
   transition: background 0.15s, color 0.15s, border-color 0.15s;
@@ -480,13 +480,13 @@
   align-items: center;
   background: var(--background);
   border: 2px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 0;
   padding: 2px;
   gap: 1px;
 }
 .sm-mark-btn {
   padding: 3px 10px;
-  border-radius: var(--radius);
+  border-radius: 0;
   font-size: 11px;
   font-weight: 600;
   color: var(--muted-foreground);
@@ -523,7 +523,7 @@
 /* Avatars */
 .sm-avatar {
   width: 34px; height: 34px;
-  border-radius: var(--radius);
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -553,7 +553,7 @@
 /* Bubbles */
 .sm-bubble {
   padding: 10px 14px;
-  border-radius: var(--radius);
+  border-radius: 0;
   line-height: 1.65;
   font-size: 13px;
   border: 3px solid var(--border);
@@ -578,7 +578,7 @@
   background: var(--foreground);
   color: var(--background);
   padding: 1px 5px;
-  border-radius: var(--radius);
+  border-radius: 0;
   font-family: var(--font-mono);
   font-size: 11px;
 }
@@ -587,7 +587,7 @@
 .sm-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
 .sm-action-btn {
   padding: 5px 12px;
-  border-radius: var(--radius);
+  border-radius: 0;
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
@@ -613,7 +613,7 @@
 .sm-typing-bubble span {
   display: block;
   width: 7px; height: 7px;
-  border-radius: var(--radius);
+  border-radius: 0;
   background: var(--muted);
   animation: typingDot 1.2s ease-in-out infinite;
 }
@@ -641,7 +641,7 @@
   align-items: center;
   gap: 3px;
   padding: 2px 8px;
-  border-radius: var(--radius);
+  border-radius: 0;
   font-size: 10px;
   font-weight: 600;
   white-space: nowrap;
@@ -668,7 +668,7 @@
   min-height: 40px;
   max-height: 120px;
   padding: 10px 44px 10px 14px;
-  border-radius: var(--radius);
+  border-radius: 0;
   border: 3px solid var(--border);
   background: var(--background);
   color: var(--foreground);
@@ -690,7 +690,7 @@
   right: 8px;
   bottom: 7px;
   width: 28px; height: 28px;
-  border-radius: var(--radius);
+  border-radius: 0;
   border: 2px solid var(--border);
   background: var(--muted);
   color: var(--muted-foreground);
@@ -751,7 +751,7 @@
 .sm-subject-select {
   width: 100%;
   padding: 7px 28px 7px 10px;
-  border-radius: var(--radius);
+  border-radius: 0;
   border: 2px solid var(--border);
   background: var(--background) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%239ca3af' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 8px center;
   -webkit-appearance: none;

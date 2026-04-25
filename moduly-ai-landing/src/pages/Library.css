@@ -24,7 +24,7 @@
 /* Scrollbar */
 .lib-shell::-webkit-scrollbar { width: 6px; }
 .lib-shell::-webkit-scrollbar-track { background: transparent; }
-.lib-shell::-webkit-scrollbar-thumb { background: var(--muted); border-radius: var(--radius); }
+.lib-shell::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 0; }
 
 /* ─── Page header ────────────────────────────────────────────────────────── */
 .lib-page-header {
@@ -55,7 +55,7 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 0.2rem 0.6rem;
-  border-radius: var(--radius);
+  border-radius: 0;
   background: var(--secondary);
   color: var(--on-secondary);
   border: 2px solid var(--foreground);
@@ -81,7 +81,7 @@
   align-items: center;
   gap: 0.375rem;
   padding: 0.5rem 1rem;
-  border-radius: var(--radius);
+  border-radius: 0;
   border: 2px solid var(--border);
   background: var(--background);
   color: var(--foreground);
@@ -103,7 +103,7 @@
   align-items: center;
   gap: 0.375rem;
   padding: 0.5rem 1.125rem;
-  border-radius: var(--radius);
+  border-radius: 0;
   border: 2px solid var(--foreground);
   background: var(--primary);
   color: #ffffff;
@@ -131,7 +131,7 @@
 .lib-filters {
   background: var(--background);
   border: 3px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 0;
   padding: 0.75rem 1.25rem;
   display: flex;
   flex-direction: column;
@@ -175,7 +175,7 @@
 .lib-select {
   appearance: none;
   padding: 0.4rem 1.75rem 0.4rem 0.75rem;
-  border-radius: var(--radius);
+  border-radius: 0;
   border: 2px solid var(--border);
   background: var(--background) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23000000' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3E%3C/svg%3E") no-repeat right 0.5rem center / 14px;
   color: var(--foreground);
@@ -212,7 +212,7 @@
 .lib-search-input {
   width: 100%;
   padding: 0.4rem 1rem 0.4rem 2.25rem;
-  border-radius: var(--radius);
+  border-radius: 0;
   border: 2px solid var(--border);
   background: var(--background);
   color: var(--foreground);
@@ -262,7 +262,7 @@
 .lib-table-card {
   background: var(--background);
   border: 3px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 0;
   overflow: hidden;
   box-shadow: 6px 6px 0px var(--foreground);
   display: flex;
@@ -305,7 +305,7 @@
 }
 
 .lib-table-body::-webkit-scrollbar { width: 4px; }
-.lib-table-body::-webkit-scrollbar-thumb { background: var(--muted); border-radius: var(--radius); }
+.lib-table-body::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 0; }
 
 /* ─── Rows ───────────────────────────────────────────────────────────────── */
 .lib-row {
@@ -329,7 +329,7 @@
 .lib-doc-icon {
   width: 40px;
   height: 40px;
-  border-radius: var(--radius);
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -371,7 +371,7 @@
   display: inline-flex;
   align-items: center;
   padding: 0.2rem 0.625rem;
-  border-radius: var(--radius);
+  border-radius: 0;
   background: var(--accent);
   border: 2px solid var(--foreground);
   font-size: 0.75rem;
@@ -382,7 +382,7 @@
 .lib-contributor-dot {
   width: 10px;
   height: 10px;
-  border-radius: var(--radius);
+  border-radius: 0;
   flex-shrink: 0;
   display: inline-block;
   background: var(--primary);
@@ -407,7 +407,7 @@ div.lib-col-contributor {
   align-items: center;
   gap: 0.375rem;
   padding: 0.25rem 0.625rem;
-  border-radius: var(--radius);
+  border-radius: 0;
   font-size: 0.75rem;
   font-weight: 700;
   border: 2px solid var(--foreground);
@@ -501,7 +501,7 @@ div.lib-col-contributor {
   min-width: 32px;
   height: 32px;
   padding: 0 0.375rem;
-  border-radius: var(--radius);
+  border-radius: 0;
   border: 2px solid var(--border);
   background: var(--background);
   color: var(--foreground);
@@ -544,7 +544,7 @@ div.lib-col-contributor {
 .lib-remove-btn {
   background: none;
   border: 2px solid var(--primary);
-  border-radius: var(--radius);
+  border-radius: 0;
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--primary);
