@@ -8,8 +8,8 @@ interface AppNavProps {
 
 export function AppNav({ onSignOut, showSignOut = true }: AppNavProps) {
     const handleSignOut = async () => {
-        await signOut();
         onSignOut?.();
+        await signOut();
     };
 
     return (

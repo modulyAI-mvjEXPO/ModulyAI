@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { User } from '@supabase/supabase-js';
 
 import { Header } from './sections/Header';
@@ -40,8 +40,10 @@ function AppContent() {
   const [authOpen, setAuthOpen] = useState(false);
   const [view, setView] = useState<AppView>('loading');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const isManualSignOut = useRef(false);
 
   const handleSignOut = () => {
+    isManualSignOut.current = true;
     setCurrentUser(null);
     setView('landing');
   };
@@ -98,6 +100,12 @@ function AppContent() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
+
+        // Ignore events immediately after a manual sign-out to prevent re-login
+        if (isManualSignOut.current && (event === 'SIGNED_OUT' || event === 'INITIAL_SESSION')) {
+          isManualSignOut.current = false;
+          return;
+        }
 
         if (session?.user) {
           setCurrentUser(session.user);

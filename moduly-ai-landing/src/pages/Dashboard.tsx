@@ -167,12 +167,16 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
     setIsSigningOut(true);
-    void signOut();
-    setTimeout(() => {
+    try {
+      const { error } = await signOut();
+      if (error) {
+        console.error('Sign out failed:', error);
+      }
+    } finally {
       onSignOut();
-    }, 300);
+    }
   };
 
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

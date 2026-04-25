@@ -105,14 +105,24 @@ export async function resendOtp(email: string): Promise<{ error: string | null }
     }
 }
 
-export async function signOut(): Promise<void> {
+export async function signOut(): Promise<{ error: string | null }> {
     try {
-        await withTimeout(supabase.auth.signOut(), 5000);
+        const { error } = await withTimeout(supabase.auth.signOut({ scope: 'global' }), 5000);
+        if (error) {
+            console.error('Supabase signOut error:', error);
+            return { error: formatError(error) };
+        }
+        return { error: null };
     } catch (e) {
         console.error('Sign out error or timeout:', e);
-        // Fallback: Clear local session manually if logout fails
-        localStorage.removeItem('supabase.auth.token');
-        window.location.reload();
+        // Fallback: clear local session without server call
+        try {
+            await supabase.auth.signOut({ scope: 'local' });
+            return { error: null };
+        } catch (localErr) {
+            console.error('Local sign-out also failed:', localErr);
+            return { error: 'Sign out failed. Please try again.' };
+        }
     }
 }
 
