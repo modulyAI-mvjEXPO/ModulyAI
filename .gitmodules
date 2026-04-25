@@ -1,0 +1,4 @@
+[submodule "ModulyAI"]
+	path = ModulyAI
+	url = https://github.com/modulyAI-mvjEXPO/ModulyAI.git
+	branch = main
