@@ -2,6 +2,10 @@ import { useState, useEffect, useMemo } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type { DocumentRow } from '../lib/ai/types';
+<<<<<<< HEAD
+=======
+import { LiquidButton } from '../components/ui/liquid-glass-button';
+>>>>>>> parent of 9466db5 (Holy push.)
 import './Library.css';
 
 /* ─── Display helpers ────────────────────────────────────────────────────── */
@@ -280,10 +284,16 @@ export function Library({ user, onNavigate }: LibraryProps) {
             <span className="material-icons-outlined lib-btn-icon">history</span>
             History
           </button>
+<<<<<<< HEAD
           <button className="lib-btn-contribute" onClick={() => onNavigate?.('upload')}>
             <span className="material-icons-outlined lib-btn-icon">add</span>
             Contribute
           </button>
+=======
+          <LiquidButton onClick={() => onNavigate?.('upload')} size="lg">
+            Contribute
+          </LiquidButton>
+>>>>>>> parent of 9466db5 (Holy push.)
         </div>
       </div>
 
@@ -428,6 +438,7 @@ export function Library({ user, onNavigate }: LibraryProps) {
                       {alreadyRequested ? 'Requested' : isPending ? '…' : 'Remove'}
                     </button>
                   )}
+<<<<<<< HEAD
                   <button
                     className="lib-view-btn"
                     disabled={viewingDoc === doc.file_path}
@@ -436,6 +447,14 @@ export function Library({ user, onNavigate }: LibraryProps) {
                   >
                     {viewingDoc === doc.file_path ? '…' : 'View'}
                   </button>
+=======
+                  <LiquidButton
+                    onClick={() => void handleView(doc.file_path)}
+                    size="sm"
+                  >
+                    {viewingDoc === doc.file_path ? '…' : 'View'}
+                  </LiquidButton>
+>>>>>>> parent of 9466db5 (Holy push.)
                 </div>
               </div>
             );

@@ -4,6 +4,10 @@ import { supabase } from '../lib/supabase';
 import { getProfile } from '../lib/profile';
 import type { ChatResponse } from '../lib/ai/types';
 import { DocumentPickerModal } from '../components/DocumentPickerModal';
+<<<<<<< HEAD
+=======
+import { LiquidButton } from '../components/ui/liquid-glass-button';
+>>>>>>> parent of 9466db5 (Holy push.)
 import './StudyMode.css';
 
 interface StudyModeProps {
@@ -548,13 +552,24 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
         <div className="sm-dash">
           {/* Header */}
           <div className="sm-dash-head">
+<<<<<<< HEAD
             <button className="sm-dash-create-btn">
+=======
+            <LiquidButton
+              onClick={() => {}} // Internal logic for create kit if any
+              size="lg"
+            >
+>>>>>>> parent of 9466db5 (Holy push.)
               <div className="sm-dash-create-group">
                 <span className="material-icons-outlined sm-dash-spark-icon">auto_awesome</span>
                 <span>Create a study kit</span>
               </div>
+<<<<<<< HEAD
               <span className="material-icons-outlined">arrow_forward</span>
             </button>
+=======
+            </LiquidButton>
+>>>>>>> parent of 9466db5 (Holy push.)
             <div className="sm-dash-subhead">
               <div className="sm-dash-search">
                 <span className="material-icons-outlined">search</span>
@@ -625,10 +640,16 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
               <div className="sm-pick-empty-state">
                 <span className="material-icons-outlined">library_books</span>
                 <p>No documents selected yet.</p>
+<<<<<<< HEAD
                 <button className="sm-pick-upload-btn" onClick={() => setPickerOpen(true)}>
                   <span className="material-icons-outlined">add</span>
                   Select from Library
                 </button>
+=======
+                <LiquidButton onClick={() => setPickerOpen(true)} size="lg">
+                  Select from Library
+                </LiquidButton>
+>>>>>>> parent of 9466db5 (Holy push.)
               </div>
             ) : (
               <>
@@ -662,10 +683,16 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
           </div>
 
           <div className="sm-pick-footer">
+<<<<<<< HEAD
             <button
               className="sm-pick-start-btn"
               onClick={handleStartSession}
               disabled={parsingDocs}
+=======
+            <LiquidButton
+              onClick={handleStartSession}
+              size="xl"
+>>>>>>> parent of 9466db5 (Holy push.)
             >
               {parsingDocs ? (
                 <>
@@ -678,7 +705,11 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
                   {docs.length === 0 ? 'Start Without Documents' : 'Start Study Kit'}
                 </>
               )}
+<<<<<<< HEAD
             </button>
+=======
+            </LiquidButton>
+>>>>>>> parent of 9466db5 (Holy push.)
           </div>
           
           <DocumentPickerModal

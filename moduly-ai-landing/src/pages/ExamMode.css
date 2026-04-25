@@ -1037,7 +1037,11 @@
   background: var(--accent);
   color: #fff;
   border: 2px solid var(--foreground);
+<<<<<<< HEAD
   border-radius: 0;
+=======
+  border-radius: var(--radius);
+>>>>>>> parent of 9466db5 (Holy push.)
   padding: 10px 20px;
   font-size: 14px;
   font-weight: 700;

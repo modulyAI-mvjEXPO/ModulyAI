@@ -1,4 +1,8 @@
 import { useState, useRef } from 'react';
+<<<<<<< HEAD
+=======
+import { LiquidButton } from './ui/liquid-glass-button';
+>>>>>>> parent of 9466db5 (Holy push.)
 
 export interface UploadedFile {
     id: number;
@@ -191,6 +195,7 @@ export function FileUpload({ onUploadSuccess, userId }: FileUploadProps) {
             </div>
 
             <div className="ud-submit-wrap">
+<<<<<<< HEAD
                 <button
                     className="ud-submit-btn"
                     onClick={handleUpload}
@@ -198,6 +203,14 @@ export function FileUpload({ onUploadSuccess, userId }: FileUploadProps) {
                 >
                     {uploading ? 'Uploading...' : 'Upload File'}
                 </button>
+=======
+                <LiquidButton
+                    onClick={handleUpload}
+                    size="lg"
+                >
+                    {uploading ? 'Uploading...' : 'Upload File'}
+                </LiquidButton>
+>>>>>>> parent of 9466db5 (Holy push.)
             </div>
 
             {message && (
