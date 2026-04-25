@@ -89,10 +89,8 @@
 }
 
 .hero-tagline .text-accent {
-  color: var(--accent);
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  text-decoration-thickness: 2px;
+  color: #c96442;
+  font-weight: 700;
 }
 
 /* Description */
@@ -112,23 +110,25 @@
 }
 
 .visual-card {
-  max-width: 420px;
+  max-width: 440px;
   margin: 0 auto;
-  background: var(--background);
-  border: 2px solid var(--border);
-  border-radius: var(--radius);
+  background: rgba(250, 249, 245, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: var(--shadow);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
   text-align: left;
 }
 
 .visual-header {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  background: var(--foreground);
-  border-bottom: 2px solid var(--border);
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: rgba(255, 255, 255, 0.5);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .visual-dots {
@@ -145,15 +145,15 @@
 
 .visual-dots span:first-child  { background: var(--primary); }
 .visual-dots span:nth-child(2) { background: var(--secondary); }
-.visual-dots span:last-child   { background: #00cc00; }
+.visual-dots span:last-child   { background: #10b981; }
 
 .visual-title {
-  font-size: var(--font-size-sm);
-  font-weight: 700;
-  font-family: var(--font-mono);
-  color: var(--background);
+  font-size: 13px;
+  font-weight: 800;
+  font-family: var(--font-sans);
+  color: #141413;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.1em;
 }
 
 .visual-content {
@@ -171,10 +171,11 @@
 .visual-row:last-child { border-bottom: none; }
 
 .visual-row.highlight {
-  background: rgba(255, 51, 51, 0.06);
+  background: rgba(201, 100, 66, 0.1);
   margin: 0 calc(-1 * var(--space-4));
   padding-left: var(--space-4);
   padding-right: var(--space-4);
+  border-left: 3px solid #c96442;
 }
 
 .visual-label {
@@ -231,3 +232,17 @@
   .stat-number { font-size: var(--font-size-xl); }
   .title-main { letter-spacing: -0.02em; }
 }
+
+/* ─────────────────────────────────────────────────────
+   DARK MODE OVERRIDES — Hero
+   ───────────────────────────────────────────────────── */
+[data-theme="dark"] .hero               { background: var(--background); }
+[data-theme="dark"] .hero-title         { color: var(--foreground); }
+[data-theme="dark"] .hero-subtitle      { color: var(--muted-foreground); }
+[data-theme="dark"] .hero-visual        { background: transparent; border: none; }
+[data-theme="dark"] .visual-card        { background: rgba(38, 38, 36, 0.8); border-color: rgba(255, 255, 255, 0.1); }
+[data-theme="dark"] .visual-header      { background: rgba(0, 0, 0, 0.2); border-bottom-color: rgba(255, 255, 255, 0.05); }
+[data-theme="dark"] .visual-title       { color: #ffffff; }
+[data-theme="dark"] .visual-dots span:first-child  { background: #ef4444; }
+[data-theme="dark"] .visual-dots span:nth-child(2) { background: #f59e0b; }
+[data-theme="dark"] .visual-dots span:last-child   { background: #10b981; }

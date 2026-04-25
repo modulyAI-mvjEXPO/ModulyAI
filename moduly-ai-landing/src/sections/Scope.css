@@ -9,24 +9,24 @@
 }
 
 .scope-card {
-  background: var(--background);
-  border: 2px solid var(--border);
-  border-radius: var(--radius);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-lg);
   padding: var(--space-8);
   transition: all var(--transition-base);
 }
 
 .scope-card:hover {
-  transform: translate(-4px, -4px);
+  transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
 }
 
 .scope-card.mvp:hover {
-  border-color: #00aa00;
+  border-color: #c96442;
 }
 
 .scope-card.future:hover {
-  border-color: var(--accent);
+  border-color: #9c87f5;
 }
 
 .scope-header {
@@ -50,11 +50,13 @@
 }
 
 .mvp-icon {
-  background: #00aa00;
+  background: rgba(201, 100, 66, 0.1);
+  color: #c96442;
 }
 
 .future-icon {
-  background: var(--accent);
+  background: rgba(156, 135, 245, 0.1);
+  color: #9c87f5;
 }
 
 .scope-header h3 {
@@ -96,17 +98,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #00aa00;
-  color: white;
-  border-radius: var(--radius);
+  background: rgba(201, 100, 66, 0.1);
+  color: #c96442;
+  border-radius: 50%;
   flex-shrink: 0;
 }
 
 .future-dot {
   width: 8px;
   height: 8px;
-  background: var(--accent);
-  border-radius: var(--radius);
+  background: #9c87f5;
+  border-radius: 50%;
   flex-shrink: 0;
 }
 
@@ -125,15 +127,15 @@
 }
 
 .status-badge.implemented {
-  background: #00aa00;
+  background: #c96442;
   color: white;
-  border-color: #00aa00;
+  border-color: #c96442;
 }
 
 .status-badge.planned {
-  background: var(--secondary);
-  color: var(--foreground);
-  border-color: var(--border);
+  background: rgba(156, 135, 245, 0.1);
+  color: #9c87f5;
+  border-color: rgba(156, 135, 245, 0.2);
 }
 
 @media (max-width: 1024px) {
@@ -143,3 +145,8 @@
     margin: 0 auto;
   }
 }
+
+/* ── Dark mode: surface & text tokens ── */
+[data-theme="dark"] section,
+[data-theme="dark"] .section { background: var(--background); }
+[data-theme="dark"] .card    { background: var(--card); border-color: var(--border); color: var(--card-foreground); }

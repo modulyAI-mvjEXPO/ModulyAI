@@ -120,3 +120,13 @@
     font-size: var(--font-size-xs);
   }
 }
+
+/* ─────────────────────────────────────────────────────
+   DARK MODE OVERRIDES — Header / Landing Nav
+   ───────────────────────────────────────────────────── */
+[data-theme="dark"] .header             { background: var(--sidebar); border-bottom-color: var(--border); }
+[data-theme="dark"] .nav-link           { color: var(--muted-foreground); }
+[data-theme="dark"] .nav-link:hover     { color: var(--foreground); }
+[data-theme="dark"] .nav-cta            { background: var(--primary); color: var(--primary-foreground); }
+[data-theme="dark"] .brand-name         { color: var(--foreground); }
+[data-theme="dark"] .mobile-menu        { background: var(--sidebar); border-color: var(--border); }

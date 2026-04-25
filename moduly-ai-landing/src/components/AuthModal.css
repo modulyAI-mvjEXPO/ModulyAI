@@ -134,8 +134,8 @@
 
 .auth-success {
   background: #eafaf1;
-  border-color: #00aa00;
-  color: #00aa00;
+  border-color: #10b981;
+  color: #10b981;
 }
 
 .auth-error {
@@ -510,8 +510,8 @@
 .resend-btn:disabled {
   opacity: 0.6;
   cursor: default;
-  color: #00aa00;
-  border-color: #00aa00;
+  color: #10b981;
+  border-color: #10b981;
 }
 
 /* Back link */
@@ -556,3 +556,29 @@
     justify-content: center;
   }
 }
+
+/* ─────────────────────────────────────────────────────
+   DARK MODE OVERRIDES — Auth Modal
+   ───────────────────────────────────────────────────── */
+[data-theme="dark"] .auth-overlay        { background: rgba(0,0,0,0.65); }
+[data-theme="dark"] .auth-modal          { background: var(--card); border-color: var(--border); color: var(--card-foreground); }
+[data-theme="dark"] .auth-header         { border-bottom-color: var(--border); }
+[data-theme="dark"] .auth-title          { color: var(--foreground); }
+[data-theme="dark"] .auth-subtitle       { color: var(--muted-foreground); }
+[data-theme="dark"] .auth-tabs           { background: var(--muted); }
+[data-theme="dark"] .auth-tab            { color: var(--muted-foreground); }
+[data-theme="dark"] .auth-tab--active    { background: var(--card); color: var(--foreground); box-shadow: var(--shadow-sm); }
+[data-theme="dark"] .form-group label    { color: var(--foreground); }
+[data-theme="dark"] .input-wrapper       { background: var(--muted); border-color: var(--border); }
+[data-theme="dark"] .input-wrapper input { background: transparent; color: var(--foreground); }
+[data-theme="dark"] .input-wrapper input::placeholder { color: var(--muted-foreground); }
+[data-theme="dark"] .input-wrapper.error { border-color: var(--destructive); }
+[data-theme="dark"] .field-error         { color: var(--destructive); }
+[data-theme="dark"] .field-hint          { color: var(--muted-foreground); }
+[data-theme="dark"] .auth-success        { background: rgba(74,222,128,0.1); border-color: #4ade80; color: #4ade80; }
+[data-theme="dark"] .auth-error          { background: rgba(239,68,68,0.1); border-color: var(--destructive); color: #fca5a5; }
+[data-theme="dark"] .otp-digit           { background: var(--muted); border-color: var(--border); color: var(--foreground); }
+[data-theme="dark"] .otp-digit.filled    { border-color: var(--primary); }
+[data-theme="dark"] .resend-btn          { color: var(--muted-foreground); }
+[data-theme="dark"] .resend-btn:not(:disabled):hover { color: var(--primary); }
+[data-theme="dark"] .open-email-btn      { border-color: var(--primary); color: var(--primary); }

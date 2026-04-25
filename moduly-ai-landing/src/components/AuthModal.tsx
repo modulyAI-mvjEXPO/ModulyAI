@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { signIn, signUp, verifyOtp, resendOtp } from '../lib/auth';
 import { upsertProfile } from '../lib/profile';
+import { ButtonColorful } from './ui/button-colorful';
 import './AuthModal.css';
 
 interface AuthModalProps {
@@ -412,10 +413,14 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                     {errors.confirmPassword && <span className="field-error">{errors.confirmPassword}</span>}
                                 </div>
 
-                                <button type="submit" className="auth-submit" disabled={isSubmitting}>
-                                    {isSubmitting ? <span className="spinner" /> : 'Create Account'}
-                                </button>
+                                <ButtonColorful
+                                    type="submit"
+                                    className="auth-submit w-full mt-4"
+                                    disabled={isSubmitting}
+                                    label={isSubmitting ? "Creating Account..." : "Create Account"}
+                                />
                             </form>
+
                         )}
                     </>
                 ) : (

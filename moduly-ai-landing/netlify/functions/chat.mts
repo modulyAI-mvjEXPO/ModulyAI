@@ -243,36 +243,50 @@ export const handler = async (
       history: Array.isArray(body['history']) ? (body['history'] as ChatRequest['history'])?.slice(-MAX_HISTORY_MESSAGES) : undefined,
     };
 
+    // ── Document-Grounded Mode: client sends pre-built context ─────────────
+    const groundedContext = typeof body['_groundedContext'] === 'string'
+      ? body['_groundedContext']
+      : null;
+
     let ragChunks: ReadonlyArray<RagChunk> = [];
-    try {
-      const queryEmbedding = await getEmbedding(request.message, 'query');
+    // Skip RAG pipeline when client already provides grounded context
+    if (!groundedContext) {
+      try {
+        const queryEmbedding = await getEmbedding(request.message, 'query');
 
-      const supabase = createServerSupabaseClient();
-      const { data: chunks, error: ragError } = await supabase.rpc('match_documents_filtered', {
-        query_embedding: queryEmbedding,
-        filter_document_ids: request.documentIds ?? null,
-        filter_subject_id: request.subjectId ?? null,
-        match_threshold: RAG_THRESHOLD,
-        match_count: RAG_MATCH_COUNT,
-      });
+        const supabase = createServerSupabaseClient();
+        const { data: chunks, error: ragError } = await supabase.rpc('match_documents_filtered', {
+          query_embedding: queryEmbedding,
+          filter_document_ids: request.documentIds ?? null,
+          filter_subject_id: request.subjectId ?? null,
+          match_threshold: RAG_THRESHOLD,
+          match_count: RAG_MATCH_COUNT,
+        });
 
-      if (ragError) {
-        console.error('RAG retrieval error:', ragError);
-      } else {
-        ragChunks = (chunks ?? []) as ReadonlyArray<RagChunk>;
+        if (ragError) {
+          console.error('RAG retrieval error:', ragError);
+        } else {
+          ragChunks = (chunks ?? []) as ReadonlyArray<RagChunk>;
+        }
+      } catch (ragErr) {
+        console.warn('Embedding/RAG pipeline failed, proceeding without context:', ragErr instanceof Error ? ragErr.message : String(ragErr));
       }
-    } catch (ragErr) {
-      console.warn('Embedding/RAG pipeline failed, proceeding without context:', ragErr instanceof Error ? ragErr.message : String(ragErr));
     }
-
 
 
     // ── Reranking: cross-encoder precision pass ──────────────────────────────
     // Fetch 10 candidates above, rerank to the 5 most relevant chunks.
     // Falls back to top-5 by similarity if NVIDIA NIM reranker is unavailable.
-    const rerankedChunks = await rerankChunks(request.message, ragChunks, RAG_RERANK_COUNT);
+    const rerankedChunks = groundedContext
+      ? [] as ReadonlyArray<RagChunk>
+      : await rerankChunks(request.message, ragChunks, RAG_RERANK_COUNT);
 
-    const systemPrompt = buildSystemPrompt(rerankedChunks, request.mark, request.strict, request.subjectId);
+    // If groundedContext provided by client, use it directly as system prompt
+    const systemPrompt = groundedContext
+      ? groundedContext + (request.mark && MARK_INSTRUCTIONS[request.mark]
+          ? `\n\n${MARK_INSTRUCTIONS[request.mark]}`
+          : '')
+      : buildSystemPrompt(rerankedChunks, request.mark, request.strict, request.subjectId);
     const messages = buildMessagesArray(systemPrompt, request.history, request.message);
 
     let responseText: string;

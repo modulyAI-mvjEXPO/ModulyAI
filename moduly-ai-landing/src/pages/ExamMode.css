@@ -687,9 +687,9 @@
   padding: 0.125rem 0.375rem;
   border-radius: 0;
   background-color: var(--background);
-  color: #00aa00;
+  color: #10b981;
   font-size: 0.625rem;
-  border: 2px solid #00aa00;
+  border: 2px solid #10b981;
   display: flex;
   align-items: center;
   gap: 0.25rem;
@@ -944,7 +944,7 @@
 .em-icon-22 { font-size: 22px !important; }
 
 .em-file-icon-pdf { color: var(--primary) !important; }
-.em-file-icon-check { color: #00aa00 !important; }
+.em-file-icon-check { color: #10b981 !important; }
 
 .em-no-margin { margin: 0 !important; }
 .em-mb-1 { margin-bottom: 1rem !important; }
@@ -965,7 +965,7 @@
   height: 10px;
   width: 10px;
   border-radius: 0;
-  background-color: #00aa00;
+  background-color: #10b981;
   display: inline-block;
   margin-right: 4px;
 }
@@ -973,7 +973,7 @@
 .em-status-text {
   margin: 0;
   font-size: 0.6875rem;
-  color: #00aa00;
+  color: #10b981;
   font-weight: 700;
 }
 
@@ -1437,3 +1437,54 @@
   cursor: pointer;
 }
 .em-pick-skip-btn:hover { color: var(--foreground); text-decoration: underline; }
+/* ─────────────────────────────────────────────────────
+   DARK MODE OVERRIDES — Exam Mode
+   ───────────────────────────────────────────────────── */
+[data-theme="dark"] .em-grid            { background: var(--background); color: var(--foreground); }
+[data-theme="dark"] .em-sidebar         { background: var(--sidebar); border-right-color: var(--border); }
+[data-theme="dark"] .em-panel           { background: var(--card); border-color: var(--border); }
+[data-theme="dark"] .em-header          { background: var(--sidebar); border-bottom-color: var(--border); color: var(--foreground); }
+
+/* Type / Subject picker */
+[data-theme="dark"] .em-dash            { background: var(--background); }
+[data-theme="dark"] .em-type-card       { background: var(--card); border-color: var(--border); color: var(--card-foreground); }
+[data-theme="dark"] .em-type-card:hover { border-color: var(--primary); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+/* Vivid colored cards keep their hue in dark mode — only border tweaked */
+[data-theme="dark"] .em-type-card--blue,
+[data-theme="dark"] .em-type-card--green,
+[data-theme="dark"] .em-type-card--amber,
+[data-theme="dark"] .em-type-card--rose  { filter: brightness(0.85) saturate(0.9); }
+[data-theme="dark"] .em-kit-card--blue,
+[data-theme="dark"] .em-kit-card--green,
+[data-theme="dark"] .em-kit-card--amber,
+[data-theme="dark"] .em-kit-card--rose   { filter: brightness(0.85) saturate(0.9); }
+
+/* Doc picker */
+[data-theme="dark"] .em-pick            { background: var(--background); }
+[data-theme="dark"] .em-pick-head       { border-bottom-color: var(--border); }
+[data-theme="dark"] .em-pick-item       { background: var(--card); border-color: var(--border); color: var(--card-foreground); }
+[data-theme="dark"] .em-pick-item--on   { border-color: var(--primary); }
+
+/* Chat */
+[data-theme="dark"] .em-chat-body       { background: var(--background); }
+[data-theme="dark"] .em-msg--user .em-bubble { background: var(--primary); color: var(--primary-foreground); }
+[data-theme="dark"] .em-msg--ai .em-bubble   { background: var(--card); color: var(--card-foreground); border-color: var(--border); }
+
+/* Mark correct/incorrect */
+[data-theme="dark"] .em-mark-btn--correct   { background: #16a34a; color: #fff; border-color: #16a34a; }
+[data-theme="dark"] .em-mark-btn--incorrect { background: #dc2626; color: #fff; border-color: #dc2626; }
+
+/* Input */
+[data-theme="dark"] .em-input-area      { background: var(--sidebar); border-top-color: var(--border); }
+[data-theme="dark"] .em-input-wrap      { background: var(--card); border-color: var(--border); }
+[data-theme="dark"] .em-input          { background: transparent; color: var(--foreground); }
+[data-theme="dark"] .em-input::placeholder { color: var(--muted-foreground); }
+
+/* Success colors */
+[data-theme="dark"] .em-correct         { color: #4ade80; border-color: #4ade80; }
+[data-theme="dark"] .em-file-icon-check { color: #4ade80 !important; }
+[data-theme="dark"] .em-doc-status-bar--done { background: #4ade80; }
+
+/* Score/pyq */
+[data-theme="dark"] .em-score-card      { background: var(--card); border-color: var(--border); color: var(--card-foreground); }
+[data-theme="dark"] .em-gs-btn          { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }

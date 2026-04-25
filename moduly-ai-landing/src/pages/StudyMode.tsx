@@ -1,10 +1,19 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import { getProfile } from '../lib/profile';
 import type { ChatResponse } from '../lib/ai/types';
 import { DocumentPickerModal } from '../components/DocumentPickerModal';
-
+import {
+  DEMO_DOCUMENTS,
+  retrieveChunks,
+  buildGroundedContext,
+  getCachedResult,
+  setCachedResult,
+  makeCacheKey,
+} from '../lib/docGrounding';
+import type { StudySet } from '../lib/ai/types';
+import { fetchStudySets, createStudySet, updateStudySetMessages, deleteStudySet, renameStudySet } from '../lib/studySets';
+import { ButtonColorful } from '../components/ui/button-colorful';
 import './StudyMode.css';
 
 interface StudyModeProps {
@@ -34,6 +43,9 @@ interface Message {
   content: string;
   time: string;
   isRich?: boolean;
+  sources?: ReadonlyArray<{ docTitle: string; chunkId: string; score: number }>;
+  confidenceScore?: number;
+  isGrounded?: boolean;
 }
 
 // ─── Constants & Helpers ───────────────────────────────────────────────────
@@ -176,8 +188,8 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
 
   // ── State ──────────────────────────────────────────────────────────────
   const [studyView, setStudyView] = useState<'dashboard' | 'pick-docs' | 'chat'>('dashboard');
-  const [subjects, setSubjects] = useState<string[]>(['DSA', 'OS', 'DDCO', 'JAVA']);
-  const [selectedKitSubject, setSelectedKitSubject] = useState('');
+  const [studySets, setStudySets] = useState<StudySet[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [kitOpen, setKitOpen] = useState(true);
@@ -198,20 +210,35 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
   const [revealingId, setRevealingId] = useState<string | null>(null);
   const [revealedLen, setRevealedLen] = useState(0);
 
+  // ── Document-Grounded Mode state ─────────────────────────────────────
+  type GroundingMode = 'general' | 'document';
+  const [groundingMode, setGroundingMode] = useState<GroundingMode>('general');
+  const [selectedDemoDocIds, setSelectedDemoDocIds] = useState<ReadonlyArray<string>>(
+    DEMO_DOCUMENTS.slice(0, 2).map(d => d.doc_id)
+  );
+
+  const toggleDemoDoc = (docId: string) => {
+    setSelectedDemoDocIds(prev =>
+      prev.includes(docId)
+        ? prev.filter(id => id !== docId)
+        : prev.length < 3 ? [...prev, docId] : prev
+    );
+  };
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
 
-  // ── Fetch subjects for dashboard ───────────────────────────────────────
+  // ── Fetch Study Sets for dashboard ─────────────────────────────────────
   useEffect(() => {
-    const fetchProfile = async () => {
-      const profile = await getProfile(user.id);
-      if (profile?.subjects && profile.subjects.length > 0) {
-        setSubjects(profile.subjects);
-      }
+    const loadSets = async () => {
+      const sets = await fetchStudySets(user.id);
+      setStudySets(sets);
     };
-    fetchProfile();
-  }, [user.id]);
+    if (studyView === 'dashboard') {
+      loadSets();
+    }
+  }, [user.id, studyView]);
 
   // ── Poll for Processing documents ──────────────────────────────────────
   useEffect(() => {
@@ -291,6 +318,14 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
     return () => clearTimeout(timer);
   }, [revealingId, revealedLen, messages]);
 
+  // ── Auto-save messages to Supabase ────────────────────────────────────
+  useEffect(() => {
+    if (currentSessionId && messages.length > 0) {
+      // Map UI Message[] to the format expected in DB (we store them as is for simplicity)
+      void updateStudySetMessages(currentSessionId, messages);
+    }
+  }, [messages, currentSessionId]);
+
   // ── Helpers ──────────────────────────────────────────────────────────
   const selectedDocs = docs.filter(d => d.selected);
   const activeTopics = topics.filter(t => t.active);
@@ -307,8 +342,19 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
     const selectedRows = docs.filter(d => d.selected);
     const unparsed = selectedRows.filter(d => d.id.startsWith('utho-'));
 
+    // Create session in Supabase
+    const title = selectedRows.length > 0 ? `Study Session: ${selectedRows[0].name}` : 'New Study Session';
+    const docIds = selectedRows.map(d => d.id).filter(id => !id.startsWith('utho-')); // skip utho until parsed
+    const session = await createStudySet(user.id, title, docIds, groundingMode);
+    
+    if (session) {
+      setCurrentSessionId(session.id);
+    }
+
     // Immediately enter chat view
     setStudyView('chat');
+    
+    // We only set the welcome message. It will trigger the useEffect below to save it.
     setMessages([getWelcome(selectedRows.length)]);
 
     if (unparsed.length === 0) return;
@@ -506,20 +552,98 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
     setIsTyping(true);
 
     try {
+      // ── Document-Grounded Mode ─────────────────────────────────────────
+      if (groundingMode === 'document' && selectedDemoDocIds.length > 0) {
+        const cacheKey = makeCacheKey(text, selectedDemoDocIds);
+        const cached = getCachedResult(cacheKey);
+
+        if (cached) {
+          setIsTyping(false);
+          const aiMsg: Message = {
+            id: uid(), role: 'ai',
+            content: cached.response, time: ts(),
+            sources: cached.sources,
+            confidenceScore: cached.confidenceScore,
+            isGrounded: true,
+          };
+          setMessages(prev => [...prev, aiMsg]);
+          setRevealingId(aiMsg.id);
+          setRevealedLen(0);
+          return;
+        }
+
+        const chunks = retrieveChunks(text, selectedDemoDocIds);
+        const { context, sources, confidenceScore } = buildGroundedContext(chunks);
+
+        let responseText: string;
+        if (chunks.length === 0) {
+          responseText = 'Not found in selected documents. Try selecting more documents or switching to General AI Mode.';
+          setIsTyping(false);
+          const aiMsg: Message = {
+            id: uid(), role: 'ai',
+            content: responseText, time: ts(),
+            sources: [], confidenceScore: 0, isGrounded: true,
+          };
+          setMessages(prev => [...prev, aiMsg]);
+          setRevealingId(aiMsg.id);
+          setRevealedLen(0);
+          return;
+        }
+
+        // Inject context into Groq via the existing chat endpoint
+        const docHistory = buildHistory([...messages, userMsg]);
+        const backendBase = import.meta.env.VITE_BACKEND_URL || '';
+        const res = await fetch(`${backendBase}/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: text,
+            mark: selectedMark,
+            strict: true,
+            history: docHistory.length > 0 ? docHistory : undefined,
+            // System override is baked into the message via context prefix
+            _groundedContext: context,
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json() as ChatResponse;
+          responseText = data.response;
+        } else {
+          // Client-side fallback: build response from chunks directly
+          responseText =
+            `**From your selected documents:**\n\n` +
+            chunks.map(c => `- ${c.text}`).join('\n\n');
+        }
+
+        setCachedResult(cacheKey, { response: responseText, sources, confidenceScore });
+
+        setIsTyping(false);
+        const docAiMsg: Message = {
+          id: uid(), role: 'ai',
+          content: responseText, time: ts(),
+          sources, confidenceScore, isGrounded: true,
+        };
+        setMessages(prev => [...prev, docAiMsg]);
+        setRevealingId(docAiMsg.id);
+        setRevealedLen(0);
+        return;
+      }
+
+      // ── General AI Mode (existing behaviour) ──────────────────────────
       const selectedDocIds = docs.filter(d => d.selected).map(d => d.id);
       const history = buildHistory([...messages, userMsg]);
-
       const response = await chatWithAI(text, selectedDocIds, selectedMark, strict, subjectId || undefined, history);
 
-      const aiMsg: Message = {
+      const generalAiMsg: Message = {
         id: uid(),
         role: 'ai',
         content: response.response,
         time: ts(),
       };
       setIsTyping(false);
-      setMessages(prev => [...prev, aiMsg]);
-      setRevealingId(aiMsg.id);
+      setMessages(prev => [...prev, generalAiMsg]);
+      setRevealingId(generalAiMsg.id);
       setRevealedLen(0);
     } catch (err) {
       const errorContent = err instanceof Error
@@ -529,13 +653,29 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
       setIsTyping(false);
       setMessages(prev => [...prev, errMsg]);
     }
-  }, [input, isBusy, selectedMark, strict, subjectId, docs, messages]);
+  }, [input, isBusy, selectedMark, strict, subjectId, docs, messages, groundingMode, selectedDemoDocIds]);
 
   const handleKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
+  };
+
+  const handleResumeSession = (set: StudySet) => {
+    setCurrentSessionId(set.id);
+    
+    // Convert saved messages back to Message type (if needed, but they are stored as is)
+    setMessages(set.messages as Message[]);
+    setGroundingMode(set.grounding_mode === 'document' ? 'document' : 'general');
+    
+    // For docs, ideally we would fetch them to get names/types, but for now we'll 
+    // mock the doc selection based on IDs or rely on the demo picker state.
+    if (set.grounding_mode === 'document') {
+      setSelectedDemoDocIds(set.documents);
+    }
+    
+    setStudyView('chat');
   };
 
   // ── Render ────────────────────────────────────────────────────────────
@@ -549,61 +689,76 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
         <div className="sm-dash">
           {/* Header */}
           <div className="sm-dash-head">
-            <button className="sm-dash-create-btn">
-              <div className="sm-dash-create-group">
-                <span className="material-icons-outlined sm-dash-spark-icon">auto_awesome</span>
-                <span>Create a study kit</span>
-              </div>
-              <span className="material-icons-outlined">arrow_forward</span>
-            </button>
+            <ButtonColorful
+              className="sm-dash-create-btn w-auto"
+              onClick={() => {
+                setCurrentSessionId(null);
+                setMessages([]);
+                setStudyView('pick-docs');
+              }}
+              label="New Study Session"
+            />
             <div className="sm-dash-subhead">
               <div className="sm-dash-search">
                 <span className="material-icons-outlined">search</span>
-                <input placeholder="Search" />
-              </div>
-              <div className="sm-dash-class">
-                <button className="sm-dash-class-btn">
-                  <span className="material-icons-outlined">folder</span> Class <span className="material-icons-outlined">expand_more</span>
-                </button>
-                <div className="sm-dash-toggle" title="Toggle Grid/List">
-                  <div className="sm-toggle-knob"/>
-                </div>
+                <input placeholder="Search Study Sets" />
               </div>
             </div>
           </div>
 
           <div className="sm-dash-content">
-            {subjects.map((sub, i) => {
-              const colorClass = ['sm-kit-card--amber', 'sm-kit-card--blue', 'sm-kit-card--green', 'sm-kit-card--rose'][i % 4];
-              const isJava = sub.toUpperCase() === 'JAVA';
-              return (
-                <div key={sub} className="sm-dash-subject-row">
-                  <div className="sm-dash-sub-title">
-                    <h3>{sub.toUpperCase()}</h3>
-                    <div className="sm-dash-sub-icons">
-                      <span className="material-icons-outlined" title="Edit">edit</span>
-                      <span className="material-icons-outlined" title="Theme">palette</span>
-                      <span className="material-icons-outlined" title="Invite">person_add</span>
+            {studySets.length === 0 ? (
+              <div className="sm-dash-empty">
+                <span className="material-icons-outlined">folder_open</span>
+                <p>No study sessions yet. Create one to get started!</p>
+              </div>
+            ) : (
+              <div className="sm-set-grid">
+                {studySets.map((set) => (
+                  <div key={set.id} className="sm-set-card">
+                    <div className="sm-set-card-body" onClick={() => handleResumeSession(set)}>
+                      <span className="material-icons-outlined sm-set-icon">folder</span>
+                      <h3 className="sm-set-title">{set.title}</h3>
+                      <p className="sm-set-meta">
+                        {set.documents.length} Document{set.documents.length !== 1 ? 's' : ''}
+                      </p>
+                      <p className="sm-set-time">
+                        Last active {new Date(set.updated_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="sm-set-card-actions">
+                      <button 
+                        className="sm-set-action-btn"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          const newTitle = prompt('Enter new title:', set.title);
+                          if (newTitle && newTitle !== set.title) {
+                            if (await renameStudySet(set.id, newTitle)) {
+                              setStudySets(prev => prev.map(s => s.id === set.id ? { ...s, title: newTitle } : s));
+                            }
+                          }
+                        }}
+                      >
+                        <span className="material-icons-outlined">edit</span>
+                      </button>
+                      <button 
+                        className="sm-set-action-btn sm-set-action-btn--danger"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          if (confirm(`Delete "${set.title}"? This cannot be undone.`)) {
+                            if (await deleteStudySet(set.id)) {
+                              setStudySets(prev => prev.filter(s => s.id !== set.id));
+                            }
+                          }
+                        }}
+                      >
+                        <span className="material-icons-outlined">delete</span>
+                      </button>
                     </div>
                   </div>
-                  <div className="sm-dash-kits">
-                    <button 
-                      className={`sm-kit-card ${colorClass}`} 
-                      onClick={() => { setSelectedKitSubject(sub); setSubjectId(sub.toLowerCase()); setStudyView('pick-docs'); }}
-                    >
-                      <span className="material-icons-outlined sm-kit-card-menu">more_vert</span>
-                      <span className="sm-kit-card-title">Module 1 & 2</span>
-                      <span className="material-icons-outlined sm-kit-card-icon">laptop_mac</span>
-                      {isJava && (
-                        <div className="sm-kit-progress">
-                          <div className="sm-kit-progress-bar sm-w-60" />
-                        </div>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+                ))}
+              </div>
+            )}
           </div>
         </div>      ) : studyView === 'pick-docs' ? (
         /* ── Document Picker (Library Modal Pattern) ─────────────────────────────────────── */
@@ -614,7 +769,7 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
               Back
             </button>
             <h1 className="sm-pick-title">
-              {selectedKitSubject.toUpperCase()} — Selected Documents
+              Selected Documents
             </h1>
             <p className="sm-pick-subtitle">
               These documents will provide the context for your AI study session.
@@ -626,10 +781,11 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
               <div className="sm-pick-empty-state">
                 <span className="material-icons-outlined">library_books</span>
                 <p>No documents selected yet.</p>
-                <button className="sm-pick-upload-btn" onClick={() => setPickerOpen(true)}>
-                  <span className="material-icons-outlined">add</span>
-                  Select from Library
-                </button>
+                <ButtonColorful
+                  className="sm-pick-upload-btn"
+                  onClick={() => setPickerOpen(true)}
+                  label="Select from Library"
+                />
               </div>
             ) : (
               <>
@@ -663,23 +819,12 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
           </div>
 
           <div className="sm-pick-footer">
-            <button
-              className="sm-pick-start-btn"
+            <ButtonColorful
+              className="sm-pick-start-btn mt-4"
               onClick={handleStartSession}
               disabled={parsingDocs}
-            >
-              {parsingDocs ? (
-                <>
-                  <span className="material-icons-outlined ud-spin">sync</span>
-                  Parsing New Documents...
-                </>
-              ) : (
-                <>
-                  <span className="material-icons-outlined">play_arrow</span>
-                  {docs.length === 0 ? 'Start Without Documents' : 'Start Study Kit'}
-                </>
-              )}
-            </button>
+              label={parsingDocs ? "Parsing New Documents..." : (docs.length === 0 ? "Start Without Documents" : "Start Study Kit")}
+            />
           </div>
           
           <DocumentPickerModal
@@ -711,6 +856,69 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
         </div>
 
         <div className="sm-kit-scroll">
+          {/* ── AI Mode Toggle ──────────────────────────────── */}
+          <section className="sm-section sm-section--mode">
+            <span className="sm-label">AI Mode</span>
+            <div className="sm-mode-toggle" role="group" aria-label="AI Mode">
+              <button
+                className={`sm-mode-btn ${groundingMode === 'general' ? 'sm-mode-btn--active' : ''}`}
+                onClick={() => setGroundingMode('general')}
+                title="Use Groq AI general knowledge"
+              >
+                <span className="material-icons-outlined">psychology</span>
+                General AI
+              </button>
+              <button
+                className={`sm-mode-btn sm-mode-btn--doc ${groundingMode === 'document' ? 'sm-mode-btn--active sm-mode-btn--doc-active' : ''}`}
+                onClick={() => setGroundingMode('document')}
+                title="Answer only from selected demo documents"
+              >
+                <span className="material-icons-outlined">folder_special</span>
+                Doc Mode
+              </button>
+            </div>
+          </section>
+
+          {/* ── Demo Document Picker (only in Document Mode) ──────── */}
+          {groundingMode === 'document' && (
+            <section className="sm-section sm-section--demo-docs">
+              <div className="sm-section-row">
+                <span className="sm-label">Demo Docs</span>
+                <span className="sm-demo-limit-badge">
+                  {selectedDemoDocIds.length}/3 selected
+                </span>
+              </div>
+              <p className="sm-demo-hint">Select up to 3 documents. AI will answer only from these.</p>
+              <div className="sm-demo-doc-list">
+                {DEMO_DOCUMENTS.map(doc => {
+                  const isSelected = selectedDemoDocIds.includes(doc.doc_id);
+                  const isDisabled = !isSelected && selectedDemoDocIds.length >= 3;
+                  const typeIcons: Record<string, string> = {
+                    notes: 'description', pyqs: 'quiz', concepts: 'lightbulb', ppt: 'slideshow',
+                  };
+                  return (
+                    <button
+                      key={doc.doc_id}
+                      className={`sm-demo-doc ${isSelected ? 'sm-demo-doc--on' : ''} ${isDisabled ? 'sm-demo-doc--disabled' : ''}`}
+                      onClick={() => !isDisabled && toggleDemoDoc(doc.doc_id)}
+                      title={isDisabled ? 'Max 3 documents' : doc.title}
+                    >
+                      <span className={`material-icons-outlined sm-demo-doc-icon ${isSelected ? 'sm-demo-doc-icon--on' : ''}`}>
+                        {typeIcons[doc.type] ?? 'description'}
+                      </span>
+                      <div className="sm-demo-doc-info">
+                        <p className="sm-demo-doc-name">{doc.title}</p>
+                        <p className="sm-demo-doc-meta">{doc.chunks.length} chunks · {doc.subject}</p>
+                      </div>
+                      <div className={`sm-check ${isSelected ? 'sm-check--on' : ''}`}>
+                        {isSelected && <span className="material-icons-outlined sm-check-icon">check</span>}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          )}
           {/* Source Docs */}
           <section className="sm-section">
             <div className="sm-section-row">
@@ -923,6 +1131,26 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
                       </div>
                     )}
                   </div>
+                  {/* Grounded Sources */}
+                  {msg.isGrounded && msg.sources && msg.sources.length > 0 && !isCurrentlyRevealing && (
+                    <div className="sm-sources">
+                      <span className="sm-sources-label">
+                        <span className="material-icons-outlined sm-sources-icon">verified</span>
+                        Sources used
+                        {msg.confidenceScore !== undefined && (
+                          <span className="sm-confidence-badge">{msg.confidenceScore}% match</span>
+                        )}
+                      </span>
+                      <div className="sm-source-pills">
+                        {msg.sources.map((src, si) => (
+                          <span key={si} className="sm-source-pill">
+                            <span className="material-icons-outlined">description</span>
+                            {src.docTitle}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
@@ -957,6 +1185,13 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
         <div className="sm-footer">
           {/* Context chips */}
           <div className="sm-chips">
+            {/* Mode chip */}
+            <span className={`sm-chip ${groundingMode === 'document' ? 'sm-chip--grounded' : 'sm-chip--violet'}`}>
+              <span className="material-icons-outlined sm-chip-icon">
+                {groundingMode === 'document' ? 'folder_special' : 'psychology'}
+              </span>
+              {groundingMode === 'document' ? 'Doc Mode' : 'General AI'}
+            </span>
             {docs.length > 0 && selectedDocs.length === 0 && (
               <span className="sm-chip sm-chip--warn">
                 <span className="material-icons-outlined sm-chip-icon">warning_amber</span>

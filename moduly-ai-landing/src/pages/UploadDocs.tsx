@@ -50,7 +50,12 @@ function formatDate(isoDate: string): string {
     return `Uploaded on ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
 }
 
-export function UploadDocs({ user }: { user: User }) {
+interface UploadDocsProps {
+    user: User;
+    onNavigate?: (page: string) => void;
+}
+
+export function UploadDocs({ user, onNavigate }: UploadDocsProps) {
     const [documents, setDocuments] = useState<ReadonlyArray<DocumentRow>>([]);
     const [loading, setLoading] = useState(true);
     const [fetchError, setFetchError] = useState('');
@@ -110,9 +115,19 @@ export function UploadDocs({ user }: { user: User }) {
         <div className="ud-shell">
             <div className="ud-container">
 
-                <section className="ud-header-card">
+        <section className="ud-header-card">
                     <div className="ud-header-blob"></div>
                     <div className="ud-header-content">
+                        {onNavigate && (
+                            <button
+                                className="ud-back-btn"
+                                onClick={() => onNavigate('library')}
+                                title="Back to Library"
+                            >
+                                <span className="material-icons-outlined">arrow_back</span>
+                                Back
+                            </button>
+                        )}
                         <h1 className="ud-title">
                             Upload <span className="ud-title-highlight">Documents</span>
                         </h1>
@@ -206,7 +221,7 @@ export function UploadDocs({ user }: { user: User }) {
                 </div>
 
                 <footer className="ud-footer">
-                    &copy; 2023 MODULY AI. Built for VTU Project Expo.
+                    &copy; 2023 MODULY AI. All rights reserved.
                 </footer>
             </div>
         </div>

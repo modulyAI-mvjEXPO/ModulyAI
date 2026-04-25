@@ -8,6 +8,7 @@ import type {
   PyqIntelligenceResponse,
   DocumentRow,
 } from '../lib/ai/types.ts';
+import { ButtonColorful } from '../components/ui/button-colorful';
 import './ExamMode.css';
 
 
@@ -497,18 +498,18 @@ export function ExamMode({ user }: ExamModeProps) {
           </div>
 
           <div className="em-pick-footer">
-            <button
+            <ButtonColorful
               className="em-pick-start-btn"
               onClick={() => setExamView('chat')}
               disabled={docs.length > 0 && docs.filter(d => d.selected).length === 0}
-            >
-              <span className="material-icons-outlined">play_arrow</span>
-              {docs.length === 0 ? 'Start Without Context' : 'Start Exam Intelligence'}
-            </button>
+              label={docs.length === 0 ? 'Start Without Context' : 'Start Exam Intelligence'}
+            />
             {docs.length > 0 && (
-              <button className="em-pick-skip-btn" onClick={() => { selectAllDocs(); setExamView('chat'); }}>
-                Skip — Use All Documents
-              </button>
+              <ButtonColorful 
+                className="em-pick-skip-btn mt-4" 
+                onClick={() => { selectAllDocs(); setExamView('chat'); }}
+                label="Skip — Use All Documents"
+              />
             )}
           </div>
         </div>

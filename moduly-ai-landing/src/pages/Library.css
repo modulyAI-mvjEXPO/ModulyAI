@@ -566,3 +566,23 @@ div.lib-col-contributor {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* ─────────────────────────────────────────────────────
+   DARK MODE OVERRIDES — Library
+   ───────────────────────────────────────────────────── */
+[data-theme="dark"] .lib-page           { background: var(--background); color: var(--foreground); }
+[data-theme="dark"] .lib-header-row     { border-bottom-color: var(--border); }
+[data-theme="dark"] .lib-title          { color: var(--foreground); }
+[data-theme="dark"] .lib-subtitle       { color: var(--muted-foreground); }
+[data-theme="dark"] .lib-badge-global   { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+[data-theme="dark"] .lib-filters        { background: var(--sidebar); border-bottom-color: var(--border); }
+[data-theme="dark"] .lib-filter-btn     { background: var(--card); color: var(--foreground); border-color: var(--border); }
+[data-theme="dark"] .lib-filter-btn--active { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+[data-theme="dark"] .lib-search         { background: var(--card); color: var(--foreground); border-color: var(--border); }
+[data-theme="dark"] .lib-search::placeholder { color: var(--muted-foreground); }
+[data-theme="dark"] .lib-doc-card       { background: var(--card); border-color: var(--border); color: var(--card-foreground); }
+[data-theme="dark"] .lib-doc-card:hover { border-color: var(--primary); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+[data-theme="dark"] .lib-doc-name       { color: var(--card-foreground); }
+[data-theme="dark"] .lib-doc-meta       { color: var(--muted-foreground); }
+[data-theme="dark"] .lib-view-error     { background: #450a0a; color: #fca5a5; border-color: #dc2626; }
+[data-theme="dark"] .lib-empty          { color: var(--muted-foreground); }

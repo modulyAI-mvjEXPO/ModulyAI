@@ -129,3 +129,8 @@
     margin: 0 auto;
   }
 }
+
+/* ── Dark mode: surface & text tokens ── */
+[data-theme="dark"] section,
+[data-theme="dark"] .section { background: var(--background); }
+[data-theme="dark"] .card    { background: var(--card); border-color: var(--border); color: var(--card-foreground); }

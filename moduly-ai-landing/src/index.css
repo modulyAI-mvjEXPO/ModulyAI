@@ -1,74 +1,125 @@
 @import "tailwindcss";
 
 /* ========================================
-   MODULY AI - Design System (Flat/Brutalist)
-   Phase 9: New Theme System
+   MODULY AI — Design System
+   Theme: Terracotta & Cream (Light + Dark)
    ======================================== */
 
-/* ---- NEW THEME VARIABLES (Flat/Brutalist) ---- */
+/* ───────────────────────────────────────
+   DESIGN TOKENS — LIGHT MODE
+   ─────────────────────────────────────── */
 :root {
-  /* Core palette */
-  --primary: #ff3333;
-  --secondary: #ffff00;
-  --on-secondary: #000000;
-  --accent: #0066ff;
-  --background: #ffffff;
-  --foreground: #000000;
-  --muted: #f5f5f5;
-  --muted-foreground: #555555;
-  --border: #000000;
-  --radius: 0px;
+  /* ── Shadcn token surface ── */
+  --card:                        #faf9f5;
+  --ring:                        #c96442;
+  --input:                       #b4b2a7;
+  --muted:                       #ede9de;
+  --accent:                      #e9e6dc;
+  --border:                      #dad9d4;
+  --radius:                      0.5rem;
+  --chart-1:                     #b05730;
+  --chart-2:                     #9c87f5;
+  --chart-3:                     #ded8c4;
+  --chart-4:                     #dbd3f0;
+  --chart-5:                     #b4552d;
+  --popover:                     #ffffff;
+  --primary:                     #c96442;
+  --sidebar:                     #f5f4ee;
+  --secondary:                   #e9e6dc;
+  --background:                  #faf9f5;
+  --foreground:                  #3d3929;
+  --destructive:                 #141413;
+  --sidebar-ring:                #b5b5b5;
+  --sidebar-accent:              #e9e6dc;
+  --sidebar-border:              #ebebeb;
+  --card-foreground:             #141413;
+  --sidebar-primary:             #c96442;
+  --muted-foreground:            #83827d;
+  --accent-foreground:           #28261b;
+  --popover-foreground:          #28261b;
+  --primary-foreground:          #ffffff;
+  --sidebar-foreground:          #3d3d3a;
+  --secondary-foreground:        #535146;
+  --destructive-foreground:      #ffffff;
+  --sidebar-accent-foreground:   #343434;
+  --sidebar-primary-foreground:  #fbfbfb;
 
-  /* Shadows - hard brutalist */
-  --shadow: 4px 4px 0px #000000;
-  --shadow-sm: 2px 2px 0px #000000;
-  --shadow-lg: 6px 6px 0px #000000;
-  --shadow-xl: 8px 8px 0px #000000;
+  /* ── @theme inline mapping ── */
+  --color-card:                        var(--card);
+  --color-ring:                        var(--ring);
+  --color-input:                       var(--input);
+  --color-muted:                       var(--muted);
+  --color-accent:                      var(--accent);
+  --color-border:                      var(--border);
+  --color-radius:                      var(--radius);
+  --color-chart-1:                     var(--chart-1);
+  --color-chart-2:                     var(--chart-2);
+  --color-chart-3:                     var(--chart-3);
+  --color-chart-4:                     var(--chart-4);
+  --color-chart-5:                     var(--chart-5);
+  --color-popover:                     var(--popover);
+  --color-primary:                     var(--primary);
+  --color-sidebar:                     var(--sidebar);
+  --color-secondary:                   var(--secondary);
+  --color-background:                  var(--background);
+  --color-foreground:                  var(--foreground);
+  --color-destructive:                 var(--destructive);
+  --color-sidebar-ring:                var(--sidebar-ring);
+  --color-sidebar-accent:              var(--sidebar-accent);
+  --color-sidebar-border:              var(--sidebar-border);
+  --color-card-foreground:             var(--card-foreground);
+  --color-sidebar-primary:             var(--sidebar-primary);
+  --color-muted-foreground:            var(--muted-foreground);
+  --color-accent-foreground:           var(--accent-foreground);
+  --color-popover-foreground:          var(--popover-foreground);
+  --color-primary-foreground:          var(--primary-foreground);
+  --color-sidebar-foreground:          var(--sidebar-foreground);
+  --color-secondary-foreground:        var(--secondary-foreground);
+  --color-destructive-foreground:      var(--destructive-foreground);
+  --color-sidebar-accent-foreground:   var(--sidebar-accent-foreground);
+  --color-sidebar-primary-foreground:  var(--sidebar-primary-foreground);
 
-  /* Typography */
-  --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'Space Mono', 'Courier New', monospace;
+  /* ── Legacy bridge aliases (keeps per-page CSS working) ── */
+  --color-surface:           var(--card);
+  --color-surface-elevated:  var(--muted);
+  --color-text-primary:      var(--foreground);
+  --color-text-secondary:    var(--muted-foreground);
+  --color-text-tertiary:     var(--input);
+  --color-border-subtle:     var(--border);
 
-  /* ---- BRIDGE ALIASES (keep per-page CSS working) ---- */
-  --color-primary: var(--foreground);
-  --color-secondary: var(--primary);
-  --color-accent: var(--accent);
-  --color-background: var(--background);
-  --color-surface: var(--background);
-  --color-surface-elevated: var(--muted);
-  --color-text-primary: var(--foreground);
-  --color-text-secondary: var(--muted-foreground);
-  --color-text-tertiary: #777777;
-  --color-border: var(--border);
-  --color-border-subtle: #cccccc;
-
-  /* Legacy shadow bridge */
-  --shadow-md: var(--shadow);
+  /* ── Shadows — soft warm ── */
+  --shadow-sm: 0 1px 3px rgba(61, 57, 41, 0.08), 0 1px 2px rgba(61, 57, 41, 0.06);
+  --shadow:    0 4px 6px rgba(61, 57, 41, 0.07), 0 2px 4px rgba(61, 57, 41, 0.06);
+  --shadow-md: 0 10px 15px rgba(61, 57, 41, 0.07), 0 4px 6px rgba(61, 57, 41, 0.05);
+  --shadow-lg: 0 20px 25px rgba(61, 57, 41, 0.07), 0 10px 10px rgba(61, 57, 41, 0.04);
+  --shadow-xl: 0 25px 50px rgba(61, 57, 41, 0.12);
   --shadow-card: var(--shadow-sm);
 
-  /* Legacy font bridge */
+  /* ── Typography ── */
+  --font-sans:   'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono:   'Space Mono', 'Courier New', monospace;
   --font-family: var(--font-sans);
 
-  /* Font sizes (unchanged) */
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
+  /* ── Font sizes ── */
+  --font-size-xs:   0.75rem;
+  --font-size-sm:   0.875rem;
   --font-size-base: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
-  --font-size-2xl: 1.5rem;
-  --font-size-3xl: 1.875rem;
-  --font-size-4xl: 2.25rem;
-  --font-size-5xl: 3rem;
-  --font-size-6xl: 3.75rem;
+  --font-size-lg:   1.125rem;
+  --font-size-xl:   1.25rem;
+  --font-size-2xl:  1.5rem;
+  --font-size-3xl:  1.875rem;
+  --font-size-4xl:  2.25rem;
+  --font-size-5xl:  3rem;
+  --font-size-6xl:  3.75rem;
 
-  /* Spacing (unchanged) */
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.25rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
+  /* ── Spacing ── */
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-5:  1.25rem;
+  --space-6:  1.5rem;
+  --space-8:  2rem;
   --space-10: 2.5rem;
   --space-12: 3rem;
   --space-16: 4rem;
@@ -76,54 +127,80 @@
   --space-24: 6rem;
   --space-32: 8rem;
 
-  /* Layout */
-  --max-width: 1440px;
+  /* ── Layout ── */
+  --max-width:     1440px;
   --content-width: 1200px;
 
-  /* Border radius — brutalist = 0 */
-  --border-radius-sm: 0px;
-  --border-radius-md: 0px;
-  --border-radius-lg: 0px;
-  --border-radius-xl: 0px;
-  --border-radius-2xl: 0px;
+  /* ── Border radius ── */
+  --border-radius-sm:  0.25rem;
+  --border-radius-md:  0.5rem;
+  --border-radius-lg:  0.75rem;
+  --border-radius-xl:  1rem;
+  --border-radius-2xl: 1.5rem;
 
-  /* Transitions */
+  /* ── Transitions ── */
   --transition-fast: 150ms ease;
   --transition-base: 250ms ease;
   --transition-slow: 350ms ease;
 }
 
-/* ---- DARK THEME (Brutalist) ---- */
+/* ───────────────────────────────────────
+   DESIGN TOKENS — DARK MODE
+   Applied via [data-theme="dark"] on <html>
+   ─────────────────────────────────────── */
 [data-theme="dark"] {
-  --primary: #ff3333;
-  --secondary: #ffff00;
-  --on-secondary: #000000;
-  --accent: #4488ff;
-  --background: #0a0a0a;
-  --foreground: #ffffff;
-  --muted: #1a1a1a;
-  --muted-foreground: #aaaaaa;
-  --border: #ffffff;
-  --shadow: 4px 4px 0px #ffffff;
-  --shadow-sm: 2px 2px 0px #ffffff;
-  --shadow-lg: 6px 6px 0px #ffffff;
-  --shadow-xl: 8px 8px 0px #ffffff;
-  --color-primary: var(--foreground);
-  --color-secondary: var(--primary);
-  --color-accent: var(--accent);
-  --color-background: var(--background);
-  --color-surface: var(--background);
+  --card:                        #262624;
+  --ring:                        #d97757;
+  --input:                       #52514a;
+  --muted:                       #1b1b19;
+  --accent:                      #1a1915;
+  --border:                      #3e3e38;
+  --chart-1:                     #b05730;
+  --chart-2:                     #9c87f5;
+  --chart-3:                     #1a1915;
+  --chart-4:                     #2f2b48;
+  --chart-5:                     #b4552d;
+  --popover:                     #30302e;
+  --primary:                     #d97757;
+  --sidebar:                     #1f1e1d;
+  --secondary:                   #faf9f5;
+  --background:                  #262624;
+  --foreground:                  #c3c0b6;
+  --destructive:                 #ef4444;
+  --sidebar-ring:                #b5b5b5;
+  --sidebar-accent:              #0f0f0e;
+  --sidebar-border:              #ebebeb;
+  --card-foreground:             #faf9f5;
+  --sidebar-primary:             #343434;
+  --muted-foreground:            #b7b5a9;
+  --accent-foreground:           #f5f4ee;
+  --popover-foreground:          #e5e5e2;
+  --primary-foreground:          #ffffff;
+  --sidebar-foreground:          #c3c0b6;
+  --secondary-foreground:        #30302e;
+  --destructive-foreground:      #ffffff;
+  --sidebar-accent-foreground:   #c3c0b6;
+  --sidebar-primary-foreground:  #fbfbfb;
+
+  /* ── Dark shadows ── */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  --shadow:    0 4px 6px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2);
+  --shadow-md: 0 10px 15px rgba(0,0,0,0.3), 0 4px 6px rgba(0,0,0,0.2);
+  --shadow-lg: 0 20px 25px rgba(0,0,0,0.3), 0 10px 10px rgba(0,0,0,0.2);
+  --shadow-xl: 0 25px 50px rgba(0,0,0,0.5);
+
+  /* ── Legacy bridge ── */
+  --color-surface:          var(--card);
   --color-surface-elevated: var(--muted);
-  --color-text-primary: var(--foreground);
-  --color-text-secondary: var(--muted-foreground);
-  --color-text-tertiary: #888888;
-  --color-border: var(--border);
-  --color-border-subtle: #333333;
-  --shadow-md: var(--shadow);
-  --shadow-card: var(--shadow-sm);
+  --color-text-primary:     var(--foreground);
+  --color-text-secondary:   var(--muted-foreground);
+  --color-text-tertiary:    var(--input);
+  --color-border-subtle:    var(--border);
 }
 
-/* ---- RESET & BASE ---- */
+/* ───────────────────────────────────────
+   RESET & BASE
+   ─────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -145,7 +222,7 @@ body {
   transition: background-color var(--transition-base), color var(--transition-base);
 }
 
-/* ---- TYPOGRAPHY ---- */
+/* ── Typography ── */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-sans);
   font-weight: 800;
@@ -157,7 +234,7 @@ h1, h2, h3, h4, h5, h6 {
 h1 { font-size: var(--font-size-5xl); }
 h2 { font-size: var(--font-size-4xl); }
 h3 { font-size: var(--font-size-2xl); font-weight: 700; }
-h4 { font-size: var(--font-size-xl); font-weight: 700; }
+h4 { font-size: var(--font-size-xl);  font-weight: 700; }
 
 p {
   color: var(--muted-foreground);
@@ -169,23 +246,22 @@ code, pre, .mono {
 }
 
 a {
-  color: var(--accent);
+  color: var(--primary);
   text-decoration: none;
   transition: color var(--transition-fast);
 }
 
 a:hover {
-  color: var(--primary);
+  color: var(--chart-5);
 }
 
-/* ---- CONTAINER ---- */
+/* ── Container & Section ── */
 .container {
   max-width: var(--content-width);
   margin: 0 auto;
   padding: 0 var(--space-6);
 }
 
-/* ---- SECTION ---- */
 .section {
   padding: var(--space-24) 0;
 }
@@ -195,9 +271,7 @@ a:hover {
   margin-bottom: var(--space-16);
 }
 
-.section-header h2 {
-  margin-bottom: var(--space-4);
-}
+.section-header h2 { margin-bottom: var(--space-4); }
 
 .section-header p {
   font-size: var(--font-size-lg);
@@ -205,72 +279,62 @@ a:hover {
   margin: 0 auto;
 }
 
-/* ---- CARD — brutalist flat ---- */
+/* ── Card ── */
 .card {
-  background: var(--background);
-  border: 2px solid var(--border);
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: var(--space-6);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-sm);
   transition: transform var(--transition-base), box-shadow var(--transition-base);
+  color: var(--card-foreground);
 }
 
 .card:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
-/* ---- BUTTONS — brutalist flat ---- */
+/* ── Buttons ── */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: var(--space-2);
   padding: var(--space-3) var(--space-6);
   font-size: var(--font-size-base);
-  font-weight: 700;
+  font-weight: 600;
   font-family: var(--font-sans);
   border-radius: var(--radius);
-  border: 2px solid var(--border);
+  border: 1px solid transparent;
   cursor: pointer;
   transition: all var(--transition-base);
-  box-shadow: var(--shadow-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.btn:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: var(--shadow);
-}
-
-.btn:active {
-  transform: translate(0, 0);
-  box-shadow: none;
+  text-decoration: none;
 }
 
 .btn-primary {
   background: var(--primary);
-  color: #000000;
-  border-color: var(--border);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
 }
 
 .btn-primary:hover {
-  background: var(--secondary);
-  color: var(--on-secondary);
+  background: var(--chart-5);
+  border-color: var(--chart-5);
 }
 
 .btn-secondary {
-  background: var(--background);
-  color: var(--foreground);
-  border: 2px solid var(--border);
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  border-color: var(--border);
 }
 
 .btn-secondary:hover {
-  background: var(--accent);
-  color: #ffffff;
+  background: var(--muted);
+  color: var(--foreground);
 }
 
-/* ---- BADGE — brutalist ---- */
+/* ── Badge ── */
 .badge {
   display: inline-block;
   padding: var(--space-1) var(--space-3);
@@ -279,19 +343,14 @@ a:hover {
   font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  border-radius: var(--radius);
-  border: 2px solid var(--border);
-  background: var(--secondary);
-  color: var(--on-secondary);
-  box-shadow: var(--shadow-sm);
+  border-radius: calc(var(--radius) / 2);
+  border: 1px solid var(--border);
+  background: var(--muted);
+  color: var(--foreground);
 }
 
-/* ---- GRID ---- */
-.grid {
-  display: grid;
-  gap: var(--space-6);
-}
-
+/* ── Grid ── */
+.grid { display: grid; gap: var(--space-6); }
 .grid-2 { grid-template-columns: repeat(2, 1fr); }
 .grid-3 { grid-template-columns: repeat(3, 1fr); }
 .grid-4 { grid-template-columns: repeat(4, 1fr); }
@@ -308,28 +367,26 @@ a:hover {
   .section { padding: var(--space-16) 0; }
 }
 
-/* ---- UTILITY CLASSES ---- */
-.text-accent  { color: var(--accent); }
-.text-primary-color { color: var(--primary); }
-.text-secondary { color: var(--muted-foreground); }
+/* ── Utility Classes ── */
+.text-primary-color  { color: var(--primary); }
+.text-muted          { color: var(--muted-foreground); }
+.text-accent         { color: var(--accent-foreground); }
 
-/* Brutalist highlight replaces gradient text */
 .gradient-text {
-  background: var(--secondary);
-  color: var(--on-secondary);
-  padding: 4px 12px;
-  -webkit-text-fill-color: unset;
+  background: linear-gradient(135deg, var(--primary), var(--chart-5));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-/* Divider — thick brutalist line */
 .divider {
   width: 60px;
-  height: 4px;
+  height: 3px;
   background: var(--primary);
+  border-radius: var(--radius);
   margin: var(--space-4) auto;
 }
 
-/* Icon container — flat */
 .icon-container {
   width: 48px;
   height: 48px;
@@ -337,26 +394,24 @@ a:hover {
   align-items: center;
   justify-content: center;
   border-radius: var(--radius);
-  border: 2px solid var(--border);
-  background: var(--secondary);
-  color: var(--on-secondary);
+  border: 1px solid var(--border);
+  background: var(--muted);
+  color: var(--primary);
   margin-bottom: var(--space-4);
   font-size: 1.5rem;
-  box-shadow: var(--shadow-sm);
 }
 
-
-/* ---- SELECTION ---- */
+/* ── Selection ── */
 ::selection {
-  background: var(--secondary);
-  color: var(--on-secondary);
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
-/* ---- SCROLLBAR ---- */
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: var(--background); }
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--muted); }
 ::-webkit-scrollbar-thumb {
   background: var(--border);
-  border-radius: 0px;
+  border-radius: var(--radius);
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--primary); }

@@ -14,7 +14,7 @@ export function Footer() {
                     </div>
 
                     <div className="footer-info">
-                        <div className="footer-badge">PROJECT EXPO 2026</div>
+                        <div className="footer-badge">VTU FOCUSED</div>
                         <p className="footer-category">Smart Education</p>
                     </div>
                 </div>

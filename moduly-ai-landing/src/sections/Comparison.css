@@ -13,8 +13,8 @@
 .comparison-header {
   display: grid;
   grid-template-columns: 1fr 1.5fr 1.5fr;
-  background: var(--foreground);
-  border-bottom: 2px solid var(--border);
+  background: #c96442;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
 .comparison-header > div {
@@ -68,8 +68,9 @@
 }
 
 .row-moduly {
-  color: var(--on-secondary);
-  background: var(--secondary);
+  color: #141413;
+  background: #faf9f5;
+  font-weight: 500;
 }
 
 .status-icon {
@@ -84,12 +85,12 @@
 }
 
 .status-icon.negative {
-  background: var(--primary);
+  background: #c96442;
   color: white;
 }
 
 .status-icon.positive {
-  background: #008800;
+  background: #10b981;
   color: white;
 }
 
@@ -140,3 +141,8 @@
     content: 'MODULY: ';
   }
 }
+
+/* ── Dark mode: surface & text tokens ── */
+[data-theme="dark"] section,
+[data-theme="dark"] .section { background: var(--background); }
+[data-theme="dark"] .card    { background: var(--card); border-color: var(--border); color: var(--card-foreground); }

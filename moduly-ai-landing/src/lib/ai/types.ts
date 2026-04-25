@@ -177,3 +177,14 @@ export type PyqIntelligenceResponse = {
   readonly patterns: ReadonlyArray<PyqTopicPattern>;
   readonly moduleWeightage: ReadonlyArray<PyqModuleWeightage>;
 };
+
+export type StudySet = {
+  readonly id: string;
+  readonly user_id: string;
+  readonly title: string;
+  readonly documents: ReadonlyArray<string>;
+  readonly messages: ReadonlyArray<any>;
+  readonly grounding_mode: string;
+  readonly created_at: string;
+  readonly updated_at: string;
+};

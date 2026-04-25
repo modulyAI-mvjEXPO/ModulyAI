@@ -52,6 +52,40 @@
   }
 }
 
+.ud-back-btn {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 1rem;
+  padding: 6px 12px;
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ud-back-btn .material-icons-outlined {
+  font-size: 16px;
+}
+
+.ud-back-btn:hover {
+  background: var(--muted);
+  border-color: var(--foreground);
+  transform: translateX(-2px);
+}
+
+[data-theme="dark"] .ud-back-btn {
+  background: var(--muted);
+}
+[data-theme="dark"] .ud-back-btn:hover {
+  background: var(--accent);
+}
+
 /* Brutalist highlight — yellow block instead of gradient text */
 .ud-title-highlight {
   background: var(--secondary);
@@ -483,8 +517,8 @@
 
 .ud-badge--cloud {
   background: var(--muted);
-  color: #00aa00;
-  border-color: #00aa00;
+  color: #10b981;
+  border-color: #10b981;
 }
 
 .ud-badge--processing {
@@ -494,8 +528,8 @@
 
 .ud-badge--ready {
   background: var(--muted);
-  color: #00aa00;
-  border-color: #00aa00;
+  color: #10b981;
+  border-color: #10b981;
 }
 
 .ud-badge--failed {
@@ -601,7 +635,7 @@
   line-height: 1.5;
 }
 .ud-upload-msg--success {
-  color: #00aa00;
+  color: #10b981;
 }
 .ud-upload-msg--error {
   color: var(--primary);
@@ -635,3 +669,24 @@
   font-size: 0.75rem;
   color: var(--muted-foreground);
 }
+
+/* ─────────────────────────────────────────────────────
+   DARK MODE OVERRIDES — Upload Docs
+   ───────────────────────────────────────────────────── */
+[data-theme="dark"] .ud-page            { background: var(--background); color: var(--foreground); }
+[data-theme="dark"] .ud-header          { border-bottom-color: var(--border); }
+[data-theme="dark"] .ud-title           { color: var(--foreground); }
+[data-theme="dark"] .ud-drop-zone       { background: var(--card); border-color: var(--border); color: var(--muted-foreground); }
+[data-theme="dark"] .ud-drop-zone:hover,
+[data-theme="dark"] .ud-drop-zone--active { border-color: var(--primary); background: var(--accent); }
+[data-theme="dark"] .ud-file-list       { background: var(--card); border-color: var(--border); }
+[data-theme="dark"] .ud-file-item       { border-bottom-color: var(--border); color: var(--card-foreground); }
+[data-theme="dark"] .ud-file-item:hover { background: var(--accent); }
+[data-theme="dark"] .ud-file-name       { color: var(--card-foreground); }
+[data-theme="dark"] .ud-file-size       { color: var(--muted-foreground); }
+[data-theme="dark"] .ud-status--done    { color: #4ade80; border-color: #4ade80; }
+[data-theme="dark"] .ud-status-bar--done { background: #4ade80; }
+[data-theme="dark"] .ud-form-section    { background: var(--card); border-color: var(--border); }
+[data-theme="dark"] .ud-label           { color: var(--foreground); }
+[data-theme="dark"] .ud-select,
+[data-theme="dark"] .ud-input           { background: var(--muted); border-color: var(--border); color: var(--foreground); }

@@ -59,7 +59,9 @@ export function Settings({ user }: SettingsProps) {
     const [answerFormat, setAnswerFormat] = useState('8 Marks');
     const [answerStyle, setAnswerStyle] = useState('Concise');
     const [aiMode, setAiMode] = useState(false);
-    const [appearance, setAppearance] = useState<AppearanceTheme>('dark');
+    const [appearance, setAppearance] = useState<AppearanceTheme>(
+        (document.documentElement.getAttribute('data-theme') as AppearanceTheme) || 'system'
+    );
 
     const [isSaving, setIsSaving] = useState(false);
     const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');

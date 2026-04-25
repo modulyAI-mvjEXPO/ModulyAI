@@ -9,7 +9,7 @@ import { ExamMode } from './ExamMode';
 import { Library } from './Library';
 import { UploadDocs } from './UploadDocs';
 import { Settings } from './Settings';
-import { DashedBackground } from '../components/ui/demo';
+import { ButtonColorful } from '../components/ui/button-colorful';
 import './Dashboard.css';
 
 type DashboardPage = 'overview' | 'study' | 'exam' | 'library' | 'upload' | 'settings';
@@ -156,11 +156,15 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (!(e.target as Element).closest('.db-brand-nav-wrap')) {
         setDropdownOpen(false);
+      }
+      if (!(e.target as Element).closest('.db-profile-wrap')) {
+        setProfileMenuOpen(false);
       }
     };
     document.addEventListener('click', handleClickOutside);
@@ -198,7 +202,6 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
 
   return (
     <div className="db-shell">
-      <DashedBackground />
       {/* ── Top header (Full Width) ── */}
       <header className="db-header">
         <div className="db-header-left">
@@ -291,22 +294,56 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
             />
           </div>
 
-          <button
-            className="db-notif-btn"
-            aria-label="Settings"
-            onClick={() => setActivePage('settings')}
-          >
-            <span className="material-icons-outlined">settings</span>
-          </button>
+          {/* Profile avatar with dropdown */}
+          <div className="db-profile-wrap">
+            <button
+              className="db-avatar-ring"
+              aria-label="Profile menu"
+              aria-expanded={profileMenuOpen}
+              onClick={(e) => { e.stopPropagation(); setProfileMenuOpen(o => !o); }}
+            >
+              <div className="db-header-avatar">
+                {firstName.charAt(0).toUpperCase()}
+              </div>
+            </button>
 
-          <button className="db-notif-btn" aria-label="Notifications">
-            <span className="material-icons-outlined">notifications</span>
-          </button>
-
-          <div className="db-avatar-ring">
-            <div className="db-header-avatar">
-              {firstName.charAt(0).toUpperCase()}
-            </div>
+            {profileMenuOpen && (
+              <div className="db-profile-dropdown">
+                <div className="db-profile-dropdown-user">
+                  <div className="db-profile-dropdown-avatar">
+                    {firstName.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="db-profile-dropdown-name">{displayName}</p>
+                    <p className="db-profile-dropdown-email">{user.email}</p>
+                  </div>
+                </div>
+                <div className="db-profile-dropdown-divider" />
+                <button
+                  className="db-profile-dropdown-item"
+                  onClick={() => { setActivePage('settings'); setProfileMenuOpen(false); }}
+                >
+                  <span className="material-icons-outlined">settings</span>
+                  Settings
+                </button>
+                <button className="db-profile-dropdown-item">
+                  <span className="material-icons-outlined">notifications</span>
+                  Notifications
+                  <span className="db-profile-dropdown-badge">0</span>
+                </button>
+                <div className="db-profile-dropdown-divider" />
+                <button
+                  className="db-profile-dropdown-item db-profile-dropdown-item--danger"
+                  onClick={handleSignOut}
+                  disabled={isSigningOut}
+                >
+                  <span className="material-icons-outlined">
+                    {isSigningOut ? 'hourglass_empty' : 'logout'}
+                  </span>
+                  {isSigningOut ? 'Signing out…' : 'Sign Out'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -322,7 +359,7 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
         <Library user={user} onNavigate={(page) => setActivePage(page as DashboardPage)} />
       )}
       {activePage === 'upload' && (
-        <UploadDocs user={user} />
+        <UploadDocs user={user} onNavigate={(page) => setActivePage(page as DashboardPage)} />
       )}
       {activePage === 'settings' && (
         <Settings user={user} />
@@ -414,12 +451,12 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
         <section className="db-table-card">
           <div className="db-table-header">
             <h2 className="db-table-title">Recent Study Sessions</h2>
-            <button
-              className="db-table-view-all"
+            <ButtonColorful
+              label="View All"
               onClick={() => setActivePage('library')}
-            >
-              View All
-            </button>
+              className="db-table-view-all"
+              textColor="black"
+            />
           </div>
           <div className="db-table-wrap">
             {recentDocs.length > 0 ? (
@@ -445,12 +482,11 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
                         </span>
                       </td>
                       <td className="db-table-right">
-                        <button
-                          className="db-resume-btn"
+                        <ButtonColorful
+                          label="Resume"
                           onClick={() => handleResume()}
-                        >
-                          Resume
-                        </button>
+                          className="db-resume-btn"
+                        />
                       </td>
                     </tr>
                   ))}
@@ -462,13 +498,11 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
                   <span className="material-icons-outlined">folder_open</span>
                   <p>No documents uploaded yet.</p>
                 </div>
-                <button
-                  className="db-table-empty-btn-new"
+                <ButtonColorful
+                  label="Upload Documents"
                   onClick={() => setActivePage('upload')}
-                >
-                  <span className="material-icons-outlined">cloud_upload</span>
-                  Upload Documents
-                </button>
+                  className="db-table-empty-btn-new"
+                />
               </div>
             )}
           </div>

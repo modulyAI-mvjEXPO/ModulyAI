@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type { DocumentRow } from '../lib/ai/types';
+import { ButtonColorful } from '../components/ui/button-colorful';
 
 import './Library.css';
 
@@ -277,14 +278,7 @@ export function Library({ user, onNavigate }: LibraryProps) {
           <p className="lib-subtitle">Browse academic resources contributed by the VTU student community.</p>
         </div>
         <div className="lib-header-actions">
-          <button className="lib-btn-history">
-            <span className="material-icons-outlined lib-btn-icon">history</span>
-            History
-          </button>
-          <button className="lib-btn-contribute" onClick={() => onNavigate?.('upload')}>
-            <span className="material-icons-outlined lib-btn-icon">add</span>
-            Contribute
-          </button>
+          <ButtonColorful className="lib-btn-contribute" onClick={() => onNavigate?.('upload')} label="Contribute" />
         </div>
       </div>
 

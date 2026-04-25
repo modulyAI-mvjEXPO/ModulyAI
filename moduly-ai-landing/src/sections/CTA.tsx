@@ -7,7 +7,7 @@ export function CTA() {
                 <div className="cta-content">
                     <div className="cta-badge">
                         <span className="badge-dot"></span>
-                        <span>Project Expo 2026</span>
+                        <span>Structured Learning</span>
                     </div>
 
                     <h2>
