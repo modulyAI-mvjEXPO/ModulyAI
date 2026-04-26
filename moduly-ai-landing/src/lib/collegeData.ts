@@ -486,6 +486,81 @@ export function getSubjects(courseId: string, year: number): Subject[] {
     return [...s1, ...s2];
 }
 
+export interface SubjectWithContext extends Subject {
+    courseId: string;
+    courseShort: string;
+    semester: number;
+    isCustom?: boolean;
+}
+
+const CUSTOM_SUBJECTS_KEY = 'moduly_custom_subjects';
+
+function loadCustomSubjects(): SubjectWithContext[] {
+    try {
+        const raw = localStorage.getItem(CUSTOM_SUBJECTS_KEY);
+        if (!raw) return [];
+        return JSON.parse(raw) as SubjectWithContext[];
+    } catch {
+        return [];
+    }
+}
+
+function saveCustomSubjects(subjects: SubjectWithContext[]): void {
+    localStorage.setItem(CUSTOM_SUBJECTS_KEY, JSON.stringify(subjects));
+}
+
+export function addCustomSubject(name: string, code: string): SubjectWithContext {
+    const customs = loadCustomSubjects();
+    const entry: SubjectWithContext = {
+        code,
+        name,
+        courseId: 'custom',
+        courseShort: 'Custom',
+        semester: 0,
+        isCustom: true,
+    };
+    // Avoid duplicates by code
+    if (!customs.some(s => s.code === code)) {
+        customs.push(entry);
+        saveCustomSubjects(customs);
+    }
+    return entry;
+}
+
+export function getAllSubjects(): SubjectWithContext[] {
+    const seen = new Set<string>();
+    const results: SubjectWithContext[] = [];
+
+    for (const courseEntry of College_COURSES) {
+        const courseData = College_SUBJECTS[courseEntry.id];
+        if (!courseData) continue;
+        for (const [semStr, subjects] of Object.entries(courseData)) {
+            const sem = Number(semStr);
+            for (const sub of subjects) {
+                if (!seen.has(sub.code)) {
+                    seen.add(sub.code);
+                    results.push({
+                        ...sub,
+                        courseId: courseEntry.id,
+                        courseShort: courseEntry.shortName,
+                        semester: sem,
+                    });
+                }
+            }
+        }
+    }
+
+    // Merge custom subjects from localStorage
+    for (const custom of loadCustomSubjects()) {
+        if (!seen.has(custom.code)) {
+            seen.add(custom.code);
+            results.push(custom);
+        }
+    }
+
+    return results.sort((a, b) => a.name.localeCompare(b.name));
+}
+
 export function getCourse(courseId: string): Course | undefined {
     return College_COURSES.find(c => c.id === courseId);
 }

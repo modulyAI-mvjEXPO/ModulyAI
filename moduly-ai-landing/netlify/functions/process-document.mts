@@ -44,6 +44,7 @@ const triggerBackgroundProcessing = (
   supabase: ReturnType<typeof createServerSupabaseClient>,
   documentId: string,
   filePath: string,
+  title: string,
   event: HandlerEvent,
 ): void => {
   const host = event.headers?.host || 'localhost:8888';
@@ -56,7 +57,7 @@ const triggerBackgroundProcessing = (
   fetch(`${baseUrl}/.netlify/functions/process-document-background`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ documentId, filePath }),
+    body: JSON.stringify({ documentId, filePath, title }),
   })
     .then(async (res) => {
       if (!res.ok) {
@@ -122,7 +123,7 @@ export const handler = async (
       });
     }
 
-    triggerBackgroundProcessing(supabase, data.id as string, filePath, event);
+    triggerBackgroundProcessing(supabase, data.id as string, filePath, title, event);
 
     return jsonResponse(202, { documentId: data.id });
   } catch (err: unknown) {

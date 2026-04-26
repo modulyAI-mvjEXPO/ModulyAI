@@ -14,11 +14,12 @@ function inferDocType(title: string, filePath?: string): string {
     const parts = filePath.split('/');
     if (parts.length >= 4) {
       const typePart = parts[2].toLowerCase();
-      if (typePart === 'pyq') return 'PYQ';
+      if (typePart === 'pyq' || typePart === 'pyqs') return 'PYQ';
       if (typePart === 'mindmap') return 'Mind Map';
-      if (typePart === 'manual') return 'Lab Manual';
+      if (typePart === 'manual' || typePart === 'assignment') return 'Lab Manual';
       if (typePart === 'imp') return 'Important Qs';
       if (typePart === 'notes') return 'Notes';
+      if (typePart === 'other') return 'Other';
     }
   }
   const t = title.toLowerCase();
@@ -156,7 +157,7 @@ export function Library({ user, onNavigate }: LibraryProps) {
 
         if (!isMounted) return;
 
-        let uthoFiles: ReadonlyArray<{ filename: string; size: number; lastModified: string }> = [];
+        let uthoFiles: ReadonlyArray<{ filename: string; rawKey: string; size: number; lastModified: string }> = [];
         let uthoError = false;
 
         // Handle Utho result
@@ -199,7 +200,8 @@ export function Library({ user, onNavigate }: LibraryProps) {
         const dbMap = new Map(dbDocs.map(d => [d.file_path, d]));
         
         const mergedDocs: DocumentRow[] = uthoFiles.map(file => {
-          const dbMatch = dbMap.get(file.filename);
+          // Match against both the display key and the raw S3 key (with source/ prefix)
+          const dbMatch = dbMap.get(file.filename) || dbMap.get(file.rawKey);
           
           if (dbMatch) {
             return {
