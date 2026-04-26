@@ -4,12 +4,12 @@ const problems = [
     {
         icon: '📄',
         title: 'Scattered Study Materials',
-        description: 'VTU study materials are fragmented across PDFs, websites, WhatsApp groups, and random drives. Students waste hours searching instead of studying.'
+        description: 'College study materials are fragmented across PDFs, websites, WhatsApp groups, and random drives. Students waste hours searching instead of studying.'
     },
     {
         icon: '📚',
         title: 'No Module-Wise Organization',
-        description: 'Standard learning resources lack VTU syllabus structure. Students struggle to map content to specific modules for focused preparation.'
+        description: 'Standard learning resources lack College syllabus structure. Students struggle to map content to specific modules for focused preparation.'
     },
     {
         icon: '📝',
@@ -19,7 +19,7 @@ const problems = [
     {
         icon: '🤖',
         title: 'Generic AI Hallucinations',
-        description: 'ChatGPT and similar tools generate plausible but often incorrect answers. They ignore VTU syllabus structure and exam patterns entirely.'
+        description: 'ChatGPT and similar tools generate plausible but often incorrect answers. They ignore College syllabus structure and exam patterns entirely.'
     }
 ];
 
@@ -29,11 +29,11 @@ export function Problem() {
             <div className="container">
                 <div className="section-header">
                     <span className="badge">The Challenge</span>
-                    <h2>Real Problems VTU Students Face</h2>
+                    <h2>Real Problems College Students Face</h2>
                     <div className="divider"></div>
                     <p>
                         Engineering students spend more time organizing resources than actually learning.
-                        Current tools fail to address the structured nature of VTU exams.
+                        Current tools fail to address the structured nature of College exams.
                     </p>
                 </div>
 

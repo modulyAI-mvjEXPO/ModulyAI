@@ -45,7 +45,7 @@ export function Modes() {
                                 </li>
                                 <li>
                                     <span className="feature-icon">+</span>
-                                    <span>VTU-style questions generated (2M / 8M / 10M)</span>
+                                    <span>College-style questions generated (2M / 8M / 10M)</span>
                                 </li>
                                 <li>
                                     <span className="feature-icon">+</span>
@@ -77,7 +77,7 @@ export function Modes() {
 
                         <div className="mode-body">
                             <p className="mode-description">
-                                Exam-focused preparation with PYQ analysis and VTU marking scheme
+                                Exam-focused preparation with PYQ analysis and College marking scheme
                                 aligned answer writing practice.
                             </p>
 
@@ -92,7 +92,7 @@ export function Modes() {
                                 </li>
                                 <li>
                                     <span className="feature-icon">+</span>
-                                    <span>Answer writing in VTU marking scheme format</span>
+                                    <span>Answer writing in College marking scheme format</span>
                                 </li>
                                 <li>
                                     <span className="feature-icon">+</span>

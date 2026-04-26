@@ -40,7 +40,7 @@ export function Hero() {
                         </p>
 
                         <p className="hero-description">
-                            An AI-powered smart education platform designed exclusively for VTU students
+                            An AI-powered smart education platform designed exclusively for College students
                             — structured around syllabus, modules, PYQs, and exam performance.
                         </p>
 
@@ -73,7 +73,7 @@ export function Hero() {
 
                     <div className="hero-stats">
                         <div className="stat-item">
-                            <span className="stat-number">VTU</span>
+                            <span className="stat-number">College</span>
                             <span className="stat-label">Focused</span>
                         </div>
                         <div className="stat-divider"></div>

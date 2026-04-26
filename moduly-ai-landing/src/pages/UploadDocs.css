@@ -243,6 +243,77 @@
   gap: 1.25rem;
 }
 
+.ud-module-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.ud-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  position: relative;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  color: var(--foreground);
+  font-size: 0.875rem;
+}
+
+.ud-checkbox input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.ud-checkbox-box {
+  width: 20px;
+  height: 20px;
+  background-color: var(--background);
+  border: 2px solid var(--border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 150ms ease;
+}
+
+.ud-checkbox input:checked ~ .ud-checkbox-box {
+  background-color: var(--primary);
+  border-color: var(--foreground);
+}
+
+.ud-checkbox input:focus ~ .ud-checkbox-box {
+  outline: 2px solid var(--foreground);
+  outline-offset: 2px;
+}
+
+.ud-checkbox-box::after {
+  content: "";
+  display: none;
+  width: 4px;
+  height: 10px;
+  border: solid var(--background);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  margin-bottom: 2px;
+}
+
+.ud-checkbox input:checked ~ .ud-checkbox-box::after {
+  display: block;
+}
+
+.ud-checkbox:hover input ~ .ud-checkbox-box {
+  background-color: var(--muted);
+}
+
+.ud-checkbox input:checked:hover ~ .ud-checkbox-box {
+  background-color: var(--primary);
+}
+
 .ud-form-grid {
   display: grid;
   grid-template-columns: 1fr;

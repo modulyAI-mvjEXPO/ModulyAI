@@ -3,8 +3,8 @@ import './Comparison.css';
 const comparisons = [
     {
         aspect: 'Syllabus Structure',
-        generic: 'No awareness of VTU syllabus or modules',
-        moduly: 'Built around VTU syllabus, organized by modules'
+        generic: 'No awareness of College syllabus or modules',
+        moduly: 'Built around College syllabus, organized by modules'
     },
     {
         aspect: 'Data Sources',
@@ -19,7 +19,7 @@ const comparisons = [
     {
         aspect: 'Question Format',
         generic: 'Generic questions, no exam pattern',
-        moduly: '2M / 8M / 10M VTU exam format'
+        moduly: '2M / 8M / 10M College exam format'
     },
     {
         aspect: 'PYQ Analysis',
@@ -29,7 +29,7 @@ const comparisons = [
     {
         aspect: 'Design Focus',
         generic: 'General-purpose, one size fits all',
-        moduly: 'VTU-first design for engineering students'
+        moduly: 'College-first design for engineering students'
     }
 ];
 

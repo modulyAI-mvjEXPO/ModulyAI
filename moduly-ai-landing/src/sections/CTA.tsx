@@ -26,7 +26,7 @@ export function CTA() {
                                     <polyline points="20 6 9 17 4 12" />
                                 </svg>
                             </span>
-                            VTU Syllabus Aligned
+                            College Syllabus Aligned
                         </div>
                         <div className="cta-feature">
                             <span className="feature-check">

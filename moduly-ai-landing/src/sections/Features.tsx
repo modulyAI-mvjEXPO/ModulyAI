@@ -11,8 +11,8 @@ const features = [
         )
     },
     {
-        title: 'VTU Answer Generation',
-        description: 'Generate answers in VTU marking scheme format — 2M, 8M, 10M question styles.',
+        title: 'College Answer Generation',
+        description: 'Generate answers in College marking scheme format — 2M, 8M, 10M question styles.',
         icon: (
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -78,7 +78,7 @@ export function Features() {
                     <h2>Intelligent, Not Flashy</h2>
                     <div className="divider"></div>
                     <p>
-                        Every feature designed with VTU exam preparation in mind.
+                        Every feature designed with College exam preparation in mind.
                     </p>
                 </div>
 

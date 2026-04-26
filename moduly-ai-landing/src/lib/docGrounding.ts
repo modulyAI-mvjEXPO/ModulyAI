@@ -90,11 +90,11 @@ export const DEMO_DOCUMENTS: ReadonlyArray<GroundedDoc> = [
     chunks: [
       {
         id: 'pyq-ds-1',
-        text: 'VTU Dec 2023 (10 Marks): Explain the working of Dijkstra\'s shortest path algorithm with a suitable example. Answer: Dijkstra\'s algorithm solves the single-source shortest path problem for a directed graph with non-negative edge weights. It maintains a set of unvisited vertices and calculates the tentative distance from the source. It repeatedly selects the unvisited vertex with the smallest tentative distance, marks it as visited, and relaxes all of its outgoing edges by checking if the path through this vertex offers a shorter route. It utilizes a Min-Priority Queue for efficient vertex extraction, resulting in an O((V+E) log V) time complexity when implemented with a binary heap.',
+        text: 'College Dec 2023 (10 Marks): Explain the working of Dijkstra\'s shortest path algorithm with a suitable example. Answer: Dijkstra\'s algorithm solves the single-source shortest path problem for a directed graph with non-negative edge weights. It maintains a set of unvisited vertices and calculates the tentative distance from the source. It repeatedly selects the unvisited vertex with the smallest tentative distance, marks it as visited, and relaxes all of its outgoing edges by checking if the path through this vertex offers a shorter route. It utilizes a Min-Priority Queue for efficient vertex extraction, resulting in an O((V+E) log V) time complexity when implemented with a binary heap.',
       },
       {
         id: 'pyq-ds-2',
-        text: 'VTU June 2022 (8 Marks): What is hashing? Explain any two collision resolution techniques. Answer: Hashing is the process of mapping a large amount of data to a smaller table using a hash function. A collision occurs when two keys map to the same index. Collision Resolution Techniques: 1) Chaining (Open Hashing): Each slot in the hash table points to a linked list of elements that hash to the same slot. 2) Linear Probing (Open Addressing): When a collision occurs, the algorithm linearly probes for the next empty slot in the table using the formula (h(k) + i) % n.',
+        text: 'College June 2022 (8 Marks): What is hashing? Explain any two collision resolution techniques. Answer: Hashing is the process of mapping a large amount of data to a smaller table using a hash function. A collision occurs when two keys map to the same index. Collision Resolution Techniques: 1) Chaining (Open Hashing): Each slot in the hash table points to a linked list of elements that hash to the same slot. 2) Linear Probing (Open Addressing): When a collision occurs, the algorithm linearly probes for the next empty slot in the table using the formula (h(k) + i) % n.',
       }
     ],
   },
@@ -106,11 +106,11 @@ export const DEMO_DOCUMENTS: ReadonlyArray<GroundedDoc> = [
     chunks: [
       {
         id: 'pyq-cn-1',
-        text: 'VTU Jan 2023 (8 Marks): Differentiate between TCP and UDP protocols. Answer: TCP (Transmission Control Protocol) is a connection-oriented, reliable protocol that guarantees in-order packet delivery. It uses a 3-way handshake (SYN, SYN-ACK, ACK) to establish a connection and incorporates flow control (sliding window) and congestion control mechanisms. UDP (User Datagram Protocol) is a connectionless, unreliable, and lightweight protocol. It does not establish a connection, offers no guarantees of delivery or ordering, and lacks flow/congestion control, making it much faster and suitable for real-time applications like VoIP and gaming.',
+        text: 'College Jan 2023 (8 Marks): Differentiate between TCP and UDP protocols. Answer: TCP (Transmission Control Protocol) is a connection-oriented, reliable protocol that guarantees in-order packet delivery. It uses a 3-way handshake (SYN, SYN-ACK, ACK) to establish a connection and incorporates flow control (sliding window) and congestion control mechanisms. UDP (User Datagram Protocol) is a connectionless, unreliable, and lightweight protocol. It does not establish a connection, offers no guarantees of delivery or ordering, and lacks flow/congestion control, making it much faster and suitable for real-time applications like VoIP and gaming.',
       },
       {
         id: 'pyq-cn-2',
-        text: 'VTU July 2021 (10 Marks): Explain the functioning of the OSI Reference Model layers. Answer: The OSI model consists of 7 layers: 1) Physical: transmission of raw bit streams. 2) Data Link: Node-to-node data transfer and error detection (MAC addressing). 3) Network: Routing and IP addressing. 4) Transport: End-to-end communication and reliability (TCP/UDP). 5) Session: Establishes, manages, and terminates connections. 6) Presentation: Data formatting, encryption, and compression. 7) Application: Network applications interacting with the user (HTTP, FTP, SMTP).',
+        text: 'College July 2021 (10 Marks): Explain the functioning of the OSI Reference Model layers. Answer: The OSI model consists of 7 layers: 1) Physical: transmission of raw bit streams. 2) Data Link: Node-to-node data transfer and error detection (MAC addressing). 3) Network: Routing and IP addressing. 4) Transport: End-to-end communication and reliability (TCP/UDP). 5) Session: Establishes, manages, and terminates connections. 6) Presentation: Data formatting, encryption, and compression. 7) Application: Network applications interacting with the user (HTTP, FTP, SMTP).',
       }
     ],
   },

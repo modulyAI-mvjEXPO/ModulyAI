@@ -1,5 +1,5 @@
 /* =============================================
-   VTU (Visvesvaraya Technological University)
+   College (Visvesvaraya Technological University)
    Affiliated Engineering Colleges, Courses & Subjects
    Scheme: CBCS 2021
    ============================================= */
@@ -22,7 +22,7 @@ export interface Subject {
 }
 
 // ─── Colleges ───────────────────────────────────────────────────────────────
-export const VTU_COLLEGES: College[] = [
+export const College_COLLEGES: College[] = [
     { id: 'rvce', name: 'R V College of Engineering', location: 'Bangalore' },
     { id: 'bmsce', name: 'BMS College of Engineering', location: 'Bangalore' },
     { id: 'msrit', name: 'M S Ramaiah Institute of Technology', location: 'Bangalore' },
@@ -58,7 +58,7 @@ export const VTU_COLLEGES: College[] = [
 ];
 
 // ─── Courses ─────────────────────────────────────────────────────────────────
-export const VTU_COURSES: Course[] = [
+export const College_COURSES: Course[] = [
     { id: 'cse', name: 'Computer Science and Engineering', shortName: 'CSE' },
     { id: 'aiml', name: 'Artificial Intelligence and Machine Learning', shortName: 'AIML' },
     { id: 'aids', name: 'Artificial Intelligence and Data Science', shortName: 'AIDS' },
@@ -78,10 +78,10 @@ export const VTU_COURSES: Course[] = [
 ];
 
 // ─── Subjects per (course, semester) ─────────────────────────────────────────
-// VTU CBCS 2021 Scheme
+// College CBCS 2021 Scheme
 type SubjectMap = Record<string, Record<number, Subject[]>>;
 
-export const VTU_SUBJECTS: SubjectMap = {
+export const College_SUBJECTS: SubjectMap = {
     // ── CSE ──────────────────────────────────────────────────────────────────
     cse: {
         1: [
@@ -476,14 +476,20 @@ export const VTU_SUBJECTS: SubjectMap = {
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-export function getSubjects(courseId: string, semester: number): Subject[] {
-    return VTU_SUBJECTS[courseId]?.[semester] ?? [];
+export function getSubjects(courseId: string, year: number): Subject[] {
+    const courseData = College_SUBJECTS[courseId];
+    if (!courseData) return [];
+    
+    // Combine subjects for both semesters in the given year
+    const s1 = courseData[year * 2 - 1] || [];
+    const s2 = courseData[year * 2] || [];
+    return [...s1, ...s2];
 }
 
 export function getCourse(courseId: string): Course | undefined {
-    return VTU_COURSES.find(c => c.id === courseId);
+    return College_COURSES.find(c => c.id === courseId);
 }
 
 export function getCollege(collegeId: string): College | undefined {
-    return VTU_COLLEGES.find(c => c.id === collegeId);
+    return College_COLLEGES.find(c => c.id === collegeId);
 }

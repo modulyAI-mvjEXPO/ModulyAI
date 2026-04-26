@@ -6,10 +6,10 @@ export function Solution() {
             <div className="container">
                 <div className="section-header">
                     <span className="badge">The Solution</span>
-                    <h2>A Syllabus-Aware AI Built for VTU</h2>
+                    <h2>A Syllabus-Aware AI Built for College</h2>
                     <div className="divider"></div>
                     <p>
-                        MODULY organizes learning the way VTU students actually study and write exams.
+                        MODULY organizes learning the way College students actually study and write exams.
                     </p>
                 </div>
 
@@ -18,7 +18,7 @@ export function Solution() {
                         <div className="flow-number">1</div>
                         <div className="flow-content">
                             <h3>Subject</h3>
-                            <p>Select your subject from the VTU curriculum</p>
+                            <p>Select your subject from the College curriculum</p>
                         </div>
                     </div>
 
@@ -46,7 +46,7 @@ export function Solution() {
                         <div className="flow-number">3</div>
                         <div className="flow-content">
                             <h3>Exam</h3>
-                            <p>VTU-style answers and prep</p>
+                            <p>College-style answers and prep</p>
                         </div>
                     </div>
                 </div>
@@ -82,7 +82,7 @@ export function Solution() {
                             </svg>
                         </div>
                         <h4>Syllabus Structured</h4>
-                        <p>Everything organized by VTU syllabus structure. Subject, semester, module — always in context.</p>
+                        <p>Everything organized by College syllabus structure. Subject, semester, module — always in context.</p>
                     </div>
                 </div>
             </div>

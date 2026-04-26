@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { upsertProfile } from '../lib/profile';
-import { VTU_COLLEGES, VTU_COURSES, getSubjects } from '../lib/vtuData';
+import { College_COLLEGES, College_COURSES, getSubjects } from '../lib/collegeData';
 import { AppNav } from '../components/AppNav/AppNav';
 import './Onboarding.css';
 
@@ -21,7 +21,7 @@ interface PersonalForm {
 interface AcademicForm {
   college: string;
   course: string;
-  semester: number | null;
+  year: number | null;
   subjects: string[];
 }
 
@@ -54,19 +54,19 @@ export function Onboarding({ user, onComplete, onSignOut }: OnboardingProps) {
   const [academic, setAcademic] = useState<AcademicForm>({
     college: '',
     course: '',
-    semester: null,
+    year: null,
     subjects: [],
   });
 
   const availableSubjects =
-    academic.course && academic.semester
-      ? getSubjects(academic.course, academic.semester)
+    academic.course && academic.year
+      ? getSubjects(academic.course, academic.year)
       : [];
 
   const step2Valid =
     academic.college !== '' &&
     academic.course !== '' &&
-    academic.semester !== null &&
+    academic.year !== null &&
     academic.subjects.length > 0;
 
   // ── Navigation ──────────────────────────────────────────────────────────
@@ -109,8 +109,8 @@ export function Onboarding({ user, onComplete, onSignOut }: OnboardingProps) {
   const setCourse = (course: string) => {
     setAcademic(prev => ({ ...prev, course, subjects: [] }));
   };
-  const setSemester = (semester: number) => {
-    setAcademic(prev => ({ ...prev, semester, subjects: [] }));
+  const setYear = (year: number) => {
+    setAcademic(prev => ({ ...prev, year, subjects: [] }));
   };
 
   // ── Submit ───────────────────────────────────────────────────────────────
@@ -126,7 +126,7 @@ export function Onboarding({ user, onComplete, onSignOut }: OnboardingProps) {
       region: personal.region.trim(),
       college: academic.college,
       course: academic.course,
-      semester: academic.semester,
+      semester: academic.year, // Saving year to semester DB column
       subjects: academic.subjects,
       onboarding_complete: true,
     });
@@ -272,7 +272,7 @@ export function Onboarding({ user, onComplete, onSignOut }: OnboardingProps) {
                         onChange={e => setAcademic(p => ({ ...p, college: e.target.value }))}
                       >
                         <option value="">Select your college...</option>
-                        {VTU_COLLEGES.map(c => (
+                        {College_COLLEGES.map(c => (
                           <option key={c.id} value={c.id}>
                             {c.name} — {c.location}
                           </option>
@@ -295,7 +295,7 @@ export function Onboarding({ user, onComplete, onSignOut }: OnboardingProps) {
                         disabled={!academic.college}
                       >
                         <option value="">Select your course...</option>
-                        {VTU_COURSES.map(c => (
+                        {College_COURSES.map(c => (
                           <option key={c.id} value={c.id}>
                             {c.name} ({c.shortName})
                           </option>
@@ -305,19 +305,19 @@ export function Onboarding({ user, onComplete, onSignOut }: OnboardingProps) {
                     </div>
                   </div>
 
-                  {/* Semester pills */}
+                  {/* Year pills */}
                   <div className="ob-field">
-                    <label className="ob-label">Current Semester</label>
+                    <label className="ob-label">Current Year</label>
                     <div className="ob-sem-pills">
-                      {[1, 2, 3, 4, 5, 6, 7, 8].map(s => (
+                      {[1, 2, 3, 4].map(y => (
                         <button
-                          key={s}
+                          key={y}
                           type="button"
-                          className={`ob-sem-pill ${academic.semester === s ? 'active' : ''}`}
-                          onClick={() => setSemester(s)}
+                          className={`ob-sem-pill ${academic.year === y ? 'active' : ''}`}
+                          onClick={() => setYear(y)}
                           disabled={!academic.course}
                         >
-                          {s}
+                          {y}{y === 1 ? 'st' : y === 2 ? 'nd' : y === 3 ? 'rd' : 'th'}
                         </button>
                       ))}
                     </div>
@@ -328,7 +328,7 @@ export function Onboarding({ user, onComplete, onSignOut }: OnboardingProps) {
                     <div className="ob-field">
                       <label className="ob-label">
                         Subjects
-                        <span className="ob-label-hint"> — check all you're studying this semester</span>
+                        <span className="ob-label-hint"> — check all you're studying this year</span>
                       </label>
                       <div className="ob-subjects-grid">
                         {availableSubjects.map(sub => (

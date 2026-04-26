@@ -14,7 +14,7 @@ export function Footer() {
                     </div>
 
                     <div className="footer-info">
-                        <div className="footer-badge">VTU FOCUSED</div>
+                        <div className="footer-badge">College FOCUSED</div>
                         <p className="footer-category">Smart Education</p>
                     </div>
                 </div>
@@ -23,7 +23,7 @@ export function Footer() {
 
                 <div className="footer-bottom">
                     <p className="footer-copyright">
-                        Designed and developed for VTU engineering students
+                        Designed and developed for College engineering students
                     </p>
                     <p className="footer-meta">
                         An AI-powered learning system designed for examination excellence

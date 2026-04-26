@@ -28,9 +28,25 @@ type AppView = 'landing' | 'onboarding' | 'dashboard' | 'loading';
 
 /**
  * Read Supabase's own session out of localStorage without any async call.
- * Returns the stored user if found and not obviously expired, else null.
+ * Returns the stored user if found, else null.
  */
-
+function getStoredUser(): User | null {
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('sb-') && key.endsWith('-auth-token')) {
+        const sessionData = localStorage.getItem(key);
+        if (sessionData) {
+          const parsed = JSON.parse(sessionData);
+          if (parsed?.user) return parsed.user;
+        }
+      }
+    }
+  } catch (err) {
+    // Ignore errors reading local storage
+  }
+  return null;
+}
 
 // ---------------------------------------------------------------------------
 // App component
@@ -38,8 +54,11 @@ type AppView = 'landing' | 'onboarding' | 'dashboard' | 'loading';
 
 function AppContent() {
   const [authOpen, setAuthOpen] = useState(false);
-  const [view, setView] = useState<AppView>('loading');
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  
+  // Initialize with stored user if present, skipping the loading screen for guests
+  const initialUser = getStoredUser();
+  const [view, setView] = useState<AppView>(initialUser ? 'loading' : 'landing');
+  const [currentUser, setCurrentUser] = useState<User | null>(initialUser);
   const isManualSignOut = useRef(false);
 
   const handleSignOut = () => {
@@ -52,50 +71,6 @@ function AppContent() {
 
   useEffect(() => {
     let mounted = true;
-
-    async function initializeAuth() {
-      // Safety timeout: transition to landing if init takes too long (e.g. 15s)
-      const safetyTimeout = setTimeout(() => {
-        if (mounted && view === 'loading') {
-          console.warn('Auth initialization timed out, defaulting to landing.');
-          setView('landing');
-        }
-      }, 15000);
-
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!mounted) {
-          clearTimeout(safetyTimeout);
-          return;
-        }
-
-        if (session?.user) {
-          setCurrentUser(session.user);
-          try {
-            // Profile fetch also needs a timeout safeguard (12s)
-            const profile = await Promise.race([
-              getProfile(session.user.id),
-              new Promise<null>((resolve) => setTimeout(() => resolve(null), 12000))
-            ]);
-
-            if (!mounted) return;
-            setView(profile?.onboarding_complete === false ? 'onboarding' : 'dashboard');
-          } catch (profileErr) {
-            console.error('Profile fetch failed during init:', profileErr);
-            setView('dashboard'); // Fallback to dashboard if profile fails
-          }
-        } else {
-          setView('landing');
-        }
-      } catch (err) {
-        console.error('Auth initialization failed:', err);
-        if (mounted) setView('landing');
-      } finally {
-        clearTimeout(safetyTimeout);
-      }
-    }
-
-    initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {

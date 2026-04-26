@@ -8,8 +8,8 @@ interface SettingsProps {
 }
 
 const MARKING_SCHEMES = [
-    'VTU 2022 Scheme (NEP)',
-    'VTU 2018 Scheme (CBCS)',
+    'College 2022 Scheme (NEP)',
+    'College 2018 Scheme (CBCS)',
     'Autonomous',
 ];
 
@@ -70,7 +70,7 @@ export function Settings({ user }: SettingsProps) {
     const [newSubjectInput, setNewSubjectInput] = useState('');
     const [showSubjectInput, setShowSubjectInput] = useState(false);
 
-    const email = user.email || 'student@vtu.edu.in';
+    const email = user.email || 'student@college.edu.in';
 
     useEffect(() => {
         applyTheme(appearance);
@@ -317,7 +317,7 @@ export function Settings({ user }: SettingsProps) {
                                 </div>
                                 <h3 className="academic-card-eyebrow">University / College</h3>
                                 <div className="academic-card-title">
-                                    VTU Belagavi
+                                    College Belagavi
                                     <span className="material-icons-outlined">check_circle</span>
                                 </div>
                                 <div className="academic-card-content">

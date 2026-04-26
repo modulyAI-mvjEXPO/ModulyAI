@@ -529,7 +529,7 @@ export function ExamMode({ user }: ExamModeProps) {
                 <span className="em-badge-beta">BETA v2.4</span>
               </h1>
               <p className="em-subtitle">
-                AI-driven solution generation engine merging historical patterns with intelligent mark allocation strategies for VTU 2024 Scheme.
+                AI-driven solution generation engine merging historical patterns with intelligent mark allocation strategies for College 2024 Scheme.
               </p>
             </div>
             <div className="em-actions">
@@ -552,7 +552,7 @@ export function ExamMode({ user }: ExamModeProps) {
                 <span className="material-icons-outlined">upload_file</span>
               </div>
               <p className="em-dropzone-text">Drop PYQ PDFs here</p>
-              <p className="em-dropzone-sub">Supports VTU Question Papers (2018-2023)</p>
+              <p className="em-dropzone-sub">Supports College Question Papers (2018-2023)</p>
             </div>
             <div className="em-files-list">
               <div className="em-file-item">

@@ -1,4 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { College_COURSES, getSubjects } from '../lib/collegeData';
+import type { Subject } from '../lib/collegeData';
 
 
 export interface UploadedFile {
@@ -37,7 +39,25 @@ export function FileUpload({ onUploadSuccess, userId }: FileUploadProps) {
     const [uploading, setUploading] = useState(false);
     const [message, setMessage] = useState('');
     const [dragActive, setDragActive] = useState(false);
+    
+    // New fields for structured storage
+    const [course, setCourse] = useState('');
+    const [year, setYear] = useState<number | ''>('');
+    const [subjectCode, setSubjectCode] = useState('');
+    const [docType, setDocType] = useState('');
+    const [modules, setModules] = useState<string[]>([]);
+    const [availableSubjects, setAvailableSubjects] = useState<Subject[]>([]);
+
     const inputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (course && year) {
+            setAvailableSubjects(getSubjects(course, year as number));
+            setSubjectCode(''); // reset subject on course/year change
+        } else {
+            setAvailableSubjects([]);
+        }
+    }, [course, year]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
@@ -73,6 +93,10 @@ export function FileUpload({ onUploadSuccess, userId }: FileUploadProps) {
             setMessage('Please select a file first.');
             return;
         }
+        if (!course || !year || !subjectCode || !docType) {
+            setMessage('Please select course, year, subject, and document type.');
+            return;
+        }
 
         setUploading(true);
         setMessage('');
@@ -80,27 +104,57 @@ export function FileUpload({ onUploadSuccess, userId }: FileUploadProps) {
         try {
             const backendBase = import.meta.env.VITE_BACKEND_URL || '';
 
-            // Step 1: Get pre-signed upload URL from backend
-            const backendResponse = await fetch(`${backendBase}/get-upload-url`, {
+            // Generate smart filename and folder path preserving original name
+            const ext = file.name.split('.').pop() || 'pdf';
+            const cleanSubject = subjectCode.toLowerCase().replace(/[^a-z0-9]/g, '-');
+            const selectedSubject = availableSubjects.find(s => s.code === subjectCode);
+            const subjectName = selectedSubject ? selectedSubject.name.replace(/[^a-zA-Z0-9]/g, '_') : cleanSubject;
+
+            const origBase = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+            const safeOrig = origBase.replace(/[^a-zA-Z0-9_-]/g, '_');
+
+            const timestamp = Date.now();
+            let moduleStr = modules.length > 0 ? `_Mod_${modules.map(m => m.replace(/\s+/g, '')).join('-')}` : '';
+            const smartFilename = `${timestamp}_${subjectName}${moduleStr}_${safeOrig}.${ext}`;
+            const finalKey = `year-${year}/${cleanSubject}/${docType}/${smartFilename}`;
+
+            const docTypeLabels: Record<string, string> = {
+                notes: 'Notes',
+                pyqs: 'PYQs',
+                imp: 'Important Questions',
+                assignment: 'Assignment',
+                other: 'Other'
+            };
+            const displayTitle = `${subjectName} - ${docTypeLabels[docType] || docType}`;
+
+            // Convert file to base64 to send it as JSON payload
+            const toBase64 = (f: File) => new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(f);
+                reader.onload = () => {
+                    let encoded = reader.result as string;
+                    // Remove the data URL prefix (e.g., "data:application/pdf;base64,")
+                    encoded = encoded.split(',')[1] || '';
+                    resolve(encoded);
+                };
+                reader.onerror = error => reject(error);
+            });
+
+            const base64Data = await toBase64(file);
+
+            // Step 1 & 2: Upload through proxy to bypass browser SSL ERR_CERT_AUTHORITY_INVALID
+            const backendResponse = await fetch(`${backendBase}/upload-to-utho`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    filename: `${Date.now()}-${file.name}`,
+                    filename: finalKey,
                     contentType: file.type || 'application/octet-stream',
+                    base64Data
                 }),
             });
 
-            if (!backendResponse.ok) throw new Error('Failed to get upload URL from backend');
-            const { uploadUrl, filename } = await backendResponse.json();
-
-            // Step 2: Upload directly to Utho using the pre-signed URL
-            const uthoResponse = await fetch(uploadUrl, {
-                method: 'PUT',
-                headers: { 'Content-Type': file.type || 'application/octet-stream' },
-                body: file,
-            });
-
-            if (!uthoResponse.ok) throw new Error('Failed to upload file to Utho Storage');
+            if (!backendResponse.ok) throw new Error('Failed to upload file to Utho via proxy');
+            const { filename } = await backendResponse.json();
 
             // Step 3: Trigger document processing pipeline
             let documentId: string | undefined;
@@ -109,7 +163,7 @@ export function FileUpload({ onUploadSuccess, userId }: FileUploadProps) {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        title: file.name.replace(/^\d+-/, ''),
+                        title: displayTitle,
                         filePath: filename,
                         fileType: file.type || 'application/octet-stream',
                         userId,
@@ -133,7 +187,7 @@ export function FileUpload({ onUploadSuccess, userId }: FileUploadProps) {
 
             onUploadSuccess({
                 id: Date.now(),
-                title: file.name.replace(/^\d+-/, ''),
+                title: displayTitle,
                 meta: formatSize(file.size),
                 status: documentId ? 'Processing' : 'Cloud',
                 date: dateStr,
@@ -157,6 +211,74 @@ export function FileUpload({ onUploadSuccess, userId }: FileUploadProps) {
 
     return (
         <div className="ud-form">
+            <div className="ud-form-grid">
+                <div>
+                    <label className="ud-label">Course</label>
+                    <select 
+                        className="ud-select" 
+                        title="Course"
+                        value={course} onChange={e => setCourse(e.target.value)} disabled={uploading}>
+                        <option value="">Select Course</option>
+                        {College_COURSES.map(c => <option key={c.id} value={c.id}>{c.shortName} - {c.name}</option>)}
+                    </select>
+                </div>
+                <div>
+                    <label className="ud-label">Year</label>
+                    <select 
+                        className="ud-select" 
+                        title="Year"
+                        value={year} onChange={e => setYear(e.target.value ? Number(e.target.value) : '')} disabled={uploading}>
+                        <option value="">Select Year</option>
+                        {[1, 2, 3, 4].map(y => <option key={y} value={y}>{y}{y === 1 ? 'st' : y === 2 ? 'nd' : y === 3 ? 'rd' : 'th'} Year</option>)}
+                    </select>
+                </div>
+                <div>
+                    <label className="ud-label">Subject</label>
+                    <select 
+                        className="ud-select" 
+                        title="Subject"
+                        value={subjectCode} onChange={e => setSubjectCode(e.target.value)} disabled={!course || !year || uploading}>
+                        <option value="">Select Subject</option>
+                        {availableSubjects.map(sub => <option key={sub.code} value={sub.code}>{sub.name} ({sub.code})</option>)}
+                    </select>
+                </div>
+                <div>
+                    <label className="ud-label">Document Type</label>
+                    <select 
+                        className="ud-select" 
+                        title="Document Type"
+                        value={docType} onChange={e => setDocType(e.target.value)} disabled={uploading}>
+                        <option value="">Select Type</option>
+                        <option value="notes">Notes / Study Material</option>
+                        <option value="pyqs">Previous Year Questions (PYQs)</option>
+                        <option value="imp">Important Questions</option>
+                        <option value="assignment">Assignment / Lab Manual</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div className="ud-field" style={{ marginBottom: '1.25rem' }}>
+                <label className="ud-label">Modules (Optional)</label>
+                <div className="ud-module-grid">
+                    {['Mod 1', 'Mod 2', 'Mod 3', 'Mod 4', 'Mod 5', 'All', 'General'].map(mod => (
+                        <label key={mod} className="ud-checkbox">
+                            <input
+                                type="checkbox"
+                                checked={modules.includes(mod)}
+                                onChange={(e) => {
+                                    if (e.target.checked) setModules(p => [...p, mod]);
+                                    else setModules(p => p.filter(m => m !== mod));
+                                }}
+                                disabled={uploading}
+                            />
+                            <span className="ud-checkbox-box"></span>
+                            <span className="ud-checkbox-label">{mod}</span>
+                        </label>
+                    ))}
+                </div>
+            </div>
+
             <div
                 className={`ud-dropzone${dragActive ? ' ud-dropzone--active' : ''}`}
                 onDragOver={handleDragOver}
@@ -184,6 +306,7 @@ export function FileUpload({ onUploadSuccess, userId }: FileUploadProps) {
                 <input
                     ref={inputRef}
                     type="file"
+                    title="Upload file"
                     className="ud-file-input"
                     onChange={handleFileChange}
                     disabled={uploading}

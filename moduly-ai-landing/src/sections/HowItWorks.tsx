@@ -60,7 +60,7 @@ const steps = [
     {
         number: '06',
         title: 'Exam Ready',
-        description: 'Output is syllabus-accurate, VTU-formatted, and exam-oriented.',
+        description: 'Output is syllabus-accurate, College-formatted, and exam-oriented.',
         icon: (
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />

@@ -3,12 +3,24 @@ import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type { DocumentRow } from '../lib/ai/types';
 import { ButtonColorful } from '../components/ui/button-colorful';
+import { College_SUBJECTS } from '../lib/collegeData';
 
 import './Library.css';
 
 /* ─── Display helpers ────────────────────────────────────────────────────── */
 
-function inferDocType(title: string): string {
+function inferDocType(title: string, filePath?: string): string {
+  if (filePath) {
+    const parts = filePath.split('/');
+    if (parts.length >= 4) {
+      const typePart = parts[2].toLowerCase();
+      if (typePart === 'pyq') return 'PYQ';
+      if (typePart === 'mindmap') return 'Mind Map';
+      if (typePart === 'manual') return 'Lab Manual';
+      if (typePart === 'imp') return 'Important Qs';
+      if (typePart === 'notes') return 'Notes';
+    }
+  }
   const t = title.toLowerCase();
   if (t.includes('question paper') || t.includes('pyq') || t.includes('previous year') || t.includes(' qp')) return 'PYQ';
   if (t.includes('mind map') || t.includes('concept map') || t.includes('diagram')) return 'Mind Map';
@@ -20,6 +32,7 @@ function getDocTypeColor(type: string): string {
   if (type === 'PYQ') return 'amber';
   if (type === 'Mind Map') return 'rose';
   if (type === 'Lab Manual') return 'teal';
+  if (type === 'Important Qs') return 'red';
   return 'violet';
 }
 
@@ -27,6 +40,7 @@ function getDocTypeIcon(type: string): string {
   if (type === 'PYQ') return 'quiz';
   if (type === 'Mind Map') return 'account_tree';
   if (type === 'Lab Manual') return 'science';
+  if (type === 'Important Qs') return 'stars';
   return 'menu_book';
 }
 
@@ -49,7 +63,21 @@ function formatDate(isoDate: string): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function inferSubject(title: string): string {
+function inferSubject(title: string, filePath?: string): string {
+  if (filePath) {
+    const parts = filePath.split('/');
+    if (parts.length >= 4 && (parts[0].startsWith('sem-') || parts[0].startsWith('year-'))) {
+      const subjectCode = parts[1].toLowerCase();
+      for (const course of Object.values(College_SUBJECTS)) {
+        for (const semesterSubjects of Object.values(course)) {
+          const match = semesterSubjects.find(s => s.code.toLowerCase().replace(/[^a-z0-9]/g, '-') === subjectCode);
+          if (match) return match.name;
+        }
+      }
+      return subjectCode.toUpperCase();
+    }
+  }
+  
   const t = title.toLowerCase();
   if (t.includes('data struct') || t.includes('tree') || t.includes('graph') || t.includes('sorting') || t.includes('algorithm') || t.includes('binary') || t.includes('heap') || t.includes('hash')) return 'Data Structures';
   if (t.includes('operating system') || t.includes(' os ') || t.includes('paging') || t.includes('segmentation') || t.includes('process') || t.includes('scheduling') || t.includes('deadlock')) return 'Operating Systems';
@@ -61,7 +89,18 @@ function inferSubject(title: string): string {
 
 function inferModule(title: string): string {
   const t = title.toLowerCase();
-  const m = t.match(/mod(?:ule)?\s*(\d)/);
+  
+  // Look for our specific multiple module format first (e.g. _Mod_Mod1-Mod2_)
+  const multiMatch = t.match(/_mod_(mod[\d-]+)_/);
+  if (multiMatch) {
+    const raw = multiMatch[1].replace(/mod/g, ''); // "1-2"
+    const mods = raw.split('-').filter(Boolean);
+    if (mods.length > 1) return `Mods ${mods.join(', ')}`;
+    if (mods.length === 1) return `Mod ${mods[0]}`;
+  }
+
+  // Fallback to single module match
+  const m = t.match(/mod(?:ule)?[\s_]*(\d)/);
   if (m) return `Mod ${m[1]}`;
   if (t.includes('all') || t.includes('complete') || t.includes('full')) return 'All';
   return 'General';
@@ -69,9 +108,8 @@ function inferModule(title: string): string {
 
 /* ─── Constants ──────────────────────────────────────────────────────────── */
 
-const SUBJECTS = ['All Subjects', 'Data Structures', 'Operating Systems', 'Discrete Math', 'Computer Networks', 'Database Mgmt'];
 const MODULES = ['All Modules', 'Mod 1', 'Mod 2', 'Mod 3', 'Mod 4', 'Mod 5', 'All', 'General'];
-const DOC_TYPES = ['Any Type', 'Notes', 'PYQ', 'Mind Map', 'Lab Manual'];
+const DOC_TYPES = ['Any Type', 'Notes', 'PYQ', 'Mind Map', 'Lab Manual', 'Important Qs'];
 
 const PAGE_SIZE = 4;
 
@@ -170,10 +208,17 @@ export function Library({ user, onNavigate }: LibraryProps) {
             } as DocumentRow;
           }
 
+          let docTitle = file.filename;
+          const basename = file.filename.split('/').pop() || file.filename;
+          
+          // Remove timestamp (either 173...-name or 173..._name)
+          const stripped = basename.replace(/^\d+[-_]/, '');
+          docTitle = stripped;
+
           return {
             id: `utho-${file.filename}`,
             user_id: 'unknown',
-            title: file.filename.replace(/^\d+-/, ''),
+            title: docTitle,
             file_path: file.filename,
             file_type: file.filename.split('.').pop()?.toLowerCase() || 'unknown',
             subject_id: null,
@@ -210,11 +255,19 @@ export function Library({ user, onNavigate }: LibraryProps) {
     };
   }, []);
 
+  const dynamicSubjects = useMemo(() => {
+    const subs = new Set<string>();
+    docs.forEach(doc => {
+      subs.add(inferSubject(doc.title, doc.file_path));
+    });
+    return ['All Subjects', ...Array.from(subs).sort()];
+  }, [docs]);
+
   const filtered = useMemo(() => {
     return docs.filter(doc => {
-      if (subject !== 'All Subjects' && inferSubject(doc.title) !== subject) return false;
+      if (subject !== 'All Subjects' && inferSubject(doc.title, doc.file_path) !== subject) return false;
       if (module !== 'All Modules' && inferModule(doc.title) !== module) return false;
-      if (docType !== 'Any Type' && inferDocType(doc.title) !== docType) return false;
+      if (docType !== 'Any Type' && inferDocType(doc.title, doc.file_path) !== docType) return false;
       if (search && !doc.title.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     });
@@ -275,7 +328,7 @@ export function Library({ user, onNavigate }: LibraryProps) {
             Universal Library
             <span className="lib-badge-global">GLOBAL ACCESS</span>
           </h1>
-          <p className="lib-subtitle">Browse academic resources contributed by the VTU student community.</p>
+          <p className="lib-subtitle">Browse academic resources contributed by the College student community.</p>
         </div>
         <div className="lib-header-actions">
           <ButtonColorful className="lib-btn-contribute" onClick={() => onNavigate?.('upload')} label="Contribute" />
@@ -305,7 +358,7 @@ export function Library({ user, onNavigate }: LibraryProps) {
           <div className="lib-filter-group">
             <label className="lib-filter-label">Subject</label>
             <select className="lib-select" aria-label="Subject" value={subject} onChange={handleFilter(setSubject)}>
-              {SUBJECTS.map(s => <option key={s}>{s}</option>)}
+              {dynamicSubjects.map(s => <option key={s}>{s}</option>)}
             </select>
           </div>
           <div className="lib-filter-group">
@@ -366,7 +419,9 @@ export function Library({ user, onNavigate }: LibraryProps) {
             </div>
           )}
           {!loading && !fetchError && pageItems.map((doc, i) => {
-            const docTypeStr = inferDocType(doc.title);
+            const docTypeStr = inferDocType(doc.title, doc.file_path);
+            const docSubjectStr = inferSubject(doc.title, doc.file_path);
+            const docModuleStr = inferModule(doc.title);
             const typeColor = getDocTypeColor(docTypeStr);
             const typeIcon = getDocTypeIcon(docTypeStr);
             const iconBgVar = getIconBgVar(docTypeStr);
@@ -389,18 +444,18 @@ export function Library({ user, onNavigate }: LibraryProps) {
 
                 {/* Subject */}
                 <div className="lib-col-subject lib-cell">
-                  <span className="lib-subject-text">{inferSubject(doc.title)}</span>
+                  <span className="lib-subject-text">{docSubjectStr}</span>
                 </div>
 
                 {/* Module */}
                 <div className="lib-col-module lib-cell">
-                  <span className="lib-module-badge">{inferModule(doc.title)}</span>
+                  <span className="lib-module-badge">{docModuleStr}</span>
                 </div>
 
                 {/* Contributor */}
                 <div className="lib-col-contributor lib-cell">
                   <span className="lib-contributor-dot lib-contributor-dot--var-1" />
-                  <span className="lib-contributor-name">{isOwner ? 'You' : 'VTU Student'}</span>
+                  <span className="lib-contributor-name">{isOwner ? 'You' : 'College Student'}</span>
                 </div>
 
                 {/* Type */}

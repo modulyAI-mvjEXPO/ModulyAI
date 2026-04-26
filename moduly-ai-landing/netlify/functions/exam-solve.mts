@@ -48,7 +48,7 @@ const SUBJECT_PROFILES: Readonly<Record<string, SubjectProfile>> = {
       'Module 4: Graphs (BFS, DFS, Spanning Trees)',
       'Module 5: Sorting and Searching Algorithms',
     ],
-    examPattern: 'VTU exam has 5 modules. Each module has two questions; student answers one. Questions are typically 10M or 8M.',
+    examPattern: 'College exam has 5 modules. Each module has two questions; student answers one. Questions are typically 10M or 8M.',
     highFrequencyTopics: [
       'AVL Tree rotations and insertion',
       'BFS and DFS traversal with examples',
@@ -67,7 +67,7 @@ const SUBJECT_PROFILES: Readonly<Record<string, SubjectProfile>> = {
       'Module 4: Transport Layer — TCP, UDP, Congestion Control',
       'Module 5: Application Layer — DNS, HTTP, SMTP, FTP',
     ],
-    examPattern: 'VTU exam has 5 modules. Each module has two questions; student answers one. Numerical problems on subnetting and routing carry 5–8 marks.',
+    examPattern: 'College exam has 5 modules. Each module has two questions; student answers one. Numerical problems on subnetting and routing carry 5–8 marks.',
     highFrequencyTopics: [
       'OSI model layers and functions',
       'TCP vs UDP comparison',
@@ -87,7 +87,7 @@ const SUBJECT_PROFILES: Readonly<Record<string, SubjectProfile>> = {
       'Module 4: Transactions, Concurrency Control, Recovery',
       'Module 5: Indexing, File Organisation, Query Processing',
     ],
-    examPattern: 'VTU exam has 5 modules. Each module has two questions; student answers one. SQL queries and normalisation steps are common for 8–10 marks.',
+    examPattern: 'College exam has 5 modules. Each module has two questions; student answers one. SQL queries and normalisation steps are common for 8–10 marks.',
     highFrequencyTopics: [
       'ER diagram to relational schema conversion',
       'SQL joins and subqueries',
@@ -125,7 +125,7 @@ const DEMO_CACHE: ReadonlyMap<string, string> = new Map([
   ],
   [
     'explain the osi model layers',
-    'The **OSI (Open Systems Interconnection) Model** is a conceptual framework that standardises network communication into **7 layers**.\n\n| Layer | Name | Key Function | Protocols |\n|-------|------|-------------|----------|\n| 7 | **Application** | User-facing services | HTTP, FTP, SMTP, DNS |\n| 6 | **Presentation** | Data translation & encryption | SSL/TLS, JPEG |\n| 5 | **Session** | Session management | NetBIOS, RPC |\n| 4 | **Transport** | End-to-end delivery | TCP, UDP |\n| 3 | **Network** | Logical addressing & routing | IP, ICMP |\n| 2 | **Data Link** | Physical addressing (MAC) | Ethernet, Wi-Fi |\n| 1 | **Physical** | Bit transmission | Cables, Hubs |\n\n**Mnemonic**: *All People Seem To Need Data Processing* (top to bottom)\n\n**Key VTU Points**:\n- TCP/IP model has 4 layers (Application, Transport, Internet, Network Access)\n- Transport layer provides **reliability** via TCP\'s 3-way handshake\n- Network layer uses **IP addresses**; Data Link uses **MAC addresses**',
+    'The **OSI (Open Systems Interconnection) Model** is a conceptual framework that standardises network communication into **7 layers**.\n\n| Layer | Name | Key Function | Protocols |\n|-------|------|-------------|----------|\n| 7 | **Application** | User-facing services | HTTP, FTP, SMTP, DNS |\n| 6 | **Presentation** | Data translation & encryption | SSL/TLS, JPEG |\n| 5 | **Session** | Session management | NetBIOS, RPC |\n| 4 | **Transport** | End-to-end delivery | TCP, UDP |\n| 3 | **Network** | Logical addressing & routing | IP, ICMP |\n| 2 | **Data Link** | Physical addressing (MAC) | Ethernet, Wi-Fi |\n| 1 | **Physical** | Bit transmission | Cables, Hubs |\n\n**Mnemonic**: *All People Seem To Need Data Processing* (top to bottom)\n\n**Key College Points**:\n- TCP/IP model has 4 layers (Application, Transport, Internet, Network Access)\n- Transport layer provides **reliability** via TCP\'s 3-way handshake\n- Network layer uses **IP addresses**; Data Link uses **MAC addresses**',
   ],
   [
     'what is normalisation in dbms',
@@ -137,7 +137,7 @@ const DEMO_CACHE: ReadonlyMap<string, string> = new Map([
   ],
   [
     'explain acid properties',
-    '**ACID** properties guarantee reliable database transactions.\n\n## A — Atomicity\n- A transaction is treated as a **single unit** — either ALL operations succeed, or NONE do.\n- **Example**: Bank transfer — debit and credit must both succeed or both be rolled back.\n- Implemented via **rollback** mechanisms.\n\n## C — Consistency\n- A transaction brings the database from one **valid state** to another valid state.\n- All integrity constraints (primary keys, foreign keys, domain constraints) must be satisfied.\n\n## I — Isolation\n- Concurrent transactions execute as if they were **serial** (one after the other).\n- Prevents dirty reads, non-repeatable reads, and phantom reads.\n- Implemented via **locking** or **MVCC** (Multi-Version Concurrency Control).\n\n## D — Durability\n- Once a transaction is **committed**, it persists even in case of system failure.\n- Implemented via **write-ahead logging (WAL)** and database recovery mechanisms.\n\n## VTU Exam Tip\nACID is almost always a 5–8 mark question. Memorise the full form, definition, and one example per property. Mention that NoSQL databases sometimes sacrifice ACID for scalability (BASE model).',
+    '**ACID** properties guarantee reliable database transactions.\n\n## A — Atomicity\n- A transaction is treated as a **single unit** — either ALL operations succeed, or NONE do.\n- **Example**: Bank transfer — debit and credit must both succeed or both be rolled back.\n- Implemented via **rollback** mechanisms.\n\n## C — Consistency\n- A transaction brings the database from one **valid state** to another valid state.\n- All integrity constraints (primary keys, foreign keys, domain constraints) must be satisfied.\n\n## I — Isolation\n- Concurrent transactions execute as if they were **serial** (one after the other).\n- Prevents dirty reads, non-repeatable reads, and phantom reads.\n- Implemented via **locking** or **MVCC** (Multi-Version Concurrency Control).\n\n## D — Durability\n- Once a transaction is **committed**, it persists even in case of system failure.\n- Implemented via **write-ahead logging (WAL)** and database recovery mechanisms.\n\n## College Exam Tip\nACID is almost always a 5–8 mark question. Memorise the full form, definition, and one example per property. Mention that NoSQL databases sometimes sacrifice ACID for scalability (BASE model).',
   ],
 ]);
 
@@ -160,7 +160,7 @@ const buildExamSystemPrompt = (
   const curriculumSection = profile
     ? (
       `\n\nSubject: ${profile.name}\n` +
-      `VTU Curriculum Modules:\n${profile.modules.map((m, i) => `  ${i + 1}. ${m}`).join('\n')}\n` +
+      `College Curriculum Modules:\n${profile.modules.map((m, i) => `  ${i + 1}. ${m}`).join('\n')}\n` +
       `Exam Pattern: ${profile.examPattern}\n` +
       `High-Frequency Exam Topics: ${profile.highFrequencyTopics.join(', ')}.`
     )
@@ -171,7 +171,7 @@ const buildExamSystemPrompt = (
     : '\n\nNo study materials were found for this question. Respond using your general knowledge and let the student know that no matching documents were found in their uploaded materials.';
 
   return (
-    'You are Moduly AI Exam Engine, a specialized answer-generation system for VTU (Visvesvaraya Technological University) students in India. ' +
+    'You are Moduly AI Exam Engine, a specialized answer-generation system for College (Visvesvaraya Technological University) students in India. ' +
     'Your task is to generate a complete, exam-ready answer for the given previous year question. ' +
     'Format your answer with clear structure: use **bold** for key terms and definitions, numbered lists for algorithms or procedures, and headings for major sections. ' +
     'Add a brief "Marking Scheme:" hint comment before each major section indicating approximate mark allocation. ' +
