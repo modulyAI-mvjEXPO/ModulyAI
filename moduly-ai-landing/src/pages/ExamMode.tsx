@@ -8,6 +8,7 @@ import type {
   PyqIntelligenceResponse,
   DocumentRow,
 } from '../lib/ai/types.ts';
+import { renderMarkdownRich } from '../lib/renderMarkdown';
 import { ButtonColorful } from '../components/ui/button-colorful';
 import './ExamMode.css';
 
@@ -28,7 +29,7 @@ const MODULES_BY_TYPE: Record<string, string[]> = {
   'Semester': ['Module 1', 'Module 2', 'Module 3', 'Module 4', 'Module 5'],
 };
 
-interface ExamModeProps { user: User; }
+interface ExamModeProps { user: User; initialMessages?: Message[]; onMessagesChange?: (msgs: Message[]) => void; }
 
 interface Message {
   id: string;
@@ -87,25 +88,9 @@ function uid() {
   return Math.random().toString(36).slice(2);
 }
 
-// ─── Markdown → simple HTML (no external dependency) ──────────────────────────
-function renderMarkdown(md: string): string {
-  return md
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/^#### (.+)$/gm, '<h4>$1</h4>')
-    .replace(/^### (.+)$/gm, '<h4>$1</h4>')
-    .replace(/^## (.+)$/gm, '<h4>$1</h4>')
-    .replace(/^# (.+)$/gm, '<h4>$1</h4>')
-    .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
-    .replace(/^[-*] (.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>.*<\/li>\n?)+/g, (m) => `<ul>${m}</ul>`)
-    .replace(/\n{2,}/g, '</p><p>')
-    .replace(/^(?!<[hul])(.+)$/gm, (m) => m.startsWith('<') ? m : `<p>${m}</p>`)
-    .replace(/<p><\/p>/g, '');
-}
-
 // ─── Wrap AI markdown answer in the styled em-ai-output shell ─────────────────
 function buildAnswerHtml(markdown: string, mark: string): string {
-  const body = renderMarkdown(markdown);
+  const body = renderMarkdownRich(markdown);
   return (
     `<div class="em-ai-output">` +
     `<div class="em-solution-header">` +
@@ -196,7 +181,7 @@ async function fetchPyqIntelligence(): Promise<PyqIntelligenceResponse> {
   return await res.json() as PyqIntelligenceResponse;
 }
 
-export function ExamMode({ user }: ExamModeProps) {
+export function ExamMode({ user, initialMessages, onMessagesChange }: ExamModeProps) {
   const displayName = user.user_metadata?.display_name ?? user.email?.split('@')[0] ?? 'Student';
   const firstName = displayName.split(' ')[0];
   const initials = firstName.charAt(0).toUpperCase();
@@ -212,7 +197,19 @@ export function ExamMode({ user }: ExamModeProps) {
   const [docsLoading, setDocsLoading] = useState(true);
 
   // ── Chat / session state ───────────────────────────────────────────────
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(initialMessages || []);
+  useEffect(() => {
+    if (initialMessages) setMessages(initialMessages);
+  }, [initialMessages]);
+
+  const updateMessages = (newMsgs: Message[] | ((prev: Message[]) => Message[])) => {
+    setMessages(prev => {
+      const updated = typeof newMsgs === 'function' ? newMsgs(prev) : newMsgs;
+      onMessagesChange?.(updated);
+      return updated;
+    });
+  };
+
   const [input, setInput] = useState('');
   const [selectedMark, setSelectedMark] = useState<typeof MARKS[number]>('10M');
   const [isTyping, setIsTyping] = useState(false);
@@ -316,19 +313,19 @@ export function ExamMode({ user }: ExamModeProps) {
     if (!text || isTyping) return;
 
     const userMsg: Message = { id: uid(), role: 'user', content: text, time: ts() };
-    setMessages(prev => [...prev, userMsg]);
+    updateMessages(prev => [...prev, userMsg]);
     setInput('');
     setIsTyping(true);
 
     try {
       const htmlContent = await solveWithAI(text, selectedMark, selectedDocIds);
       const aiMsg: Message = { id: uid(), role: 'ai', content: htmlContent, time: ts() };
-      setMessages(prev => [...prev, aiMsg]);
+      updateMessages(prev => [...prev, aiMsg]);
     } catch (err: unknown) {
       const errorText = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
       const errorHtml = buildAnswerHtml(`**Error:** ${errorText}`, selectedMark);
       const errMsg: Message = { id: uid(), role: 'ai', content: errorHtml, time: ts() };
-      setMessages(prev => [...prev, errMsg]);
+      updateMessages(prev => [...prev, errMsg]);
     } finally {
       setIsTyping(false);
     }

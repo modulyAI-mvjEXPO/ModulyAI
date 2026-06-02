@@ -1,10 +1,5 @@
-import { S3Client, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { createServerSupabaseClient } from '../../src/lib/ai/supabase-server.ts';
-import { extractPdfText } from '../../src/lib/ai/pdf-extract.ts';
-import { chunkText } from '../../src/lib/ai/chunker.ts';
-import { getEmbedding } from '../../src/lib/ai/embedding.ts';
-import https from 'https';
 
 type BackgroundEvent = {
   readonly httpMethod: string;
@@ -15,6 +10,7 @@ type BackgroundBody = {
   readonly documentId: string;
   readonly filePath: string;
   readonly title?: string;
+  readonly fileType?: string;
 };
 
 type HandlerResponse = {
@@ -22,20 +18,7 @@ type HandlerResponse = {
   readonly body: string;
 };
 
-type ParsedDocumentJson = {
-  readonly documentId: string;
-  readonly title: string;
-  readonly sourcePath: string;
-  readonly parsedAt: string;
-  readonly pageCount: number;
-  readonly totalChunks: number;
-  readonly chunks: ReadonlyArray<{
-    readonly index: number;
-    readonly content: string;
-  }>;
-  readonly fullText: string;
-};
-
+// ── S3 client (Utho) ──────────────────────────────────────────────────────────
 const createS3Client = (): S3Client =>
   new S3Client({
     endpoint: process.env['UTHO_ENDPOINT'],
@@ -55,94 +38,68 @@ const downloadFileFromS3 = async (
     Bucket: process.env['UTHO_BUCKET_NAME'],
     Key: filePath,
   });
-
   const response = await s3Client.send(command);
   const bodyBytes = await response.Body?.transformToByteArray();
-
-  if (!bodyBytes) {
-    throw new Error('Empty response from S3');
-  }
-
+  if (!bodyBytes) throw new Error('Empty response from S3');
   return Buffer.from(bodyBytes);
 };
 
+// ── Vectara File Upload API ───────────────────────────────────────────────────
 /**
- * Uploads the parsed JSON to Utho at the `parsed/` mirror path.
- * E.g. source path `source/year-2/22is35a/notes/file.pdf`
- *   → parsed path `parsed/year-2/22is35a/notes/file.json`
+ * Uploads a raw file buffer directly to Vectara's corpus.
+ * Vectara handles all parsing, chunking, and vectorisation automatically.
+ *
+ * Docs: https://docs.vectara.com/docs/rest-api/upload-file
  */
-const uploadParsedJson = async (
-  s3Client: S3Client,
-  sourcePath: string,
-  parsedDoc: ParsedDocumentJson,
-): Promise<string> => {
-  // Compute the mirror path: source/... → parsed/..., .ext → .json
-  let parsedKey: string;
-  if (sourcePath.startsWith('source/')) {
-    parsedKey = 'parsed/' + sourcePath.slice('source/'.length);
-  } else {
-    parsedKey = 'parsed/' + sourcePath;
+const uploadFileToVectara = async (
+  fileBuffer: Buffer,
+  filename: string,
+  documentId: string,
+  title: string,
+  fileType: string,
+): Promise<void> => {
+  const apiKey = process.env['VECTARA_API_KEY'];
+  const corpusId = process.env['VECTARA_CORPUS_ID'] ?? 'VTU_Study_Materials';
+
+  if (!apiKey) throw new Error('Missing VECTARA_API_KEY');
+
+  // Node 18+ (Netlify runtime) has global FormData and Blob
+  const form = new FormData();
+
+  const mimeType = fileType || 'application/pdf';
+  const blob = new Blob([fileBuffer], { type: mimeType });
+  form.set('file', blob, filename);
+
+  // Metadata for filtering in chat queries
+  const metadata = JSON.stringify({
+    document_id: documentId,
+    title: title,
+    filename: filename,
+    uploaded_at: new Date().toISOString(),
+  });
+  form.set('metadata', metadata);
+
+  const response = await fetch(
+    `https://api.vectara.io/v2/corpora/${encodeURIComponent(corpusId)}/upload`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        // Do NOT set Content-Type manually — fetch sets the multipart boundary automatically
+      },
+      body: form,
+    },
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Vectara upload failed (${response.status}): ${errorText}`);
   }
-  // Replace file extension with .json
-  parsedKey = parsedKey.replace(/\.[^.]+$/, '.json');
 
-  const jsonBuffer = Buffer.from(JSON.stringify(parsedDoc, null, 2), 'utf-8');
-
-  // Use signed URL + native https to bypass SSL issues (same as upload-to-utho.mjs)
-  const command = new PutObjectCommand({
-    Bucket: process.env['UTHO_BUCKET_NAME'],
-    Key: parsedKey,
-    ContentType: 'application/json',
-    ACL: 'public-read',
-  });
-
-  const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 900 });
-
-  await new Promise<void>((resolve, reject) => {
-    const doUpload = (targetUrl: string): void => {
-      const parsedUrl = new URL(targetUrl);
-      const options = {
-        hostname: parsedUrl.hostname,
-        port: parsedUrl.port || 443,
-        path: parsedUrl.pathname + parsedUrl.search,
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': jsonBuffer.length,
-        },
-        rejectUnauthorized: false,
-      };
-
-      const req = https.request(options, (res) => {
-        let responseBody = '';
-        res.on('data', (chunk: string) => responseBody += chunk);
-        res.on('end', () => {
-          if (res.statusCode !== undefined && res.statusCode >= 200 && res.statusCode < 300) {
-            resolve();
-          } else if (res.statusCode === 307 || res.statusCode === 301 || res.statusCode === 302 || res.statusCode === 308) {
-            if (res.headers['location']) {
-              doUpload(res.headers['location']);
-            } else {
-              reject(new Error(`Redirect with no Location header: ${res.statusCode}`));
-            }
-          } else {
-            reject(new Error(`Utho parsed upload failed: ${res.statusCode}\n${responseBody}`));
-          }
-        });
-      });
-
-      req.on('error', (e: Error) => reject(e));
-      req.write(jsonBuffer);
-      req.end();
-    };
-
-    doUpload(uploadUrl);
-  });
-
-  console.log(`Parsed JSON uploaded to: ${parsedKey}`);
-  return parsedKey;
+  console.log(`[Vectara] Uploaded "${filename}" (docId: ${documentId}) to corpus "${corpusId}"`);
 };
 
+// ── Supabase status helpers ───────────────────────────────────────────────────
 const updateDocumentStatus = async (
   supabase: ReturnType<typeof createServerSupabaseClient>,
   documentId: string,
@@ -163,127 +120,67 @@ const updateDocumentStatus = async (
   }
 };
 
-const embedAndStoreChunks = async (
-  supabase: ReturnType<typeof createServerSupabaseClient>,
-  documentId: string,
-  chunks: ReturnType<typeof chunkText>,
-  pageCount: number,
-): Promise<void> => {
-  const BATCH_SIZE = 20;
-  
-  for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
-    const batch = chunks.slice(i, i + BATCH_SIZE);
-    
-    const embeddings = await Promise.all(
-      batch.map(chunk => getEmbedding(chunk.content))
-    );
-
-    const rows = batch.map((chunk, index) => ({
-      document_id: documentId,
-      content: chunk.content,
-      chunk_index: chunk.chunkIndex,
-      metadata: {
-        page_count: pageCount,
-      },
-      embedding: embeddings[index] as unknown as string,
-    }));
-
-    const { error } = await supabase.from('document_chunks').insert(rows);
-
-    if (error) {
-      throw new Error(`Failed to bulk insert chunks ${i} to ${i + batch.length - 1}: ${error.message}`);
-    }
-  }
-};
-
+// ── Main processing logic ─────────────────────────────────────────────────────
 const processDocument = async (
   documentId: string,
   filePath: string,
   title?: string,
+  fileType?: string,
 ): Promise<void> => {
   const supabase = createServerSupabaseClient();
   const s3Client = createS3Client();
 
   try {
-    console.log(`Downloading document from S3 for document ${documentId}...`);
+    // 1. Download raw file from Utho (S3-compatible)
+    console.log(`[BG] Downloading "${filePath}" from Utho for document ${documentId}...`);
     const fileBuffer = await downloadFileFromS3(s3Client, filePath);
 
-    console.log(`Extracting text for document ${documentId}...`);
-    const { text, pageCount, isScanned } = await extractPdfText(fileBuffer);
+    // 2. Derive a clean filename for Vectara
+    const filename = (title || filePath.split('/').pop() || 'document');
 
-    if (!text.trim() || isScanned) {
-      console.warn(`No readable text or scanned PDF detected for document ${documentId}.`);
-      await updateDocumentStatus(supabase, documentId, 'no_text', { chunk_count: 0 });
-      return;
-    }
-
-    console.log(`Chunking extracted text for document ${documentId}...`);
-    const chunks = chunkText(text);
-
-    // ── Upload parsed JSON to Utho under parsed/ folder ─────────────────
-    const parsedDoc: ParsedDocumentJson = {
+    // 3. Upload the raw file to Vectara — Vectara handles ALL parsing & vectorisation
+    console.log(`[BG] Uploading to Vectara corpus for document ${documentId}...`);
+    await uploadFileToVectara(
+      fileBuffer,
+      filename,
       documentId,
-      title: title || filePath.split('/').pop()?.replace(/\.[^.]+$/, '') || 'Untitled',
-      sourcePath: filePath,
-      parsedAt: new Date().toISOString(),
-      pageCount,
-      totalChunks: chunks.length,
-      chunks: chunks.map(c => ({ index: c.chunkIndex, content: c.content })),
-      fullText: text,
-    };
+      title ?? filename,
+      fileType ?? 'application/pdf',
+    );
 
-    let parsedPath: string | undefined;
-    try {
-      parsedPath = await uploadParsedJson(s3Client, filePath, parsedDoc);
-    } catch (uploadErr) {
-      console.error(`Failed to upload parsed JSON for ${documentId}:`, uploadErr);
-      // Non-fatal — continue with embedding
-    }
-
-    // ── Embed and store chunks in Supabase ──────────────────────────────
-    console.log(`Embedding and storing ${chunks.length} chunks for document ${documentId}...`);
-    await embedAndStoreChunks(supabase, documentId, chunks, pageCount);
-
-    console.log(`Document ${documentId} processed successfully!`);
+    // 4. Mark as ready in Supabase
+    console.log(`[BG] Document ${documentId} successfully indexed in Vectara.`);
     await updateDocumentStatus(supabase, documentId, 'ready', {
-      chunk_count: chunks.length,
-      ...(parsedPath ? { parsed_path: parsedPath } : {}),
+      chunk_count: 1, // Vectara manages chunking internally; we use 1 as a sentinel
     });
   } catch (error) {
-    console.error(`Document processing failed internally for ${documentId}:`, error);
+    console.error(`[BG] Processing failed for document ${documentId}:`, error);
     throw error;
   }
 };
 
-export const handler = async (
-  event: BackgroundEvent,
-): Promise<HandlerResponse> => {
-  const { documentId, filePath, title } = JSON.parse(
+// ── Handler ───────────────────────────────────────────────────────────────────
+export const handler = async (event: BackgroundEvent): Promise<HandlerResponse> => {
+  const { documentId, filePath, title, fileType } = JSON.parse(
     event.body ?? '{}',
   ) as BackgroundBody;
 
   if (!documentId || !filePath) {
-    console.error('Missing documentId or filePath in background function');
+    console.error('[BG] Missing documentId or filePath');
     return { statusCode: 200, body: 'missing_params' };
   }
 
   try {
-    await processDocument(documentId, filePath, title);
-    console.log(`Document ${documentId} processed successfully`);
+    await processDocument(documentId, filePath, title, fileType);
     return { statusCode: 200, body: 'ok' };
   } catch (err: unknown) {
-    console.error(`Document processing failed for ${documentId}:`, err);
-
+    console.error(`[BG] Fatal error for document ${documentId}:`, err);
     try {
       const supabase = createServerSupabaseClient();
       await updateDocumentStatus(supabase, documentId, 'failed');
     } catch (updateErr: unknown) {
-      console.error(
-        `Failed to update document ${documentId} status to failed:`,
-        updateErr,
-      );
+      console.error(`[BG] Could not mark document ${documentId} as failed:`, updateErr);
     }
-
     return { statusCode: 200, body: 'failed' };
   }
 };

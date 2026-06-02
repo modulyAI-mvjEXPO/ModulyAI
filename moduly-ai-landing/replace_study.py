@@ -1,42 +1,51 @@
 import re
 
-file_path = "src/pages/StudyMode.tsx"
-with open(file_path, "r") as f:
+filepath = 'src/pages/StudyMode.tsx'
+with open(filepath, 'r', encoding='utf-8') as f:
     content = f.read()
 
-# Add import if missing
-if "import { ButtonColorful }" not in content:
-    content = content.replace("import './StudyMode.css';", "import { ButtonColorful } from '../components/ui/button-colorful';\nimport './StudyMode.css';")
-
-# 1. New Study Session (Line 552)
-content = re.sub(
-    r'<button className="sm-dash-create-btn">\s*<span className="material-icons-outlined">add</span>\s*New Study Session\s*</button>',
-    r'<ButtonColorful className="sm-dash-create-btn" onClick={() => setStudyView(\'pick-docs\')} label="New Study Session" />',
-    content
+# 1. Import vectaraService
+content = content.replace(
+    "import { ButtonColorful } from '../components/ui/button-colorful';\nimport './StudyMode.css';",
+    "import { ButtonColorful } from '../components/ui/button-colorful';\nimport vectaraService from '../services/vectaraService';\nimport './StudyMode.css';"
+)
+content = content.replace(
+    "import { ButtonColorful } from '../components/ui/button-colorful';\r\nimport './StudyMode.css';",
+    "import { ButtonColorful } from '../components/ui/button-colorful';\r\nimport vectaraService from '../services/vectaraService';\r\nimport './StudyMode.css';"
 )
 
-# 2. Upload Documents (Line 629)
-content = re.sub(
-    r'<button className="sm-pick-upload-btn" onClick=\{\(\) => setPickerOpen\(true\)\}>\s*<span className="material-icons-outlined">cloud_upload</span>\s*Upload Documents\s*</button>',
-    r'<ButtonColorful className="sm-pick-upload-btn" onClick={() => setPickerOpen(true)} label="Upload Documents" />',
-    content
-)
+# 2. Modify sendMessage general AI mode
+target_general = """      const selectedDocIds = docs.filter(d => d.selected).map(d => d.id);
+      const history = buildHistory([...messages, userMsg]);
+      const response = await chatWithAI(text, selectedDocIds, selectedMark, strict, subjectId || undefined, history);
 
-# 3. Skip & Learn Everything (Line ~666)
-content = re.sub(
-    r'<button\s*className="sm-pick-skip-btn"\s*onClick=\{\(\) => \{\s*selectAllDocs\(\);\s*setStudyView\(\'chat\'\);\s*\}\}\s*>\s*Skip & Learn Everything\s*<span className="material-icons-outlined">arrow_forward</span>\s*</button>',
-    r'<ButtonColorful className="sm-pick-skip-btn" onClick={() => { selectAllDocs(); setStudyView(\'chat\'); }} label="Skip & Learn Everything" />',
-    content
-)
+      const generalAiMsg: Message = {
+        id: uid(),
+        role: 'ai',
+        content: response.response,"""
+replacement_general = """      const selectedDocIds = docs.filter(d => d.selected).map(d => d.id);
+      const history = buildHistory([...messages, userMsg]);
+      const responseText = await vectaraService.chat(text, history);
 
-# 4. Start Learning (Line ~781)
-content = re.sub(
-    r'<button\s*className="sm-btn-start"\s*disabled=\{selectedDocIds\.length === 0\}\s*onClick=\{\(\) => setStudyView\(\'chat\'\)\}\s*>\s*Start Learning\s*<span className="material-icons-outlined">arrow_forward</span>\s*</button>',
-    r'<ButtonColorful className="sm-btn-start w-full mt-4" disabled={selectedDocIds.length === 0} onClick={() => setStudyView(\'chat\')} label="Start Learning" />',
-    content
-)
+      const generalAiMsg: Message = {
+        id: uid(),
+        role: 'ai',
+        content: responseText,"""
+content = content.replace(target_general, replacement_general)
+content = content.replace(target_general.replace('\n', '\r\n'), replacement_general.replace('\n', '\r\n'))
 
-with open(file_path, "w") as f:
+# 3. Typing indicator
+target_typing = """              <div className="sm-bubble sm-bubble--ai sm-typing-bubble">
+                <span /><span /><span />
+              </div>"""
+replacement_typing = """              <div className="sm-bubble sm-bubble--ai sm-typing-bubble" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '0.9em', color: 'var(--text-muted)' }}>Analyzing study materials...</span>
+                <span /><span /><span />
+              </div>"""
+content = content.replace(target_typing, replacement_typing)
+content = content.replace(target_typing.replace('\n', '\r\n'), replacement_typing.replace('\n', '\r\n'))
+
+with open(filepath, 'w', encoding='utf-8') as f:
     f.write(content)
 
-print("StudyMode.tsx updated")
+print("StudyMode updated successfully!")

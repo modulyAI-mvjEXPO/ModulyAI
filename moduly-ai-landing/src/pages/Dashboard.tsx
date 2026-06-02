@@ -4,15 +4,14 @@ import { signOut } from '../lib/auth';
 import { supabase } from '../lib/supabase';
 import { getProfile } from '../lib/profile';
 import type { UserProfile } from '../lib/profile';
-import { StudyMode } from './StudyMode';
-import { ExamMode } from './ExamMode';
 import { Library } from './Library';
 import { UploadDocs } from './UploadDocs';
 import { Settings } from './Settings';
+import { Chat } from './Chat';
 import { ButtonColorful } from '../components/ui/button-colorful';
 import './Dashboard.css';
 
-type DashboardPage = 'overview' | 'study' | 'exam' | 'library' | 'upload' | 'settings';
+type DashboardPage = 'overview' | 'chat' | 'exam' | 'library' | 'upload' | 'settings';
 
 interface DashboardProps {
   user: User;
@@ -45,9 +44,9 @@ const QUICK_ACTIONS: { icon: string; bgIcon: string; title: string; desc: string
     icon: 'play_arrow',
     bgIcon: 'play_circle',
     title: 'Start Study Session',
-    desc: 'Ask questions and get AI-powered explanations from your study materials.',
+    desc: 'Ask questions and get AI-powered explanations from your documents.',
     color: 'primary',
-    page: 'study',
+    page: 'chat',
   },
   {
     icon: 'quiz',
@@ -55,7 +54,7 @@ const QUICK_ACTIONS: { icon: string; bgIcon: string; title: string; desc: string
     title: 'Analyse PYQs',
     desc: 'AI analysis of Previous Year Questions.',
     color: 'teal',
-    page: 'exam',
+    page: 'chat',
   },
   {
     icon: 'upload_file',
@@ -69,6 +68,8 @@ const QUICK_ACTIONS: { icon: string; bgIcon: string; title: string; desc: string
 
 export function Dashboard({ user, onSignOut }: DashboardProps) {
   const [activePage, setActivePage] = useState<DashboardPage>('overview');
+  const [activeChatSessionId, setActiveChatSessionId] = useState<string | null>(null);
+  const [allSessions, setAllSessions] = useState<any[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [recentDocs, setRecentDocs] = useState<readonly RecentDoc[]>([]);
   const [stats, setStats] = useState<readonly StatItem[]>([
@@ -183,14 +184,47 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
     }
   };
 
+
+  useEffect(() => {
+    const loadSessions = async () => {
+      let merged: any[] = [];
+      try {
+        const raw = localStorage.getItem('moduly-chat-sessions');
+        if (raw) merged = JSON.parse(raw);
+        const { data, error } = await supabase.from('chat_sessions').select('*').eq('user_id', user.id).order('updated_at', { ascending: false });
+        if (data && !error && data.length > 0) {
+           merged = data;
+        }
+      } catch (err) {}
+      setAllSessions(merged);
+    };
+    if (activePage === 'overview' || activePage === 'chat') {
+      loadSessions();
+    }
+  }, [user.id, activePage]);
+
+  const matchingSessions = searchQuery.trim() 
+    ? allSessions.filter(s => s.title?.toLowerCase().includes(searchQuery.toLowerCase()))
+    : [];
+
+  const handleSelectSession = (sessionId: string) => {
+    setActiveChatSessionId(sessionId);
+    setActivePage('chat');
+    setSearchQuery('');
+  };
+
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchQuery.trim()) {
-      setActivePage('study');
+      if (matchingSessions.length > 0) {
+        setActiveChatSessionId(matchingSessions[0].id);
+      }
+      setActivePage('chat');
+      setSearchQuery('');
     }
   };
 
   const handleResume = () => {
-    setActivePage('study');
+    setActivePage('chat');
   };
 
   const completedModules = recentDocs.length > 0 ? recentDocs.length : 0;
@@ -257,41 +291,41 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
               </div>
             )}
           </div>
-
-          <div className="db-subject-wrap">
-            <select className="db-subject-select" aria-label="Select subject">
-              {subjects.length > 0 ? (
-                subjects.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))
-              ) : (
-                <>
-                  <option>Data Structures</option>
-                  <option>Operating Systems</option>
-                  <option>Database Mgmt</option>
-                  <option>Computer Networks</option>
-                </>
-              )}
-            </select>
-            <span className="material-icons-outlined db-select-arrow">expand_more</span>
-          </div>
-          <span className="db-sem-badge">{semesterStr}</span>
         </div>
 
         <div className="db-header-right">
-          <div className="db-search-wrap">
-            <span className="material-icons-outlined db-search-icon">search</span>
-            <input
-              className="db-search"
-              type="text"
-              placeholder="Search modules, questions…"
-              aria-label="Search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={handleSearchKeyDown}
-            />
+          <div className="db-header-right-col">
+            <div className="db-search-wrap">
+              <span className="material-icons-outlined db-search-icon">search</span>
+                            <input
+                className="db-search"
+                type="text"
+                placeholder="Search modules, questions…"
+                aria-label="Search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+              />
+              {searchQuery.trim() && matchingSessions.length > 0 && (
+                <div className="db-search-dropdown">
+                  {matchingSessions.map(s => (
+                    <div 
+                      key={s.id} 
+                      className="db-search-dropdown-item"
+                      onClick={() => handleSelectSession(s.id)}
+                    >
+                      <span className="material-icons-outlined db-search-item-icon">
+                        {s.mode === 'exam' ? 'quiz' : 'menu_book'}
+                      </span>
+                      <div className="db-search-item-text">
+                        <div className="db-search-item-title">{s.title}</div>
+                        <div className="db-search-item-mode">{s.mode === 'exam' ? 'Exam Mode' : 'Study Mode'}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Profile avatar with dropdown */}
@@ -349,11 +383,8 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
       </header>
 
       {/* ── Page content ── */}
-      {activePage === 'study' && (
-        <StudyMode user={user} onNavigate={(page) => setActivePage(page as DashboardPage)} />
-      )}
-      {activePage === 'exam' && (
-        <ExamMode user={user} />
+      {activePage === 'chat' && (
+        <Chat user={user} onNavigate={(page) => setActivePage(page as DashboardPage)} initialSessionId={activeChatSessionId} />
       )}
       {activePage === 'library' && (
         <Library user={user} onNavigate={(page) => setActivePage(page as DashboardPage)} />
@@ -514,7 +545,6 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
 
 const NAV_MAIN: { icon: string; label: string; page: DashboardPage }[] = [
   { icon: 'dashboard', label: 'Overview', page: 'overview' },
-  { icon: 'school', label: 'Study Mode', page: 'study' },
-  { icon: 'assignment', label: 'Exam Mode', page: 'exam' },
+  { icon: 'chat', label: 'Your Assistant', page: 'chat' },
   { icon: 'library_books', label: 'Library', page: 'library' },
 ];

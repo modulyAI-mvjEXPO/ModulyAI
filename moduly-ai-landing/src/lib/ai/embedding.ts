@@ -2,14 +2,14 @@ import type { AIProviderConfig, EmbeddingResponse } from './types';
 
 const EMBEDDING_PROVIDERS: readonly AIProviderConfig[] = [
   {
+    // Primary: NVIDIA NIM - 1536 dimensions (works with pgvector < 2000 limit)
     name: 'nvidia-nim',
     baseUrl: 'https://integrate.api.nvidia.com/v1',
     apiKeyEnvVar: 'NVIDIA_NIM_API_KEY',
-    // Purpose-built for RAG retrieval — tuned for query-passage matching
     defaultModel: 'nvidia/llama-3.2-nv-embedqa-1b-v2',
   },
   {
-    // Fallback: Groq's nomic model if NVIDIA NIM is unavailable
+    // Fallback: Groq (will be converted to 1536 if we upgrade pgvector later)
     name: 'groq',
     baseUrl: 'https://api.groq.com/openai/v1',
     apiKeyEnvVar: 'GROQ_API_KEY',

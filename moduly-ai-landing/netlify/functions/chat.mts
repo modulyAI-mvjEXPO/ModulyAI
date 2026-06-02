@@ -1,5 +1,5 @@
 import { createServerSupabaseClient } from '../../src/lib/ai/supabase-server.ts';
-import { getEmbedding } from '../../src/lib/ai/embedding.ts';
+import { getEmbedding } from '../../src/lib/ai/langchain-embeddings.ts';
 import { chatCompletion } from '../../src/lib/ai/llm.ts';
 import { rerankChunks } from '../../src/lib/ai/reranker.ts';
 import type { ChatMessage, ChatRequest, RagChunk } from '../../src/lib/ai/types.ts';
@@ -252,7 +252,8 @@ export const handler = async (
     // Skip RAG pipeline when client already provides grounded context
     if (!groundedContext) {
       try {
-        const queryEmbedding = await getEmbedding(request.message, 'query');
+        // Note: langchain-embeddings doesn't use 'query' or 'passage' parameter
+        const queryEmbedding = await getEmbedding(request.message);
 
         const supabase = createServerSupabaseClient();
         const { data: chunks, error: ragError } = await supabase.rpc('match_documents_filtered', {

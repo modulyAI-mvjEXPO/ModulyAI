@@ -1,21 +1,14 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import type { ChatResponse } from '../lib/ai/types';
 import { DocumentPickerModal } from '../components/DocumentPickerModal';
-import {
-  DEMO_DOCUMENTS,
-  retrieveChunks,
-  buildGroundedContext,
-  getCachedResult,
-  setCachedResult,
-  makeCacheKey,
-  loadUthoDoc,
-} from '../lib/docGrounding';
+import { getCachedResult, setCachedResult, makeCacheKey } from '../lib/docGrounding';
+import { renderMarkdownRich } from '../lib/renderMarkdown';
+
 import type { StudySet } from '../lib/ai/types';
-import { fetchStudySets, createStudySet, updateStudySetMessages, deleteStudySet, renameStudySet } from '../lib/studySets';
-import { ButtonColorful } from '../components/ui/button-colorful';
-import './StudyMode.css';
+  import { fetchStudySets, createStudySet, updateStudySetMessages, deleteStudySet, renameStudySet } from '../lib/studySets';
+  import { ButtonColorful } from '../components/ui/button-colorful';
+  import './StudyMode.css';
 
 interface StudyModeProps {
   user: User;
@@ -30,12 +23,6 @@ interface DocItem {
   type: 'pdf' | 'doc';
   meta: string;
   selected: boolean;
-}
-
-interface TopicItem {
-  id: string;
-  name: string;
-  active: boolean;
 }
 
 interface Message {
@@ -53,50 +40,23 @@ interface Message {
 
 const MARKS = ['2M', '5M', '8M', '10M'] as const;
 
-const SUBJECT_TOPIC_MAP: Readonly<Record<string, ReadonlyArray<{ id: string; name: string }>>> = {
-  'data-structures': [
-    { id: 'ds-t1', name: 'AVL Trees' },
-    { id: 'ds-t2', name: 'Graph Traversal' },
-    { id: 'ds-t3', name: 'BFS' },
-    { id: 'ds-t4', name: 'DFS' },
-    { id: 'ds-t5', name: 'Heap Sort' },
-    { id: 'ds-t6', name: 'Hashing' },
-  ],
-  'computer-networks': [
-    { id: 'cn-t1', name: 'OSI Model' },
-    { id: 'cn-t2', name: 'TCP vs UDP' },
-    { id: 'cn-t3', name: 'IP Subnetting' },
-    { id: 'cn-t4', name: 'Routing Algorithms' },
-    { id: 'cn-t5', name: 'DNS Resolution' },
-    { id: 'cn-t6', name: 'TCP Handshake' },
-  ],
-  'dbms': [
-    { id: 'db-t1', name: 'ER Diagrams' },
-    { id: 'db-t2', name: 'SQL Joins' },
-    { id: 'db-t3', name: 'Normalisation' },
-    { id: 'db-t4', name: 'ACID Properties' },
-    { id: 'db-t5', name: 'Concurrency Control' },
-    { id: 'db-t6', name: 'Indexing' },
-  ],
-};
-
-const DEFAULT_TOPICS: ReadonlyArray<{ id: string; name: string }> = [
-  { id: 'g-t1', name: 'Key Concepts' },
-  { id: 'g-t2', name: 'Definitions' },
-  { id: 'g-t3', name: 'Examples' },
-  { id: 'g-t4', name: 'Practice Questions' },
-];
-
-function getTopicsForSubject(subjectId: string): TopicItem[] {
-  const base = SUBJECT_TOPIC_MAP[subjectId] ?? DEFAULT_TOPICS;
-  return base.map((t, i) => ({ ...t, active: i < 2 }));
-}
-
 function ts() {
   return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 function uid() {
   return Math.random().toString(36).slice(2);
+}
+
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = (reader.result as string).split(',')[1] || '';
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 }
 
 function getWelcome(docCount: number): Message {
@@ -108,58 +68,7 @@ function getWelcome(docCount: number): Message {
 
 // ─── Chat API ──────────────────────────────────────────────────────────────
 
-async function chatWithAI(
-  message: string,
-  documentIds: ReadonlyArray<string>,
-  mark: string,
-  strict: boolean,
-  subjectId: string | undefined,
-  history: ReadonlyArray<{ role: 'user' | 'assistant'; content: string }>,
-): Promise<ChatResponse> {
-  const backendBase = import.meta.env.VITE_BACKEND_URL || '';
-  const res = await fetch(`${backendBase}/chat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      message,
-      documentIds: documentIds.length > 0 ? documentIds : undefined,
-      mark,
-      strict,
-      subjectId: subjectId || undefined,
-      history: history.length > 0 ? history : undefined,
-    }),
-  });
 
-  if (!res.ok) {
-    const msgLower = message.trim().toLowerCase();
-    
-    const DEMO_CACHE: Record<string, string> = {
-      'explain avl tree rotations': '**AVL Tree Rotations** are self-balancing operations performed when a Binary Search Tree becomes unbalanced after insertion or deletion.\n\n**Balance Factor** = Height(Left Subtree) − Height(Right Subtree). A node is balanced if its balance factor is −1, 0, or +1.\n\n## Four Rotation Types\n\n**1. Right Rotation (LL Case)**\nOccurs when a node is inserted into the left subtree of the left child.\n- Pivot the unbalanced node down-right; its left child becomes the new root.\n\n**2. Left Rotation (RR Case)**\nOccurs when a node is inserted into the right subtree of the right child.\n- Pivot the unbalanced node down-left; its right child becomes the new root.\n\n**3. Left-Right Rotation (LR Case)**\nLeft rotate the left child first, then right rotate the unbalanced node.\n\n**4. Right-Left Rotation (RL Case)**\nRight rotate the right child first, then left rotate the unbalanced node.\n\n## Time Complexity\n- Each rotation is **O(1)**\n- Insertion with rebalancing: **O(log n)**\n- AVL trees guarantee **O(log n)** for search, insert, and delete.',
-      'explain the osi model layers': 'The **OSI (Open Systems Interconnection) Model** is a conceptual framework that standardises network communication into **7 layers**.\n\n| Layer | Name | Key Function | Protocols |\n|-------|------|-------------|----------|\n| 7 | **Application** | User-facing services | HTTP, FTP, SMTP, DNS |\n| 6 | **Presentation** | Data translation & encryption | SSL/TLS, JPEG |\n| 5 | **Session** | Session management | NetBIOS, RPC |\n| 4 | **Transport** | End-to-end delivery | TCP, UDP |\n| 3 | **Network** | Logical addressing & routing | IP, ICMP |\n| 2 | **Data Link** | Physical addressing (MAC) | Ethernet, Wi-Fi |\n| 1 | **Physical** | Bit transmission | Cables, Hubs |\n\n**Mnemonic**: *All People Seem To Need Data Processing* (top to bottom)\n\n**Key College Points**:\n- TCP/IP model has 4 layers (Application, Transport, Internet, Network Access)\n- Transport layer provides **reliability** via TCP\'s 3-way handshake\n- Network layer uses **IP addresses**; Data Link uses **MAC addresses**',
-      'what is normalisation in dbms': '**Normalisation** is the process of organising a relational database to reduce **data redundancy** and improve **data integrity**.\n\n## Normal Forms\n\n**1NF (First Normal Form)**\n- Every column must contain **atomic** (indivisible) values\n- No repeating groups or arrays\n\n**2NF (Second Normal Form)**\n- Must be in 1NF\n- Every non-key attribute must be **fully functionally dependent** on the entire primary key\n- Eliminates *partial dependencies*\n\n**3NF (Third Normal Form)**\n- Must be in 2NF\n- No **transitive dependencies** (non-key attribute depending on another non-key attribute)\n\n**BCNF (Boyce-Codd Normal Form)**\n- Stricter version of 3NF\n- For every functional dependency A → B, A must be a **superkey**\n\n## Benefits\n- Eliminates insertion, deletion, and update anomalies\n- Reduces storage space\n- Improves query performance\n\n## Trade-off\nOver-normalisation can lead to excessive JOINs. Denormalisation is sometimes used for read-heavy applications.',
-      'explain bfs and dfs with example': '**BFS (Breadth-First Search)** and **DFS (Depth-First Search)** are fundamental graph traversal algorithms.\n\n## BFS — Breadth-First Search\n**Strategy**: Explore all neighbours at the current depth before moving deeper.\n**Data Structure**: Queue (FIFO)\n\n**Algorithm**:\n1. Enqueue the start node; mark it visited\n2. Dequeue a node; visit it\n3. Enqueue all unvisited neighbours\n4. Repeat until queue is empty\n\n**Example** (Graph: A-B, A-C, B-D, C-D):\n- Start A → Queue: [B, C] → Visit B → Queue: [C, D] → Visit C → Visit D\n- **BFS Order**: A, B, C, D\n\n**Applications**: Shortest path in unweighted graphs, level-order traversal\n\n## DFS — Depth-First Search\n**Strategy**: Explore as far as possible along each branch before backtracking.\n**Data Structure**: Stack (or recursion)\n\n**Algorithm**:\n1. Push start node; mark visited\n2. Pop a node; visit it\n3. Push all unvisited neighbours\n4. Repeat until stack is empty\n\n**DFS Order** (same graph): A, B, D, C\n\n**Applications**: Cycle detection, topological sort, connected components\n\n## Complexity\n| | Time | Space |\n|--|------|-------|\n| BFS | O(V+E) | O(V) |\n| DFS | O(V+E) | O(V) |',
-      'explain acid properties': '**ACID** properties guarantee reliable database transactions.\n\n## A — Atomicity\n- A transaction is treated as a **single unit** — either ALL operations succeed, or NONE do.\n- **Example**: Bank transfer — debit and credit must both succeed or both be rolled back.\n- Implemented via **rollback** mechanisms.\n\n## C — Consistency\n- A transaction brings the database from one **valid state** to another valid state.\n- All integrity constraints (primary keys, foreign keys, domain constraints) must be satisfied.\n\n## I — Isolation\n- Concurrent transactions execute as if they were **serial** (one after the other).\n- Prevents dirty reads, non-repeatable reads, and phantom reads.\n- Implemented via **locking** or **MVCC** (Multi-Version Concurrency Control).\n\n## D — Durability\n- Once a transaction is **committed**, it persists even in case of system failure.\n- Implemented via **write-ahead logging (WAL)** and database recovery mechanisms.\n\n## College Exam Tip\nACID is almost always a 5–8 mark question. Memorise the full form, definition, and one example per property. Mention that NoSQL databases sometimes sacrifice ACID for scalability (BASE model).'
-    };
-
-    if (DEMO_CACHE[msgLower]) {
-      return { response: DEMO_CACHE[msgLower], sources: [] };
-    }
-
-    if (msgLower.includes('why do i run into this') || msgLower.includes('error') || msgLower.includes('404')) {
-      return {
-        response: 'Because the live API endpoint (`/chat`) disconnected or failed to deploy! I natively caught this error in the frontend interface. **Please ask about "AVL tree rotations", "OSI model layers", "normalisation in dbms", or "BFS and DFS" to see my offline cache in action!**',
-        sources: []
-      };
-    }
-
-    return {
-      response: 'Offline Mode: I am currently running without live API keys or backend connectivity. Please try asking about "AVL tree rotations", "OSI model layers", "normalisation in dbms", or "BFS and DFS" to see a cached response!',
-      sources: []
-    };
-  }
-
-  return res.json() as Promise<ChatResponse>;
-}
 
 function buildHistory(msgs: ReadonlyArray<Message>): ReadonlyArray<{ role: 'user' | 'assistant'; content: string }> {
   return msgs
@@ -171,14 +80,8 @@ function buildHistory(msgs: ReadonlyArray<Message>): ReadonlyArray<{ role: 'user
     }));
 }
 
-// ─── Markdown-lite renderer ────────────────────────────────────────────────
-
-function renderMd(text: string) {
-  return text
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/`(.*?)`/g, '<code>$1</code>');
-}
+// ─── Markdown renderer (shared) ────────────────────────────────────────────
+// Uses renderMarkdownRich from ../lib/renderMarkdown
 
 // ─── Component ─────────────────────────────────────────────────────────────
 
@@ -198,13 +101,13 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
   const [strict, setStrict] = useState(true);
   const [docs, setDocs] = useState<DocItem[]>([]);
   const [subjectId, setSubjectId] = useState('');
-  const [topics, setTopics] = useState<TopicItem[]>(() => getTopicsForSubject(''));
   const [isTyping, setIsTyping] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [parsingDocs, setParsingDocs] = useState(false);
   const docsLoading = false;
   const [parsingDocNames, setParsingDocNames] = useState<string[]>([]);
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Progressive reveal state
@@ -214,12 +117,8 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
   // ── Document-Grounded Mode state ─────────────────────────────────────
   type GroundingMode = 'general' | 'document';
   const [groundingMode, setGroundingMode] = useState<GroundingMode>('general');
-  const [selectedDemoDocIds, setSelectedDemoDocIds] = useState<string[]>([]);
-  const toggleDemoDoc = (id: string) => {
-    setSelectedDemoDocIds(prev => 
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-    );
-  };
+  const initialSelectedIds = useMemo(() => new Set(docs.map(d => d.id)), [docs]);
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -287,9 +186,9 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
     }
   }, [input]);
 
-  // reset topics when subject changes
+  // reset subject (no longer reset topics)
   useEffect(() => {
-    setTopics(getTopicsForSubject(subjectId));
+    // Topics removed - no longer needed
   }, [subjectId]);
 
   // ── Progressive reveal animation ──────────────────────────────────────
@@ -323,14 +222,12 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
 
   // ── Helpers ──────────────────────────────────────────────────────────
   const selectedDocs = docs;
-  const activeTopics = topics.filter(t => t.active);
   const isRevealing = !!revealingId;
   const isBusy = isTyping || isRevealing;
 
   const toggleDoc = (id: string) => setDocs(prev => prev.filter(d => d.id !== id));
   const selectAllDocs = () => {}; // No longer needed as docs are selected in modal
   const selectNoneDocs = () => setDocs([]);
-  const toggleTopic = (id: string) => setTopics(prev => prev.map(t => t.id === id ? { ...t, active: !t.active } : t));
 
 
   const handleStartSession = async () => {
@@ -467,38 +364,45 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // For direct upload in chat, we just stage the file.
+    // It will be uploaded when the user sends their first message.
+    setAttachedFile(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const uploadAndProcessAttachedFile = async (file: File): Promise<string | null> => {
     setIsUploading(true);
-    const uploadingMsgId = uid();
-    setMessages(prev => [...prev, {
-      id: uploadingMsgId,
-      role: 'ai',
-      content: `Uploading **${file.name}** and preparing it for analysis...`,
-      time: ts()
-    }]);
-
+    const backendBase = import.meta.env.VITE_BACKEND_URL || '';
     try {
-      const backendBase = import.meta.env.VITE_BACKEND_URL || '';
+      // Convert file to base64 to send it as JSON payload through proxy
+      const toBase64 = (f: File) => new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(f);
+        reader.onload = () => {
+          let encoded = reader.result as string;
+          encoded = encoded.split(',')[1] || '';
+          resolve(encoded);
+        };
+        reader.onerror = error => reject(error);
+      });
 
-      const backendResponse = await fetch(`${backendBase}/get-upload-url`, {
+      const base64Data = await toBase64(file);
+      const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const filename = `chat-uploads/${user.id}/${Date.now()}-${safeName}`;
+
+      const backendResponse = await fetch(`${backendBase}/upload-to-utho`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          filename: `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
+          filename,
           contentType: file.type || 'application/octet-stream',
+          base64Data
         }),
       });
 
-      if (!backendResponse.ok) throw new Error('Failed to get upload URL');
-      const { uploadUrl, filename } = await backendResponse.json();
+      if (!backendResponse.ok) throw new Error('Failed to upload file to storage');
 
-      const uthoResponse = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': file.type || 'application/octet-stream' },
-        body: file,
-      });
-
-      if (!uthoResponse.ok) throw new Error('Failed to upload file to storage');
-
+      // 3. Trigger synchronous processing (Utho -> Vectara -> Supabase)
       const processResponse = await fetch(`${backendBase}/process-document`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -511,36 +415,14 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
         }),
       });
 
-      if (!processResponse.ok) throw new Error('Failed to trigger document processing');
+      if (!processResponse.ok) throw new Error('Failed to process document');
       const processData = await processResponse.json();
-      const documentId = processData.documentId;
-
-      if (!documentId) throw new Error('No document ID returned');
-
-      const newDoc: DocItem = {
-        id: documentId,
-        name: file.name,
-        type: file.type === 'application/pdf' ? 'pdf' : 'doc',
-        meta: 'Processing...',
-        selected: true
-      };
-
-      setDocs(prev => [newDoc, ...prev]);
-
-      setMessages(prev => prev.map(m => m.id === uploadingMsgId ? {
-        ...m,
-        content: `**${file.name}** has been successfully uploaded! It is currently being scanned into our database. **Please wait until it finishes Processing** in the sidebar before asking questions about it.`
-      } : m));
-
-    } catch (error) {
-      console.error('Upload Error:', error);
-      setMessages(prev => prev.map(m => m.id === uploadingMsgId ? {
-        ...m,
-        content: `Sorry, I met an error while uploading **${file.name}**. Please try again.`
-      } : m));
+      return processData.documentId;
+    } catch (err) {
+      console.error('File upload/process error:', err);
+      return null;
     } finally {
       setIsUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -553,10 +435,32 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
     setInput('');
     setIsTyping(true);
 
+    let activeDocIds = docs.map(d => d.id);
+
+    // If there's an attached file, upload it first
+    if (attachedFile) {
+      const newDocId = await uploadAndProcessAttachedFile(attachedFile);
+      if (newDocId) {
+        const newDoc: DocItem = {
+          id: newDocId,
+          name: attachedFile.name,
+          type: attachedFile.type === 'application/pdf' ? 'pdf' : 'doc',
+          meta: 'Ready',
+          selected: true
+        };
+        setDocs(prev => [newDoc, ...prev]);
+        activeDocIds = [newDocId, ...activeDocIds];
+        setGroundingMode('document');
+      }
+      setAttachedFile(null);
+    }
+
     try {
       // ── Document-Grounded Mode ─────────────────────────────────────────
-      if (groundingMode === 'document' && docs.length > 0) {
-        const docIds = docs.map(d => d.id);
+      if (groundingMode === 'document' || attachedFile) {
+        const docIds = activeDocIds;
+
+        // Check cache first
         const cacheKey = makeCacheKey(text, docIds);
         const cached = getCachedResult(cacheKey);
 
@@ -575,76 +479,72 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
           return;
         }
 
-        const chunks = retrieveChunks(text, docIds);
-        const { context, sources, confidenceScore } = buildGroundedContext(chunks);
-
-        let responseText: string;
-        if (chunks.length === 0) {
-          responseText = 'Not found in selected documents. Try selecting more documents or switching to General AI Mode.';
+        // Get first document to send to Gemini
+        const firstDoc = docs.find(d => d.selected);
+        if (!firstDoc) {
           setIsTyping(false);
-          const aiMsg: Message = {
-            id: uid(), role: 'ai',
-            content: responseText, time: ts(),
-            sources: [], confidenceScore: 0, isGrounded: true,
-          };
-          setMessages(prev => [...prev, aiMsg]);
-          setRevealingId(aiMsg.id);
-          setRevealedLen(0);
+          const msg: Message = { id: uid(), role: 'ai', content: "Please select a document first.", time: ts() };
+          setMessages(prev => [...prev, msg]);
           return;
         }
 
-        // Inject context into Groq via the existing chat endpoint
-        const docHistory = buildHistory([...messages, userMsg]);
-        const backendBase = import.meta.env.VITE_BACKEND_URL || '';
-        const res = await fetch(`${backendBase}/chat`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: text,
-            mark: selectedMark,
-            strict: true,
-            history: docHistory.length > 0 ? docHistory : undefined,
-            // System override is baked into the message via context prefix
-            _groundedContext: context,
-          }),
-        });
+        // Get document URL from storage
+        const { data: urlData } = await supabase.storage
+          .from('documents')
+          .createSignedUrl(firstDoc.id, 3600);
 
-        if (res.ok) {
-          const data = await res.json() as ChatResponse;
-          responseText = data.response;
-        } else {
-          // Client-side fallback: build response from chunks directly
-          responseText =
-            `**From your selected documents:**\n\n` +
-            chunks.map(c => `- ${c.text}`).join('\n\n');
+        if (!urlData?.signedUrl) {
+          throw new Error("Could not access document");
         }
 
-        setCachedResult(cacheKey, { response: responseText, sources, confidenceScore });
+        // Fetch the PDF file
+        const fileResponse = await fetch(urlData.signedUrl);
+        const fileBlob = await fileResponse.blob();
+        void await blobToBase64(fileBlob);
 
+        // Call backend with PDF
+        const formData = new FormData();
+        formData.append("file", fileBlob, "document.pdf");
+        formData.append("question", text);
+
+        const aiRes = await fetch("http://localhost:3001/api/chat", {
+          method: "POST",
+          body: formData
+        });
+
+        if (!aiRes.ok) throw new Error("AI request failed");
+        const { answer } = await aiRes.json();
+
+        setCachedResult(cacheKey, { response: answer, sources: [], confidenceScore: 100 });
         setIsTyping(false);
-        const docAiMsg: Message = {
-          id: uid(), role: 'ai',
-          content: responseText, time: ts(),
-          sources, confidenceScore, isGrounded: true,
-        };
+        const docAiMsg: Message = { id: uid(), role: 'ai', content: answer, time: ts(), sources: [], confidenceScore: 100, isGrounded: true };
         setMessages(prev => [...prev, docAiMsg]);
         setRevealingId(docAiMsg.id);
         setRevealedLen(0);
         return;
       }
 
-      // ── General AI Mode (existing behaviour) ──────────────────────────
-      const selectedDocIds = docs.filter(d => d.selected).map(d => d.id);
-      const history = buildHistory([...messages, userMsg]);
-      const response = await chatWithAI(text, selectedDocIds, selectedMark, strict, subjectId || undefined, history);
+      // ── General AI Mode ────────────────────────────────────────────────
+      const backendBase = import.meta.env.VITE_BACKEND_URL || '';
+      const history = buildHistory([...messages, userMsg]).map(m => ({
+        role: m.role,
+        content: m.content
+      }));
 
-      const generalAiMsg: Message = {
-        id: uid(),
-        role: 'ai',
-        content: response.response,
-        time: ts(),
-      };
+      const res = await fetch(`${backendBase}/chat-general`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, history })
+      });
+
+      let responseText = "Sorry, I encountered an error. Please try again.";
+      if (res.ok) {
+        const data = await res.json();
+        responseText = data.response;
+      }
+
       setIsTyping(false);
+      const generalAiMsg: Message = { id: uid(), role: 'ai', content: responseText, time: ts() };
       setMessages(prev => [...prev, generalAiMsg]);
       setRevealingId(generalAiMsg.id);
       setRevealedLen(0);
@@ -656,7 +556,10 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
       setIsTyping(false);
       setMessages(prev => [...prev, errMsg]);
     }
-  }, [input, isBusy, selectedMark, strict, subjectId, docs, messages, groundingMode]);
+  }, [input, isBusy, selectedMark, docs, messages, groundingMode, user]);
+
+
+
 
   const handleKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -672,8 +575,15 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
     setMessages(set.messages as Message[]);
     setGroundingMode(set.grounding_mode === 'document' ? 'document' : 'general');
     
-    if (set.grounding_mode === 'document') {
-      setSelectedDemoDocIds([...set.documents]);
+    if (set.grounding_mode === 'document' && set.documents.length > 0) {
+      // Restore selected docs from saved session as DocItems
+      setDocs(set.documents.map((id: string) => ({
+        id,
+        name: id,
+        type: 'pdf' as const,
+        meta: 'Indexed',
+        selected: true,
+      })));
     }
     
     setStudyView('chat');
@@ -799,9 +709,6 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
                     <span 
                       className="material-icons-outlined sm-pick-item-check" 
                       onClick={() => toggleDoc(doc.id)} 
-                      style={{ cursor: 'pointer', transition: 'transform 0.1s' }}
-                      onMouseOver={e => e.currentTarget.style.transform = 'scale(1.2)'}
-                      onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
                       title="Remove from session"
                     >
                       remove_circle_outline
@@ -831,29 +738,17 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
           <DocumentPickerModal
             isOpen={pickerOpen}
             onClose={() => setPickerOpen(false)}
-            initialSelectedIds={new Set(docs.map(d => d.id))}
+            initialSelectedIds={initialSelectedIds}
             onSave={(selectedRows) => {
+              // Simply store the selected doc IDs
               const newDocs = selectedRows.map(r => ({
                 id: r.id,
                 name: r.title,
                 type: (r.file_type === 'application/pdf' ? 'pdf' : 'doc') as 'pdf' | 'doc',
-                meta: r.id.startsWith('utho-') ? 'Loading AI Context...' : `${r.chunk_count} chunks`,
+                meta: r.status === 'ready' ? `${r.chunk_count ?? 0} chunks` : 'Processing...',
                 selected: true
               }));
               setDocs(newDocs);
-
-              // Load Utho docs in background
-              newDocs.forEach(d => {
-                if (d.id.startsWith('utho-')) {
-                  void loadUthoDoc(d.id).then(success => {
-                    if (success) {
-                      setDocs(prev => prev.map(p => p.id === d.id ? { ...p, meta: 'Ready for AI Mode' } : p));
-                    } else {
-                      setDocs(prev => prev.map(p => p.id === d.id ? { ...p, meta: 'Offline / Parsing Error' } : p));
-                    }
-                  });
-                }
-              });
             }}
           />
         </div>
@@ -893,46 +788,7 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
             </div>
           </section>
 
-          {/* ── Demo Document Picker (only in Document Mode) ──────── */}
-          {groundingMode === 'document' && (
-            <section className="sm-section sm-section--demo-docs">
-              <div className="sm-section-row">
-                <span className="sm-label">Demo Docs</span>
-                <span className="sm-demo-limit-badge">
-                  {selectedDemoDocIds.length}/3 selected
-                </span>
-              </div>
-              <p className="sm-demo-hint">Select up to 3 documents. AI will answer only from these.</p>
-              <div className="sm-demo-doc-list">
-                {DEMO_DOCUMENTS.map(doc => {
-                  const isSelected = selectedDemoDocIds.includes(doc.doc_id);
-                  const isDisabled = !isSelected && selectedDemoDocIds.length >= 3;
-                  const typeIcons: Record<string, string> = {
-                    notes: 'description', pyqs: 'quiz', concepts: 'lightbulb', ppt: 'slideshow',
-                  };
-                  return (
-                    <button
-                      key={doc.doc_id}
-                      className={`sm-demo-doc ${isSelected ? 'sm-demo-doc--on' : ''} ${isDisabled ? 'sm-demo-doc--disabled' : ''}`}
-                      onClick={() => !isDisabled && toggleDemoDoc(doc.doc_id)}
-                      title={isDisabled ? 'Max 3 documents' : doc.title}
-                    >
-                      <span className={`material-icons-outlined sm-demo-doc-icon ${isSelected ? 'sm-demo-doc-icon--on' : ''}`}>
-                        {typeIcons[doc.type] ?? 'description'}
-                      </span>
-                      <div className="sm-demo-doc-info">
-                        <p className="sm-demo-doc-name">{doc.title}</p>
-                        <p className="sm-demo-doc-meta">{doc.chunks.length} chunks · {doc.subject}</p>
-                      </div>
-                      <div className={`sm-check ${isSelected ? 'sm-check--on' : ''}`}>
-                        {isSelected && <span className="material-icons-outlined sm-check-icon">check</span>}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-          )}
+
           {/* Source Docs */}
           <section className="sm-section">
             <div className="sm-section-row">
@@ -993,24 +849,6 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
             </select>
           </section>
 
-          {/* Active Topics */}
-          <section className="sm-section">
-            <div className="sm-section-row">
-              <span className="sm-label">Active Topics</span>
-            </div>
-            <div className="sm-topics">
-              {topics.map(t => (
-                <button
-                  key={t.id}
-                  className={`sm-topic ${t.active ? 'sm-topic--on' : ''}`}
-                  onClick={() => toggleTopic(t.id)}
-                >
-                  {t.active ? t.name : `+ ${t.name}`}
-                </button>
-              ))}
-            </div>
-          </section>
-
           {/* Strict Context */}
           <section className="sm-section sm-section--border">
             <div className="sm-strict-row">
@@ -1035,16 +873,12 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
           </section>
 
           {/* Context summary */}
-          <div className="sm-context-summary">
-            <p className="sm-context-count">
-              <span className="material-icons-outlined sm-context-icon">folder_open</span>
-              {selectedDocs.length} doc{selectedDocs.length !== 1 ? 's' : ''} selected
-            </p>
-            <p className="sm-context-count">
-              <span className="material-icons-outlined sm-context-icon">topic</span>
-              {activeTopics.length} topic{activeTopics.length !== 1 ? 's' : ''} active
-            </p>
-          </div>
+           <div className="sm-context-summary">
+             <p className="sm-context-count">
+               <span className="material-icons-outlined sm-context-icon">folder_open</span>
+               {selectedDocs.length} doc{selectedDocs.length !== 1 ? 's' : ''} selected
+             </p>
+           </div>
         </div>
       </aside>
 
@@ -1123,13 +957,10 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
                 <div className="sm-msg-col">
                   <span className="sm-msg-meta">Moduly AI · {msg.time}</span>
                   <div className="sm-bubble sm-bubble--ai">
-                    {displayContent.split('\n').map((line, i) => (
-                      <p
-                        key={i}
-                        className="sm-bubble-line"
-                        dangerouslySetInnerHTML={{ __html: renderMd(line) }}
-                      />
-                    ))}
+                    <div
+                      className="sm-markdown-body"
+                      dangerouslySetInnerHTML={{ __html: renderMarkdownRich(displayContent) }}
+                    />
                     {isCurrentlyRevealing && revealedLen < msg.content.length && (
                       <span className="sm-cursor" />
                     )}
@@ -1186,7 +1017,8 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
               <div className="sm-avatar sm-avatar--ai">
                 <span className="material-icons-outlined">smart_toy</span>
               </div>
-              <div className="sm-bubble sm-bubble--ai sm-typing-bubble">
+              <div className="sm-bubble sm-bubble--ai sm-typing-bubble sm-typing-container">
+                <span className="sm-typing-status">Analyzing study materials...</span>
                 <span /><span /><span />
               </div>
             </div>
@@ -1253,14 +1085,19 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
                onChange={(e) => { void handleFileUpload(e); }}
             />
             <div className="sm-textarea-wrap">
+              {attachedFile && (
+                <div className="sm-attached-file">
+                  <span className="material-icons-outlined">description</span>
+                  <span className="sm-attached-name">{attachedFile.name}</span>
+                  <button className="sm-attached-remove" onClick={() => setAttachedFile(null)}>
+                    <span className="material-icons-outlined">close</span>
+                  </button>
+                </div>
+              )}
               <textarea
                 ref={textareaRef}
                 className="sm-textarea"
-                placeholder={
-                  activeTopics.length
-                    ? `Ask about ${activeTopics.map(t => t.name).join(', ')}… (${selectedMark} format)`
-                    : `Ask a question… (${selectedMark} format)`
-                }
+                placeholder={attachedFile ? "Ask about this file..." : `Ask a question… (${selectedMark} format)`}
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={handleKey}

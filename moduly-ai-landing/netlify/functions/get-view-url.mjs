@@ -1,4 +1,4 @@
-import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, GetObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 const s3Client = new S3Client({
@@ -11,6 +11,18 @@ const s3Client = new S3Client({
     forcePathStyle: true,
 });
 
+const BUCKET = process.env.UTHO_BUCKET_NAME;
+
+async function tryGetKey(key) {
+    const command = new HeadObjectCommand({ Bucket: BUCKET, Key: key });
+    try {
+        await s3Client.send(command);
+        return key;
+    } catch {
+        return null;
+    }
+}
+
 export const handler = async (event) => {
     if (event.httpMethod !== 'GET') {
         return { statusCode: 405, body: JSON.stringify({ error: 'Method Not Allowed' }) };
@@ -22,14 +34,24 @@ export const handler = async (event) => {
     }
 
     try {
+        // Try both with and without source/ prefix
+        let s3Key = filename.startsWith('source/') 
+            ? filename 
+            : `source/${filename}`;
+        
+        // Check if key exists, fallback to original if not
+        const foundKey = await tryGetKey(s3Key) || await tryGetKey(filename);
+        
+        if (!foundKey) {
+            return { statusCode: 404, body: JSON.stringify({ error: 'File not found in storage' }) };
+        }
+
         const command = new GetObjectCommand({
-            Bucket: process.env.UTHO_BUCKET_NAME,
-            Key: filename,
-            // Hint browser to display inline rather than forcing download
+            Bucket: BUCKET,
+            Key: foundKey,
             ResponseContentDisposition: `inline; filename="${filename}"`,
         });
 
-        // Pre-signed URL valid for 1 hour (3600 seconds)
         const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
 
         return {

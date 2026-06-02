@@ -184,28 +184,100 @@ export async function loadUthoDoc(docId: string): Promise<boolean> {
   if (!docId.startsWith('utho-')) return false;
 
   const filename = docId.replace('utho-', '');
-  const jsonKey = `parsed/${filename}.json`;
 
   try {
     const backendBase = import.meta.env.VITE_BACKEND_URL || '';
-    const res = await fetch(`${backendBase}/get-view-url?filename=${encodeURIComponent(jsonKey)}`);
-    if (!res.ok) return false;
+    const res = await fetch(`${backendBase}/get-parsed-doc?sourcePath=${encodeURIComponent(filename)}`);
     
-    const { url } = await res.json();
-    const jsonRes = await fetch(url);
-    if (!jsonRes.ok) return false;
-
-    const data = await jsonRes.json();
-    UTHO_DOCUMENTS.push({
-      doc_id: docId,
-      title: data.metadata?.title || filename,
-      type: data.metadata?.type || 'notes',
-      subject: data.metadata?.subject || 'general',
-      chunks: data.chunks || []
-    });
-    return true;
+    if (res.ok) {
+      const data = await res.json();
+      const textContent = data.fullText || data.chunks?.map((c: { content: string }) => c.content).join(' ') || '';
+        
+        // If we have good text content (more than 200 chars), use it
+        if (textContent.length > 200) {
+          UTHO_DOCUMENTS.push({
+            doc_id: docId,
+            title: data.metadata?.title || filename,
+            type: data.metadata?.type || 'notes',
+            subject: data.metadata?.subject || 'general',
+            chunks: data.chunks || []
+          });
+          return true;
+        }
+    }
+    
+    // If JSON failed or has little content, try OCR on original document
+    console.log(`[loadUthoDoc] Pre-parsed JSON insufficient or not found, trying OCR for: ${filename}`);
+    return await loadUthoDocWithOCR(docId, filename);
+    
   } catch (e) {
     console.error(`Failed to load Utho doc: ${docId}`, e);
+    return false;
+  }
+}
+
+/**
+ * Load UTHO document with OCR fallback for scanned/images
+ */
+async function loadUthoDocWithOCR(docId: string, filename: string): Promise<boolean> {
+  try {
+    // Determine source file path - add 'source/' prefix if needed
+    let sourcePath = filename;
+    if (!sourcePath.startsWith('source/')) {
+      sourcePath = `source/${filename}`;
+    }
+    
+    // Get URL for the document
+    const backendBase = import.meta.env.VITE_BACKEND_URL || '';
+    const urlRes = await fetch(`${backendBase}/get-view-url?filename=${encodeURIComponent(sourcePath)}`);
+    
+    if (!urlRes.ok) {
+      console.error(`[loadUthoDocWithOCR] Could not get URL for: ${sourcePath}`);
+      return false;
+    }
+    
+    const { url } = await urlRes.json();
+    
+    // Fetch the file
+    const response = await fetch(url);
+    const buffer = await response.arrayBuffer();
+    
+    // Import and use the document parser with OCR
+    const { parseDocument } = await import('./ai/document-parser');
+    
+    const result = await parseDocument(Buffer.from(buffer), filename, true);
+    
+    if (result.error || !result.text.trim()) {
+      console.error(`[loadUthoDocWithOCR] Parse failed: ${result.error}`);
+      return false;
+    }
+    
+    // Chunk the extracted text
+    const { chunkText } = await import('./ai/chunker');
+    const chunks = chunkText(result.text, { chunkSize: 500, overlap: 50 });
+    
+    if (chunks.length === 0) {
+      console.error(`[loadUthoDocWithOCR] No chunks generated`);
+      return false;
+    }
+    
+    // Add to documents
+    UTHO_DOCUMENTS.push({
+      doc_id: docId,
+      title: filename.replace(/\.[^/.]+$/, ''),
+      type: result.type === 'image' ? 'notes' : (result.type as 'notes' | 'pyqs' | 'concepts' | 'ppt'),
+      subject: 'general',
+      chunks: chunks.map((c, i) => ({
+        id: `chunk-${i}`,
+        text: c.content,
+      }))
+    });
+    
+    console.log(`[loadUthoDocWithOCR] Successfully parsed ${filename} (${result.type}) with ${chunks.length} chunks`);
+    return true;
+    
+  } catch (e) {
+    console.error(`[loadUthoDocWithOCR] Failed: ${docId}`, e);
     return false;
   }
 }

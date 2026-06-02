@@ -11,7 +11,11 @@ import './Library.css';
 
 function inferDocType(title: string, filePath?: string): string {
   if (filePath) {
-    const parts = filePath.split('/');
+    let cleanPath = filePath;
+    if (cleanPath.startsWith('source/')) cleanPath = cleanPath.slice(7);
+    if (cleanPath.startsWith('parsed/')) cleanPath = cleanPath.slice(7);
+
+    const parts = cleanPath.split('/');
     if (parts.length >= 4) {
       const typePart = parts[2].toLowerCase();
       if (typePart === 'pyq' || typePart === 'pyqs') return 'PYQ';
@@ -66,7 +70,11 @@ function formatDate(isoDate: string): string {
 
 function inferSubject(title: string, filePath?: string): string {
   if (filePath) {
-    const parts = filePath.split('/');
+    let cleanPath = filePath;
+    if (cleanPath.startsWith('source/')) cleanPath = cleanPath.slice(7);
+    if (cleanPath.startsWith('parsed/')) cleanPath = cleanPath.slice(7);
+
+    const parts = cleanPath.split('/');
     if (parts.length >= 4 && (parts[0].startsWith('sem-') || parts[0].startsWith('year-'))) {
       const subjectCode = parts[1].toLowerCase();
       for (const course of Object.values(College_SUBJECTS)) {
@@ -88,11 +96,12 @@ function inferSubject(title: string, filePath?: string): string {
   return 'General';
 }
 
-function inferModule(title: string): string {
+function inferModule(title: string, filePath?: string): string {
   const t = title.toLowerCase();
+  const f = filePath ? filePath.toLowerCase() : '';
   
   // Look for our specific multiple module format first (e.g. _Mod_Mod1-Mod2_)
-  const multiMatch = t.match(/_mod_(mod[\d-]+)_/);
+  const multiMatch = t.match(/_mod_(mod[\d-]+)_/) || f.match(/_mod_(mod[\d-]+)_/);
   if (multiMatch) {
     const raw = multiMatch[1].replace(/mod/g, ''); // "1-2"
     const mods = raw.split('-').filter(Boolean);
@@ -101,7 +110,7 @@ function inferModule(title: string): string {
   }
 
   // Fallback to single module match
-  const m = t.match(/mod(?:ule)?[\s_]*(\d)/);
+  const m = t.match(/mod(?:ule)?[\s_]*(\d)/) || f.match(/mod(?:ule)?[\s_]*(\d)/);
   if (m) return `Mod ${m[1]}`;
   if (t.includes('all') || t.includes('complete') || t.includes('full')) return 'All';
   return 'General';
@@ -268,7 +277,7 @@ export function Library({ user, onNavigate }: LibraryProps) {
   const filtered = useMemo(() => {
     return docs.filter(doc => {
       if (subject !== 'All Subjects' && inferSubject(doc.title, doc.file_path) !== subject) return false;
-      if (module !== 'All Modules' && inferModule(doc.title) !== module) return false;
+      if (module !== 'All Modules' && inferModule(doc.title, doc.file_path) !== module) return false;
       if (docType !== 'Any Type' && inferDocType(doc.title, doc.file_path) !== docType) return false;
       if (search && !doc.title.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
@@ -423,7 +432,7 @@ export function Library({ user, onNavigate }: LibraryProps) {
           {!loading && !fetchError && pageItems.map((doc, i) => {
             const docTypeStr = inferDocType(doc.title, doc.file_path);
             const docSubjectStr = inferSubject(doc.title, doc.file_path);
-            const docModuleStr = inferModule(doc.title);
+            const docModuleStr = inferModule(doc.title, doc.file_path);
             const typeColor = getDocTypeColor(docTypeStr);
             const typeIcon = getDocTypeIcon(docTypeStr);
             const iconBgVar = getIconBgVar(docTypeStr);

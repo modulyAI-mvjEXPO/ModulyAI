@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, Fragment } from 'react';
+import { useState, useEffect, useCallback, Fragment, useRef } from 'react';
 import type { DocumentRow } from '../lib/ai/types';
 import { supabase } from '../lib/supabase';
 import './DocumentPickerModal.css';
@@ -74,13 +74,26 @@ export function DocumentPickerModal({ isOpen, onClose, initialSelectedIds, onSav
         
       if (supaErr) throw new Error(`Supabase query failed: ${supaErr.message}`);
 
-      // 2. Fetch all S3 files from backend list-files endpoint
-      const s3Res = await fetch(`${backendBase}/list-files`);
-      if (!s3Res.ok) throw new Error('S3 fetch failed');
-      const s3Data = await s3Res.json();
+      // 2. Fetch all S3 files from backend list-files endpoint (Graceful degradation)
+      let s3Files: S3File[] = [];
+      try {
+        const s3Res = await fetch(`${backendBase}/list-files`);
+        if (s3Res.ok) {
+          const text = await s3Res.text();
+          try {
+            const s3Data = JSON.parse(text);
+            s3Files = Array.isArray(s3Data?.files) ? s3Data.files : [];
+          } catch (e) {
+            console.error('Failed to parse S3 response:', e);
+          }
+        } else {
+            console.error('S3 fetch returned status:', s3Res.status);
+        }
+      } catch (err) {
+        console.error('S3 fetch network error:', err);
+      }
 
       const supabaseDocs: DocumentRow[] = supaData || [];
-      const s3Files: S3File[] = Array.isArray(s3Data?.files) ? s3Data.files : [];
 
       // Build a set of file_paths that are already in Supabase
       const parsedPaths = new Set(supabaseDocs.map(d => d.file_path));
@@ -108,20 +121,26 @@ export function DocumentPickerModal({ isOpen, onClose, initialSelectedIds, onSav
         }));
 
       setMerged([...supaEntries, ...uthoEntries]);
-    } catch (err) {
+    } catch (err: any) {
       console.error('DocumentPickerModal fetch error:', err);
-      setError('Failed to load documents. Please try again.');
+      setError(err.message || 'Unknown error occurred while fetching docs.');
     } finally {
       setLoading(false);
     }
   }, []);
 
   // ── Sync selection from parent ───────────────────────────────────────────
+  const hasFetchedRef = useRef(false);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !hasFetchedRef.current) {
       setSelectedIds(new Set(initialSelectedIds));
-      fetchDocuments();
+      void fetchDocuments();
+      hasFetchedRef.current = true;
+    }
+    
+    if (!isOpen) {
+      hasFetchedRef.current = false;
     }
   }, [isOpen, initialSelectedIds, fetchDocuments]);
 
