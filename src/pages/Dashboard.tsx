@@ -98,7 +98,14 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const isAdminUser = useMemo(() => {
-    return !!profile?.is_admin || user.email?.toLowerCase() === '1mj24is016@mvjce.edu.in';
+    const email = user.email?.toLowerCase() || '';
+    const masterAdminEmails = [
+      '1mj24is016@mvjce.edu.in',
+      '1mj24is038@mvjce.edu.in',
+      'admin@moduly.ai',
+      'vtuadmin@moduly.ai'
+    ];
+    return !!profile?.is_admin || masterAdminEmails.includes(email);
   }, [profile, user.email]);
 
   const navItems = useMemo(() => [
