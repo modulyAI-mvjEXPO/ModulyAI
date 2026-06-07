@@ -1,5 +1,0 @@
-opencode -s ses_30fe26d53ffeLf1roUqYOHZqL3
-
-opencode -s ses_30ba70cb0ffeVkJ935hwQ37dey
-
-cd 'e:\Programming\PROJECT EXPO\ModulyAI\moduly-ai-landing'

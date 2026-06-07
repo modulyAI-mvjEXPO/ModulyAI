@@ -1,1 +1,0 @@
-give option to reename the session in the sidebar and also there is a search bar in the ribbon, and i want the search bar to show the session chats and navigae through it, and if the 

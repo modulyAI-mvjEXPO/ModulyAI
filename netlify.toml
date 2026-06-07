@@ -1,5 +1,61 @@
 [build]
-  base = "moduly-ai-landing"
   command = "npm run build"
   publish = "dist"
   functions = "netlify/functions"
+
+[dev]
+  command = "npm run dev"
+  port = 8080
+  targetPort = 5173
+  framework = "#custom"
+
+[[redirects]]
+  from = "/get-upload-url"
+  to = "/.netlify/functions/get-upload-url"
+  status = 200
+
+[[redirects]]
+  from = "/list-files"
+  to = "/.netlify/functions/list-files"
+  status = 200
+
+[[redirects]]
+  from = "/process-document"
+  to = "/.netlify/functions/process-document"
+  status = 200
+
+[[redirects]]
+  from = "/process-document-background"
+  to = "/.netlify/functions/process-document-background"
+  status = 200
+
+[[redirects]]
+  from = "/chat"
+  to = "/.netlify/functions/chat"
+  status = 200
+
+[[redirects]]
+  from = "/exam-solve"
+  to = "/.netlify/functions/exam-solve"
+  status = 200
+
+[[redirects]]
+  from = "/pyq-intelligence"
+  to = "/.netlify/functions/pyq-intelligence"
+  status = 200
+
+[[redirects]]
+  from = "/warm"
+  to = "/.netlify/functions/warm"
+  status = 200
+
+[[redirects]]
+  from = "/admin-users"
+  to = "/.netlify/functions/admin-users"
+  status = 200
+
+[[redirects]]
+  from = "/admin-documents"
+  to = "/.netlify/functions/admin-documents"
+  status = 200
+

@@ -1,8 +1,11 @@
 {
-  "extends": [
-    "development"
-  ],
-  "hints": {
-    "axe/aria": "off"
-  }
+    "connector": "local",
+    "hints": {
+        "axe/aria": [
+            "error",
+            {
+                "aria-valid-attr-value": "off"
+            }
+        ]
+    }
 }
