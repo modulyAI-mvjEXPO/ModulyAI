@@ -563,16 +563,6 @@ export function Chat({ user, initialSessionId }: ChatProps) {
     }
   };
 
-  const getFileLabel = (fileName: string) => {
-    const ext = fileName.toLowerCase().split('.').pop() || '';
-    const labels: Record<string, string> = {
-      'pdf': 'PDF', 'docx': 'Word', 'doc': 'Word',
-      'pptx': 'PowerPoint', 'ppt': 'PowerPoint', 'txt': 'Text',
-      'png': 'Image', 'jpg': 'Image', 'jpeg': 'Image', 'webp': 'Image'
-    };
-    return labels[ext] || 'Document';
-  };
-
   const hasMessages = messages.length > 0;
 
   return (

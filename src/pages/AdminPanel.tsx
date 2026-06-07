@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import { ButtonColorful } from '../components/ui/button-colorful';
 import './AdminPanel.css';
 
 /* ─── Interfaces ─────────────────────────────────────────────────────────── */
