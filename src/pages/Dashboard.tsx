@@ -599,8 +599,3 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
   );
 }
 
-const NAV_MAIN: { icon: string; label: string; page: DashboardPage }[] = [
-  { icon: 'dashboard', label: 'Overview', page: 'overview' },
-  { icon: 'chat', label: 'Your Assistant', page: 'chat' },
-  { icon: 'library_books', label: 'Library', page: 'library' },
-];
