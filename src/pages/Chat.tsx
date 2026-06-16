@@ -405,7 +405,7 @@ export function Chat({ user, initialSessionId }: ChatProps) {
 
       if (!selectedFile) {
         const historyParams = messages.map(m => ({
-          role: m.role === 'ai' ? 'model' : 'user',
+          role: m.role === 'ai' ? 'assistant' : 'user',
           content: m.content
         }));
 
@@ -443,7 +443,7 @@ export function Chat({ user, initialSessionId }: ChatProps) {
         setPdfProcessed(true);
       } else {
         const historyParams = messages.map(m => ({
-          role: m.role === 'ai' ? 'model' : 'user',
+          role: m.role === 'ai' ? 'assistant' : 'user',
           content: m.content
         }));
 
@@ -484,7 +484,7 @@ export function Chat({ user, initialSessionId }: ChatProps) {
       });
     } catch (error) {
       console.error('Chat error:', error);
-      let errorMessage = "Sorry, something went wrong. Make sure the backend is running on port 3001.";
+      let errorMessage = "Sorry, something went wrong. Please try again.";
 
       if (error instanceof Error) {
         if (error.message.includes("PDF") || error.message.includes("image") || error.message.includes("pdf")) {
@@ -497,7 +497,7 @@ export function Chat({ user, initialSessionId }: ChatProps) {
         role: 'ai',
         content: errorMessage,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        isNew: true
+        isNew: false
       };
       setMessages(prev => {
         const updated = prev.map(m => ({ ...m, isNew: false }));
