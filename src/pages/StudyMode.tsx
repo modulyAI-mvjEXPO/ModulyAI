@@ -507,7 +507,8 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
         formData.append("file", fileBlob, "document.pdf");
         formData.append("question", text);
 
-        const aiRes = await fetch("http://localhost:3001/api/chat", {
+        const backendBase = import.meta.env.VITE_BACKEND_URL || '';
+        const aiRes = await fetch(`${backendBase}/chat`, {
           method: "POST",
           body: formData
         });
@@ -531,7 +532,7 @@ export function StudyMode({ user, onNavigate }: StudyModeProps) {
         content: m.content
       }));
 
-      const res = await fetch(`${backendBase}/chat-general`, {
+      const res = await fetch(`${backendBase}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: text, history })

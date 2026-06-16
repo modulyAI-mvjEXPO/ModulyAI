@@ -304,7 +304,8 @@ export function Chat({ user, initialSessionId }: ChatProps) {
           return;
         }
         try {
-          const statusRes = await fetch(`http://localhost:3001/api/prepare-library-doc/status/${docId}`);
+        const backendBase = import.meta.env.VITE_BACKEND_URL || '';
+        const statusRes = await fetch(`${backendBase}/process-document/status/${docId}`);
           const statusData = await statusRes.json();
           if (statusData.progress != null) {
             setSessionDocs(prev => prev.map(d =>
@@ -317,7 +318,8 @@ export function Chat({ user, initialSessionId }: ChatProps) {
       }, 500);
 
       // Fire the actual preparation request (this awaits until done)
-      const res = await fetch('http://localhost:3001/api/prepare-library-doc', {
+      const backendBase = import.meta.env.VITE_BACKEND_URL || '';
+      const res = await fetch(`${backendBase}/process-document`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ documentId: docId }),
@@ -407,7 +409,8 @@ export function Chat({ user, initialSessionId }: ChatProps) {
           content: m.content
         }));
 
-        const res = await fetch("http://localhost:3001/api/chat-general", {
+        const backendBase = import.meta.env.VITE_BACKEND_URL || '';
+        const res = await fetch(`${backendBase}/chat`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -426,7 +429,8 @@ export function Chat({ user, initialSessionId }: ChatProps) {
         formData.append("question", input);
         formData.append("modes", JSON.stringify(modes));
 
-        const response = await fetch("http://localhost:3001/api/chat", {
+        const backendBase = import.meta.env.VITE_BACKEND_URL || '';
+        const response = await fetch(`${backendBase}/chat`, {
           method: "POST",
           body: formData
         });
@@ -443,7 +447,8 @@ export function Chat({ user, initialSessionId }: ChatProps) {
           content: m.content
         }));
 
-        const res = await fetch("http://localhost:3001/api/chat-context", {
+        const backendBase = import.meta.env.VITE_BACKEND_URL || '';
+        const res = await fetch(`${backendBase}/chat`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
